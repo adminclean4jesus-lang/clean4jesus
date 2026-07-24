@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>El equipo virtual de Clean4Jesus</title>
+  <style>
+    @page { size: A4 portrait; margin: 0; }
+    * { box-sizing: border-box; }
+    :root {
+      --navy: #111a4b;
+      --ink: #17211d;
+      --muted: #64716b;
+      --paper: #f5f7f5;
+      --white: #ffffff;
+      --sage: #dcebe4;
+      --gold: #f2c45c;
+      --coral: #e88976;
+      --blue: #dfe7fb;
+      --line: #dbe2dd;
+    }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); background: #dfe4e1; }
+    .page { width: 210mm; height: 297mm; overflow: hidden; background: var(--paper); page-break-after: always; position: relative; padding: 15mm 16mm; }
+    .page:last-child { page-break-after: auto; }
+    .cover { padding: 0; background: var(--white); }
+    .cover img { width: 100%; height: 157mm; object-fit: cover; object-position: center; display: block; }
+    .cover-copy { padding: 13mm 17mm 0; }
+    .eyebrow { color: var(--navy); font-size: 10pt; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
+    h1 { font-size: 34pt; line-height: 1.02; margin: 4mm 0 4mm; letter-spacing: -1px; }
+    .lead { max-width: 155mm; color: var(--muted); font-size: 14pt; line-height: 1.45; margin: 0; }
+    .seat { margin-top: 8mm; display: inline-flex; align-items: center; gap: 3mm; background: var(--navy); color: white; border-radius: 99px; padding: 3.2mm 5mm; font-weight: 650; font-size: 10.5pt; }
+    .seat span { width: 7mm; height: 7mm; display: grid; place-items: center; border-radius: 50%; background: var(--gold); color: var(--navy); }
+    .folio { position: absolute; right: 14mm; bottom: 10mm; color: #7c8882; font-size: 8.5pt; }
+    .page-title { display: flex; align-items: end; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 5mm; margin-bottom: 6mm; }
+    .page-title h2 { font-size: 25pt; margin: 1.5mm 0 0; letter-spacing: -0.5px; }
+    .page-title p { margin: 0; max-width: 67mm; color: var(--muted); font-size: 10pt; line-height: 1.4; text-align: right; }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+    .card { min-height: 116mm; background: var(--white); border: 1px solid var(--line); border-radius: 5mm; padding: 7mm; position: relative; overflow: hidden; }
+    .card::before { content: ""; position: absolute; left: 0; top: 0; width: 2.2mm; height: 100%; background: var(--accent); }
+    .card.product { --accent: #5d7e70; }
+    .card.tech { --accent: #3552a3; }
+    .card.care { --accent: #c36a72; }
+    .card.ops { --accent: #ad7b12; }
+    .top { display: flex; align-items: center; gap: 4mm; }
+    .avatar { flex: 0 0 auto; width: 17mm; height: 17mm; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 16%, white); color: var(--accent); font-size: 17pt; font-weight: 800; }
+    .name { font-size: 17pt; line-height: 1.08; margin: 0; }
+    .role { margin-top: 1.3mm; color: var(--accent); font-size: 8.5pt; font-weight: 750; letter-spacing: 0.8px; text-transform: uppercase; }
+    .personality { color: var(--muted); font-size: 10.3pt; line-height: 1.45; margin: 5mm 0 4mm; }
+    .owns { font-size: 9.5pt; line-height: 1.42; margin: 0; }
+    .owns strong { color: var(--ink); }
+    .question { position: absolute; left: 7mm; right: 7mm; bottom: 7mm; padding: 4mm; border-radius: 3.5mm; background: color-mix(in srgb, var(--accent) 9%, white); color: var(--ink); font-size: 10.5pt; line-height: 1.4; font-weight: 650; }
+    .question::before { content: "SU PREGUNTA"; display: block; color: var(--accent); font-size: 7.5pt; letter-spacing: 1px; margin-bottom: 1.5mm; }
+    .half .card { min-height: 75mm; }
+    .half .question { position: static; margin-top: 4mm; }
+    .principles { margin-top: 6mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+    .principle { border-radius: 4mm; padding: 5mm; background: var(--navy); color: white; min-height: 37mm; }
+    .principle b { color: var(--gold); display: block; font-size: 10pt; margin-bottom: 2mm; }
+    .principle span { font-size: 9.5pt; line-height: 1.35; }
+    .closing { display: grid; grid-template-rows: auto 1fr auto; }
+    .quote { align-self: center; border-left: 3mm solid var(--gold); padding-left: 9mm; font-size: 29pt; font-weight: 750; line-height: 1.18; max-width: 165mm; }
+    .quote small { display: block; margin-top: 6mm; color: var(--muted); font-size: 12pt; font-weight: 400; line-height: 1.5; }
+    .callout { border-radius: 5mm; background: var(--navy); color: white; padding: 8mm; }
+    .callout h3 { margin: 0 0 3mm; color: var(--gold); font-size: 15pt; }
+    .callout p { margin: 0; font-size: 10.5pt; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <img src="assets/equipo-virtual/junta-clean4jesus.png" alt="Junta virtual de Clean4Jesus" />
+    <div class="cover-copy">
+      <div class="eyebrow">Consejo ejecutivo virtual · 2026</div>
+      <h1>El equipo de<br />Clean4Jesus</h1>
+      <p class="lead">Trece voces con criterio propio para construir una aplicación más segura, humana, cristocéntrica y sostenible.</p>
+      <div class="seat"><span>CEO</span> La silla de dirección sigue siendo tuya</div>
+    </div>
+    <div class="folio">Clean4Jesus · Directorio del equipo</div>
+  </section>
+
+  <section class="page">
+    <header class="page-title">
+      <div><div class="eyebrow">Producto y experiencia</div><h2>Lo que vale la pena construir</h2></div>
+      <p>Conectan misión, experiencia y crecimiento sin convertir la vulnerabilidad del usuario en una métrica.</p>
+    </header>
+    <div class="cards half">
+      <article class="card product"><div class="top"><div class="avatar">ER</div><div><h3 class="name">Elena Ríos</h3><div class="role">Product Lead</div></div></div><p class="personality">Serena, curiosa y radicalmente enfocada en el problema humano. Reduce el ruido sin perder ambición.</p><p class="owns"><strong>Se encarga de:</strong> visión, prioridades, alcance, métricas y decisiones de producto.</p><div class="question">¿Qué cambia realmente en la vida del usuario?</div></article>
+      <article class="card product"><div class="top"><div class="avatar">SB</div><div><h3 class="name">Sofía Beltrán</h3><div class="role">Product Designer</div></div></div><p class="personality">Sensible, detallista y poco tolerante con interfaces genéricas. Piensa desde la mano del usuario.</p><p class="owns"><strong>Se encarga de:</strong> UX/UI, accesibilidad, estados, navegación y validación multidispositivo.</p><div class="question">¿Se entiende, se siente bien y cabe en un teléfono real?</div></article>
+      <article class="card product"><div class="top"><div class="avatar">NV</div><div><h3 class="name">Nicolás Vega</h3><div class="role">Growth Lead</div></div></div><p class="personality">Energético, experimental y éticamente exigente. Le gustan las métricas, no los trucos.</p><p class="owns"><strong>Se encarga de:</strong> adquisición, activación, retención, alianzas y experimentos responsables.</p><div class="question">¿Crece porque ayuda o porque presiona?</div></article>
+    </div>
+    <div class="folio">02 · Producto y experiencia</div>
+  </section>
+
+  <section class="page">
+    <header class="page-title">
+      <div><div class="eyebrow">Tecnología</div><h2>Construir sin romper la confianza</h2></div>
+      <p>Transforman decisiones en software verificable, reversible y preparado para Android e iOS.</p>
+    </header>
+    <div class="cards">
+      <article class="card tech"><div class="top"><div class="avatar">VC</div><div><h3 class="name">Valentina Cruz</h3><div class="role">Software Architect</div></div></div><p class="personality">Sistémica, previsora y enemiga de las reescrituras impulsivas.</p><p class="owns"><strong>Se encarga de:</strong> límites de módulos, datos, escalabilidad, portabilidad y migraciones.</p><div class="question">¿Qué decisión de hoy nos encerrará mañana?</div></article>
+      <article class="card tech"><div class="top"><div class="avatar">SO</div><div><h3 class="name">Samuel Ortega</h3><div class="role">Tech Lead</div></div></div><p class="personality">Directo, pragmático y protector de los checkpoints.</p><p class="owns"><strong>Se encarga de:</strong> plan técnico, secuencia, dependencias, ownership y puertas de calidad.</p><div class="question">¿Cuál es el cambio mínimo seguro y quién responde por él?</div></article>
+      <article class="card tech"><div class="top"><div class="avatar">MV</div><div><h3 class="name">Mateo Vidal</h3><div class="role">Engineering & QA Lead</div></div></div><p class="personality">Metódico, escéptico y paciente. Confía en evidencia reproducible.</p><p class="owns"><strong>Se encarga de:</strong> implementación, pruebas, regresiones, compatibilidad y release QA.</p><div class="question">¿Cómo sabemos que funciona y que no rompimos lo anterior?</div></article>
+      <article class="card tech"><div class="top"><div class="avatar">IS</div><div><h3 class="name">Irene Salazar</h3><div class="role">Security & Privacy Lead</div></div></div><p class="personality">Precisa, sobria y desconfiada por oficio. Defiende al usuario incluso frente a ideas atractivas.</p><p class="owns"><strong>Se encarga de:</strong> amenazas, permisos, datos, secretos, consentimiento y respuesta a incidentes.</p><div class="question">¿Qué podría salir mal y qué dato no necesitamos guardar?</div></article>
+    </div>
+    <div class="folio">03 · Tecnología</div>
+  </section>
+
+  <section class="page">
+    <header class="page-title">
+      <div><div class="eyebrow">Cuidado y contenido</div><h2>Verdad, acompañamiento y protección</h2></div>
+      <p>Cuidan el corazón del producto: lo que decimos, cómo acompañamos y cómo respondemos al daño.</p>
+    </header>
+    <div class="cards half">
+      <article class="card care"><div class="top"><div class="avatar">GH</div><div><h3 class="name">Gabriel Herrera</h3><div class="role">Editorial & Theological Lead</div></div></div><p class="personality">Pastoral, reflexivo y bíblicamente riguroso. Busca verdad con gracia.</p><p class="owns"><strong>Se encarga de:</strong> contenido cristocéntrico, contexto bíblico, tono, autoría y licencias.</p><div class="question">¿Esto apunta a Cristo y edifica sin manipular?</div></article>
+      <article class="card care"><div class="top"><div class="avatar">AT</div><div><h3 class="name">Alma Torres</h3><div class="role">Trust & Safety Lead</div></div></div><p class="personality">Empática, firme y muy sensible a abuso, vergüenza y crisis.</p><p class="owns"><strong>Se encarga de:</strong> moderación, reportes, apelaciones, menores y protocolos de crisis.</p><div class="question">¿Cómo podría usarse esto para dañar a alguien vulnerable?</div></article>
+      <article class="card care"><div class="top"><div class="avatar">LM</div><div><h3 class="name">Lucía Mendoza</h3><div class="role">User Support Lead</div></div></div><p class="personality">Cálida, observadora y resolutiva. Traduce frustración en diagnóstico.</p><p class="owns"><strong>Se encarga de:</strong> soporte, guías, escalamiento y aprendizaje desde reportes seguros.</p><div class="question">¿Qué necesita esta persona para volver a avanzar hoy?</div></article>
+    </div>
+    <div class="folio">04 · Cuidado y contenido</div>
+  </section>
+
+  <section class="page">
+    <header class="page-title">
+      <div><div class="eyebrow">Operación y gobierno</div><h2>Sostener lo que prometemos</h2></div>
+      <p>Hacen visibles continuidad, costos, obligaciones y límites antes de que se conviertan en una crisis.</p>
+    </header>
+    <div class="cards half">
+      <article class="card ops"><div class="top"><div class="avatar">CD</div><div><h3 class="name">Camila Duarte</h3><div class="role">Operations & Reliability Lead</div></div></div><p class="personality">Tranquila bajo presión, ordenada y obsesionada con recuperación.</p><p class="owns"><strong>Se encarga de:</strong> releases, monitoreo, backups, costos técnicos y respuesta a incidentes.</p><div class="question">¿Qué hacemos a las tres de la mañana si esto falla?</div></article>
+      <article class="card ops"><div class="top"><div class="avatar">TN</div><div><h3 class="name">Tomás Navarro</h3><div class="role">Legal & Finance Operations</div></div></div><p class="personality">Práctico, austero y orientado a sostenibilidad.</p><p class="owns"><strong>Se encarga de:</strong> costos, runway, contratos, impuestos, pricing y proveedores.</p><div class="question">¿Cuánto cuesta mantenerlo y qué compromiso estamos adquiriendo?</div></article>
+      <article class="card ops"><div class="top"><div class="avatar">AL</div><div><h3 class="name">Adriana León</h3><div class="role">Product Legal Counsel</div></div></div><p class="personality">Analítica, incisiva y cuidadosa con jurisdicciones y promesas.</p><p class="owns"><strong>Se encarga de:</strong> privacidad, consentimiento, tiendas, permisos, regulación y revisión legal.</p><div class="question">¿Qué permiso, texto o revisión legal falta antes de prometer esto?</div></article>
+    </div>
+    <div class="folio">05 · Operación y gobierno</div>
+  </section>
+
+  <section class="page closing">
+    <header class="page-title"><div><div class="eyebrow">Cómo trabajamos</div><h2>Una junta que también contradice</h2></div><p>La meta no es simular consenso. Es tomar mejores decisiones con riesgos visibles.</p></header>
+    <div>
+      <div class="quote">“Tú marcas la misión. El equipo protege la calidad de la decisión.”<small>Los agentes pueden disentir y declarar NO-GO en su dominio. La decisión ejecutiva final sigue siendo humana.</small></div>
+      <div class="principles">
+        <div class="principle"><b>Equipo mínimo</b><span>Convocamos solo las voces necesarias para no crear burocracia.</span></div>
+        <div class="principle"><b>Evidencia primero</b><span>Separamos hechos, inferencias y recomendaciones.</span></div>
+        <div class="principle"><b>Disenso visible</b><span>No escondemos riesgos solo para producir una respuesta cómoda.</span></div>
+      </div>
+    </div>
+    <div class="callout"><h3>Ejemplo de convocatoria</h3><p>“Convoca a Elena, Valentina, Irene y Sofía para revisar esta función antes del APK. Quiero ver sus desacuerdos y un veredicto GO / NO-GO.”</p></div>
+    <div class="folio">06 · Clean4Jesus</div>
+  </section>
+</body>
+</html>

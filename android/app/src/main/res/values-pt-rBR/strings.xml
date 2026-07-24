@@ -1,0 +1,4 @@
+<resources>
+  <string name="accessibility_service_description">O Clean4Jesus detecta momentos vulneráveis em navegadores e mostra uma interrupção de proteção.</string>
+  <string name="accessibility_service_summary">Interrupção cristã para aplicativos e buscas bloqueadas.</string>
+</resources>

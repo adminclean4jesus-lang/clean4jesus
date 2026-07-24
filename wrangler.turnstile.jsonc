@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "clean4jesus-auth-challenge",
+  "compatibility_date": "2026-07-16",
+  "assets": {
+    "directory": "./web"
+  },
+  "routes": [
+    {
+      "pattern": "verify.clean4jesus.com",
+      "custom_domain": true
+    }
+  ]
+}

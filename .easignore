@@ -1,0 +1,11 @@
+node_modules
+dist
+.expo
+.git
+.idea
+*.log
+tmp
+temp
+android/.gradle
+android/**/build
+android/**/.cxx

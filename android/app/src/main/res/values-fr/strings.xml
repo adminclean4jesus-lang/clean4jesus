@@ -1,0 +1,4 @@
+<resources>
+  <string name="accessibility_service_description">Clean4Jesus détecte les moments vulnérables dans les navigateurs et affiche une interruption de protection.</string>
+  <string name="accessibility_service_summary">Interruption chrétienne pour les applications et recherches bloquées.</string>
+</resources>

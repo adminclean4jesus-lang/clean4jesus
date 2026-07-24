@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://legal.clean4jesus.com/sitemap.xml

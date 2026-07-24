@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "clean4jesus-moderation",
+  "compatibility_date": "2026-07-16",
+  "assets": {
+    "directory": "./moderation-console/dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    {
+      "pattern": "moderation.clean4jesus.com",
+      "custom_domain": true
+    }
+  ]
+}

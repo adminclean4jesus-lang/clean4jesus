@@ -1,0 +1,30 @@
+{
+  "smtp": {
+    "configured": true,
+    "confirmationTested": true,
+    "recoveryTested": true,
+    "passwordChangedTested": true,
+    "logoHosted": true,
+    "testedAt": "2026-07-16"
+  },
+  "captcha": {
+    "provider": "turnstile",
+    "clientIntegrated": true,
+    "challengeHosted": true,
+    "serverEnabled": true,
+    "serverEnabledAt": "2026-07-18"
+  },
+  "moderation": {
+    "backendDeployed": true,
+    "consoleBuilt": true,
+    "firstAdminAssigned": true,
+    "mfaEnforced": true,
+    "consoleDeployed": true
+  },
+  "versionGate": {
+    "clientIntegrated": true,
+    "remoteApplied": true,
+    "androidMinimumSupported": "1.3.6",
+    "lastAppliedAt": "2026-07-17"
+  }
+}

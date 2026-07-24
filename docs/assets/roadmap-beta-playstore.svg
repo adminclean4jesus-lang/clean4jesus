@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <style>
+      .bg { fill: #F7F8FC; }
+      .navy { fill: #071F52; }
+      .green { fill: #16845B; }
+      .gold { fill: #E6A61A; }
+      .rose { fill: #B54762; }
+      .card { fill: #FFFFFF; stroke: #DDE1EA; stroke-width: 2; }
+      .title { font: 800 42px Arial, sans-serif; fill: #111827; }
+      .subtitle { font: 400 22px Arial, sans-serif; fill: #5E6673; }
+      .h2 { font: 800 25px Arial, sans-serif; fill: #111827; }
+      .body { font: 400 19px Arial, sans-serif; fill: #5E6673; }
+      .white { font: 800 18px Arial, sans-serif; fill: #FFFFFF; }
+      .small { font: 700 16px Arial, sans-serif; fill: #5E6673; }
+      .phase { font: 800 19px Arial, sans-serif; fill: #071F52; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1000" />
+
+  <text x="90" y="85" class="title">Clean4Jesus - Camino completo hacia Play Store</text>
+  <text x="90" y="125" class="subtitle">Estado 16 Jul 2026 | Version interna 1.3.6 | Estimacion: 8-12 semanas</text>
+
+  <g transform="translate(90 170)">
+    <rect class="card" width="440" height="220" rx="24" />
+    <rect class="green" x="24" y="24" width="126" height="36" rx="18" />
+    <text x="46" y="49" class="white">APROBADO</text>
+    <text x="24" y="102" class="h2">Base protegida</text>
+    <text x="24" y="140" class="body">Refugio + Palabra + Comunidad</text>
+    <text x="24" y="174" class="body">Auth + SMTP + moderacion base</text>
+    <text x="24" y="208" class="small">No reabrir sin una tarea explicita</text>
+  </g>
+
+  <g transform="translate(580 170)">
+    <rect class="card" width="440" height="220" rx="24" />
+    <rect class="gold" x="24" y="24" width="154" height="36" rx="18" />
+    <text x="45" y="49" class="white">AHORA</text>
+    <text x="24" y="102" class="h2">Core pre-beta</text>
+    <text x="24" y="140" class="body">PIN temporal + guardian</text>
+    <text x="24" y="174" class="body">Pantalla personal + alertas</text>
+    <text x="24" y="208" class="small">Primera puerta GO / NO-GO</text>
+  </g>
+
+  <g transform="translate(1070 170)">
+    <rect class="card" width="440" height="220" rx="24" />
+    <rect class="rose" x="24" y="24" width="154" height="36" rx="18" />
+    <text x="45" y="49" class="white">BLOQUEA</text>
+    <text x="24" y="102" class="h2">Salida publica</text>
+    <text x="24" y="140" class="body">Legal + permisos Play</text>
+    <text x="24" y="174" class="body">QA multi-device + AAB</text>
+    <text x="24" y="208" class="small">Sin esto no hay produccion</text>
+  </g>
+
+  <text x="90" y="455" class="h2">Secuencia de trabajo</text>
+
+  <line x1="165" y1="535" x2="1435" y2="535" stroke="#C9CFDA" stroke-width="8" stroke-linecap="round" />
+
+  <g transform="translate(120 495)">
+    <circle class="gold" cx="45" cy="40" r="40" />
+    <text x="40" y="47" class="white">1</text>
+    <text x="0" y="105" class="phase">Proteccion</text>
+    <text x="0" y="135" class="small">1-2 semanas</text>
+  </g>
+
+  <g transform="translate(315 495)">
+    <circle class="navy" cx="45" cy="40" r="40" />
+    <text x="40" y="47" class="white">2</text>
+    <text x="0" y="105" class="phase">Seguridad</text>
+    <text x="0" y="135" class="small">1 semana</text>
+  </g>
+
+  <g transform="translate(510 495)">
+    <circle class="navy" cx="45" cy="40" r="40" />
+    <text x="40" y="47" class="white">3</text>
+    <text x="0" y="105" class="phase">Legal / Play</text>
+    <text x="0" y="135" class="small">1-2 semanas</text>
+  </g>
+
+  <g transform="translate(705 495)">
+    <circle class="navy" cx="45" cy="40" r="40" />
+    <text x="40" y="47" class="white">4</text>
+    <text x="0" y="105" class="phase">ES / EN / FR</text>
+    <text x="0" y="135" class="small">1-2 semanas</text>
+  </g>
+
+  <g transform="translate(900 495)">
+    <circle class="navy" cx="45" cy="40" r="40" />
+    <text x="40" y="47" class="white">5</text>
+    <text x="0" y="105" class="phase">Producto</text>
+    <text x="0" y="135" class="small">1 semana</text>
+  </g>
+
+  <g transform="translate(1095 495)">
+    <circle class="navy" cx="45" cy="40" r="40" />
+    <text x="40" y="47" class="white">6</text>
+    <text x="0" y="105" class="phase">QA / Release</text>
+    <text x="0" y="135" class="small">1 semana</text>
+  </g>
+
+  <g transform="translate(1290 495)">
+    <circle class="green" cx="45" cy="40" r="40" />
+    <text x="40" y="47" class="white">7</text>
+    <text x="0" y="105" class="phase">Beta / Store</text>
+    <text x="0" y="135" class="small">3-4 semanas</text>
+  </g>
+
+  <g transform="translate(90 700)">
+    <rect class="card" width="1420" height="220" rx="24" />
+    <text x="32" y="54" class="h2">Corte de alcance para la primera beta</text>
+    <text x="32" y="96" class="body">Debe entrar: guardian, PIN temporal, Turnstile, version gate, legal, ES/EN/FR, QA y release firmado.</text>
+    <text x="32" y="134" class="body">Puede esperar: iOS, Biblia completa, IA generativa, monetizacion, passkeys y login social.</text>
+    <rect class="navy" x="32" y="160" width="1356" height="40" rx="20" />
+    <text x="58" y="187" class="white">Siguiente tarea: reparar y probar el desbloqueo temporal de 15 minutos sin tocar los checkpoints aprobados.</text>
+  </g>
+</svg>

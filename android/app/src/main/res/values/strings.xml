@@ -1,0 +1,8 @@
+<resources>
+  <string name="app_name">Clean4Jesus</string>
+  <string name="accessibility_service_description">Clean4Jesus detecta momentos vulnerables en navegadores y muestra una interrupción de protección.</string>
+  <string name="accessibility_service_summary">Interrupción cristiana para apps y búsquedas bloqueadas.</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="expo_system_ui_user_interface_style" translatable="false">light</string>
+</resources>
