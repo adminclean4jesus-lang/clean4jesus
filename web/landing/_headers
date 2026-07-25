@@ -1,5 +1,6 @@
-/*
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
-  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'self' mailto:; frame-ancestors 'none'
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/brand-mark.png
+  Cache-Control: public, max-age=31536000, immutable
+/landing-hero-product.png
+  Cache-Control: public, max-age=31536000, immutable
