@@ -651,3 +651,10 @@ La primera tarea concreta de la siguiente iteracion es **PIN de interrupcion fun
 - Se confirmo el backup remoto oficial del proyecto en GitHub privado, con `main` sincronizada y una regla permanente de commits fechados por cambio relevante.
 - Se limpiaron temporales de validacion sin tocar codigo, documentos, checkpoints ni APKs vigentes.
 - Proximo gran frente: Clean4Jesus para iOS de extremo a extremo, precedido por una auditoria de arquitectura y capacidades nativas para definir la paridad real con Android.
+
+## Inicio De Migracion iOS - 25 De Julio De 2026
+
+- Valentina Cruz, Samuel Ortega y Mateo Vidal aprobaron una migracion por capacidades: Android conserva su motor nativo; iOS no simula Accesibilidad, cierre de apps ni estado de proteccion.
+- Se creo la frontera multiplataforma, la ruta honesta de preparacion iOS, perfiles EAS para simulador/preview/produccion y contratos de prueba para impedir que iOS marque el Refugio como activo sin evidencia nativa.
+- QA de base aprobado: TypeScript, 150 pruebas unitarias, configuracion Expo iOS y exportacion del bundle iOS. No se genero release: faltan Apple Developer Program, entitlement Family Controls, extensiones Swift, iPhone fisico y TestFlight.
+- Siguiente hito: activar firma Apple y solicitar Family Controls; despues implementar Device Activity, Managed Settings, Shield Configuration y Shield Action con pruebas en dispositivo real.

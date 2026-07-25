@@ -1,5 +1,11 @@
 # Clean4Jesus Version History
 
+## Fundacion iOS - 2026-07-25
+
+- Se agrega una frontera de plataforma para que iOS no reutilice ni simule el Refugio Android.
+- El arranque iOS muestra una ruta honesta de preparacion mientras Palabra, Comunidad, Perfil, idiomas y ajustes compartidos continúan disponibles.
+- Se agregan perfiles EAS iOS y validaciones de compilacion/exportacion. La proteccion nativa iOS queda pendiente de Apple Developer, Family Controls y extensiones Swift; no corresponde a una version publicable todavia.
+
 ## Correo Operativo - 2026-07-23
 
 - Cloudflare Email Routing configurado para `soporte@clean4jesus.com`, `privacidad@clean4jesus.com` y `seguridad@clean4jesus.com`.

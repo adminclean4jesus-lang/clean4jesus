@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, AppState, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { InfoCard } from "@/components/InfoCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -17,6 +17,14 @@ import { getSecondaryText } from "@/features/i18n/secondaryText";
 import { fonts, ThemeColors } from "@/theme";
 
 export default function GateScreen() {
+  if (Platform.OS === "ios") {
+    return <Redirect href="/ios-protection" />;
+  }
+
+  return <AndroidGateScreen />;
+}
+
+function AndroidGateScreen() {
   const router = useRouter();
   const { colors } = useAppAppearance();
   const { language } = useI18n();

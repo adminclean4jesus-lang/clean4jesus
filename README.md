@@ -58,6 +58,7 @@ Las migraciones aplicadas son inmutables. Todo cambio de esquema o contenido rem
 - Expo Notifications
 - Supabase Auth, Postgres, RLS, RPCs y Edge Functions
 - Kotlin para integraciones Android nativas
+- Base de arquitectura iOS: Expo Router compartido, perfiles EAS de iOS y frontera de protección preparada para Family Controls, Managed Settings y Device Activity
 - Playwright y Vitest para QA
 
 ## Estructura
@@ -121,6 +122,17 @@ npm run build:android:preview
 
 No generar un build por cada ajuste pequeno. Antes de una APK se exige QA, red team, preview movil y recorrido funcional. Mantener como maximo dos APKs locales: `current` y `previous`.
 
+### Preparación iOS
+
+```bash
+npm run prebuild:ios
+npm run build:ios:simulator
+npm run build:ios:preview
+npm run build:ios:production
+```
+
+La interfaz compartida ya puede compilarse para iOS. La protección nativa de iPhone no se declara activa hasta contar con Apple Developer Program, entitlements aprobados de Family Controls/Network Extension, extensiones nativas y validación física en iPhone. Consulta [docs/IOS-MIGRATION-PLAN.md](./docs/IOS-MIGRATION-PLAN.md).
+
 ### QA Y Seguridad
 
 ```bash
@@ -162,6 +174,8 @@ No subir `.env`, claves, credenciales, APKs, AABs, caches ni artefactos temporal
 - [Pipeline de contenido editorial](./docs/DEVOTIONAL-CONTENT-PIPELINE.md)
 - [Arquitectura de contenido de Palabra](./docs/PALABRA-CONTENT-ARCHITECTURE.md)
 - [Bloqueo Android nativo](./docs/ANDROID-BLOQUEO-NATIVO.md)
+- [Arquitectura de protección iOS](./docs/ADR-006-IOS-PROTECTION-ARCHITECTURE.md)
+- [Plan de migración iOS](./docs/IOS-MIGRATION-PLAN.md)
 - [QA en celular](./docs/TESTING-CELULAR.md)
 - [Auditoria del proyecto](./docs/AUDITORIA-PROYECTO-2026-07-13.md)
 - [Operaciones de version gate](./docs/VERSION-GATE-OPERATIONS.md)

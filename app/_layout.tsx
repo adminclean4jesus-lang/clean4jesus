@@ -138,6 +138,7 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="ios-protection" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
           <Stack.Screen name="callback" options={{ headerShown: false }} />

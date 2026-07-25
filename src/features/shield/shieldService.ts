@@ -1,3 +1,4 @@
+import { getRuntimePlatform } from "@/features/platform/runtimePlatform";
 import { getJson, setJson, storageKeys } from "../../services/storage";
 
 export type DnsProvider = "cloudflare-family" | "cleanbrowsing" | "nextdns";
@@ -61,6 +62,10 @@ export function isShieldReady(state: ShieldState): boolean {
 }
 
 export async function getShieldState(): Promise<ShieldState> {
+  if (getRuntimePlatform() === "ios") {
+    return unsupportedIosState();
+  }
+
   const storedState = await getJson<ShieldState | null>(storageKeys.shieldState, null);
 
   if (storedState) {
@@ -85,6 +90,10 @@ export async function getShieldEnabled(): Promise<boolean> {
 }
 
 export async function prepareShield(provider: DnsProvider = defaultProvider): Promise<ShieldState> {
+  if (getRuntimePlatform() === "ios") {
+    return unsupportedIosState();
+  }
+
   const selectedProvider = dnsProviders[provider];
   const next: ShieldState = {
     activatedAt: null,
@@ -104,6 +113,10 @@ export async function prepareShield(provider: DnsProvider = defaultProvider): Pr
 }
 
 export async function enableShield(provider: DnsProvider = defaultProvider): Promise<ShieldState> {
+  if (getRuntimePlatform() === "ios") {
+    return unsupportedIosState();
+  }
+
   const selectedProvider = dnsProviders[provider];
   const next: ShieldState = {
     activatedAt: new Date().toISOString(),
@@ -123,6 +136,10 @@ export async function enableShield(provider: DnsProvider = defaultProvider): Pro
 }
 
 export async function disableShield(): Promise<ShieldState> {
+  if (getRuntimePlatform() === "ios") {
+    return unsupportedIosState();
+  }
+
   const current = await getShieldState();
   const next: ShieldState = {
     ...current,
@@ -136,4 +153,11 @@ export async function disableShield(): Promise<ShieldState> {
   await setJson(storageKeys.shieldState, next);
   await setJson(storageKeys.shieldEnabled, false);
   return next;
+}
+
+function unsupportedIosState(): ShieldState {
+  return {
+    ...defaultShieldState,
+    statusMessage: "La protección nativa de iPhone todavía no está configurada en este dispositivo.",
+  };
 }
