@@ -659,6 +659,13 @@ La primera tarea concreta de la siguiente iteracion es **PIN de interrupcion fun
 - QA de base aprobado: TypeScript, 150 pruebas unitarias, configuracion Expo iOS y exportacion del bundle iOS. No se genero release: faltan Apple Developer Program, entitlement Family Controls, extensiones Swift, iPhone fisico y TestFlight.
 - Siguiente hito: activar firma Apple y solicitar Family Controls; despues implementar Device Activity, Managed Settings, Shield Configuration y Shield Action con pruebas en dispositivo real.
 
+## Landing Oficial Y Growth Responsable - 25 De Julio De 2026
+
+- Se preparo la landing estatica oficial para `clean4jesus.com`, independiente de los modulos moviles aprobados y lista para despliegue manual en Cloudflare.
+- El mensaje publico se apoya en Refugio, Palabra y Comunidad, con accesibilidad, version movil y movimiento reducido respetado.
+- Las estadisticas publicas usan fuentes regulatorias y revision academica; el copy separa asociacion de causalidad y no promete cura, diagnostico ni bloqueo perfecto.
+- El QR de descarga queda bloqueado de forma intencional hasta tener URLs reales de beta o tiendas; el CTA actual permite solicitar acceso beta mediante el correo publico.
+
 ## Preparacion iOS Sin Membresia - 25 De Julio De 2026
 
 - Se agrego un manifiesto de readiness y una comprobacion automatica: `npm run test:ios:readiness` separa la base tecnica ya lista de los requisitos que solo puede activar el titular de Apple Developer.

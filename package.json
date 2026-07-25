@@ -96,7 +96,9 @@
     "admin:dev": "npm --prefix moderation-console run dev",
     "admin:build": "node scripts/build-moderation-console.mjs",
     "legal:build": "node scripts/build-legal-site.mjs",
-    "legal:deploy": "npm run legal:build && npx wrangler deploy --config wrangler.legal.jsonc"
+    "legal:deploy": "npm run legal:build && npx wrangler deploy --config wrangler.legal.jsonc",
+    "landing:build": "node scripts/build-landing-site.mjs",
+    "landing:deploy": "npm run landing:build && npx wrangler deploy --config wrangler.landing.jsonc"
   },
   "private": true
 }

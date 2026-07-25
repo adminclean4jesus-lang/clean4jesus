@@ -70,7 +70,7 @@ clean4jesus/
   android/                # servicio VPN, Accesibilidad e interrupcion nativa
   supabase/               # migraciones, funciones y contratos de datos
   moderation-console/     # consola interna de trust and safety
-  web/                    # superficies web legales y soporte
+  web/                    # superficies web legales, soporte y landing publica
   scripts/                # validaciones, semillas y operaciones
   tests/                  # unitarias, e2e y contratos
   docs/                   # directivas, roadmap, legal y arquitectura
@@ -121,6 +121,15 @@ npm run build:android:preview
 ```
 
 No generar un build por cada ajuste pequeno. Antes de una APK se exige QA, red team, preview movil y recorrido funcional. Mantener como maximo dos APKs locales: `current` y `previous`.
+
+### Landing publica
+
+```bash
+npm run landing:build
+npm run landing:deploy
+```
+
+La landing oficial se construye como sitio estatico para `clean4jesus.com`. El comando de despliegue solo se ejecuta con aprobacion explicita del CEO. Consulta [el plan de landing](./docs/LANDING-SITE-PLAN.md) para las fuentes, el criterio de evidencia y la regla de QR.
 
 ### Preparación iOS
 
