@@ -43,7 +43,9 @@ export function PersistentTabBar() {
 
           return (
             <Pressable
-              accessibilityRole="button"
+              accessibilityLabel={uiText(language, item.key === "refugio" ? "tabs.refuge" : item.key === "palabra" ? "tabs.word" : item.key === "comunidad" ? "tabs.community" : "tabs.profile")}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
               key={item.key}
               onPress={() => {
                 if (!active) {

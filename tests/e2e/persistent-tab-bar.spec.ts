@@ -16,6 +16,7 @@ test("la navegacion persistente conserva cuatro destinos legibles", async ({ pag
   test.setTimeout(120_000);
 
   await page.addInitScript((shieldState) => {
+    localStorage.setItem("clean4jesus.languagePreference", JSON.stringify("es"));
     localStorage.setItem("clean4jesus.shield.enabled", "true");
     localStorage.setItem("clean4jesus.shield.state", shieldState);
   }, enabledShieldState);
@@ -23,12 +24,28 @@ test("la navegacion persistente conserva cuatro destinos legibles", async ({ pag
   await page.goto("/devotional", { waitUntil: "networkidle", timeout: 120_000 });
 
   const footer = page.getByTestId("persistent-tab-bar");
-  await expect(footer).toBeVisible();
+  await expect(footer).toBeVisible({ timeout: 120_000 });
   await expect(footer).toContainText("Refugio");
   await expect(footer).toContainText("Palabra");
   await expect(footer).toContainText("Comunidad");
   await expect(footer).toContainText("Mi perfil");
   await expect(page.getByTestId("devotional-open-plans")).toBeVisible();
+  const todayMode = page.getByTestId("devotional-mode-today");
+  const plansMode = page.getByTestId("devotional-mode-plans");
+  const tabBackgrounds = await Promise.all(
+    ["refugio", "palabra", "comunidad", "ajustes"].map((key) =>
+      page.getByTestId(`persistent-tab-${key}`).evaluate((element) => getComputedStyle(element).backgroundColor),
+    ),
+  );
+  expect(tabBackgrounds.filter((color) => color !== "rgba(0, 0, 0, 0)")).toHaveLength(1);
+  expect(tabBackgrounds[1]).not.toBe("rgba(0, 0, 0, 0)");
+
+  const todayBackground = await todayMode.evaluate((element) => getComputedStyle(element).backgroundColor);
+  const plansBackground = await plansMode.evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(todayBackground).not.toBe(plansBackground);
+  await plansMode.click();
+  await expect.poll(() => plansMode.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(todayBackground);
+  await expect.poll(() => todayMode.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(plansBackground);
 
   const footerBox = await footer.boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
@@ -63,6 +80,7 @@ test("el footer y los planes hacen fit en anchos Android comunes", async ({ page
   test.setTimeout(120_000);
 
   await page.addInitScript((shieldState) => {
+    localStorage.setItem("clean4jesus.languagePreference", JSON.stringify("es"));
     localStorage.setItem("clean4jesus.shield.enabled", "true");
     localStorage.setItem("clean4jesus.shield.state", shieldState);
   }, enabledShieldState);

@@ -399,7 +399,13 @@ function StreakBadge({ days }: { days: number }) {
 function ModeChip({ active, label, onPress, testID }: { active: boolean; label: string; onPress: () => void; testID: string }) {
   const styles = useDevotionalStyles();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.modeChip, active && styles.modeChipActive, pressed && styles.modeChipPressed]} testID={testID}>
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={({ pressed }) => [styles.modeChip, active && styles.modeChipActive, pressed && styles.modeChipPressed]}
+      testID={testID}
+    >
       <Text style={[styles.modeChipText, active && styles.modeChipTextActive]}>{label}</Text>
     </Pressable>
   );
@@ -538,21 +544,26 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
     textTransform: "lowercase",
   },
   modeSwitch: {
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.border,
+    borderRadius: 14,
+    borderWidth: 1,
     flexDirection: "row",
-    gap: 8,
+    gap: 4,
+    padding: 4,
   },
   contentStack: {
     gap: 24,
   },
   modeChip: {
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    minHeight: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
   modeChipActive: {
     backgroundColor: colors.primaryDark,
@@ -565,9 +576,11 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
     color: colors.primaryDark,
     fontFamily: fonts.bodyMedium,
     fontSize: 12.5,
+    textAlign: "center",
   },
   modeChipTextActive: {
-    color: colors.surface,
+    color: "#FFFFFF",
+    fontFamily: fonts.label,
   },
   heroShell: {
     borderRadius: 28,

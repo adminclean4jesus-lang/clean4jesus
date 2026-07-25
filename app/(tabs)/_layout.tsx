@@ -32,6 +32,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      tabBar={() => null}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primaryDark,
@@ -39,9 +40,6 @@ export default function TabsLayout() {
         tabBarIconStyle: { marginBottom: 1 },
         tabBarItemStyle: { minWidth: 0 },
         tabBarLabelStyle: { fontFamily: fonts.label, fontSize: 9 },
-        tabBarStyle: {
-          display: "none",
-        },
       }}
     >
       <Tabs.Screen

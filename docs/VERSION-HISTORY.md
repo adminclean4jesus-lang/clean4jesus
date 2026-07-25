@@ -1,5 +1,13 @@
 # Clean4Jesus Version History
 
+## Candidata De Navegacion Y Landing - 2026-07-25
+
+- Palabra recupera el selector segmentado `Hoy / Planes`, con estado activo visible y areas tactiles estables.
+- La barra inferior elimina la navegacion interna duplicada de Expo Router y conserva un unico destino activo.
+- QA aprobo TypeScript, el layout publico en escritorio y Pixel, y el footer movil en anchos Android de 320, 360, 393 y 412 px.
+- La landing oficial se publico en `clean4jesus.com` con mockups reales en proporcion nativa, sin estirar ni recortar las capturas.
+- Se genero una nueva APK local `current`; queda pendiente la aprobacion de producto en Pixel antes de declararla checkpoint.
+
 ## Fundacion iOS - 2026-07-25
 
 - Se agrega una frontera de plataforma para que iOS no reutilice ni simule el Refugio Android.
