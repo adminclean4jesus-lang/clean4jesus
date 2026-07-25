@@ -56,6 +56,7 @@ Este documento es memoria operativa del proyecto. Antes de modificar la app, lee
 
 - Checkpoint Landing oficial corregido - 2026-07-25: la paleta pública usa azul marino, blanco y dorado; el verde lima queda rechazado porque no pertenece a la identidad aprobada de Clean4Jesus.
 - La landing solo puede mostrar capturas reales de la aplicación. Queda prohibido inventar dashboards, estados, prácticas o funciones dentro de mockups. El teléfono puede construirse como marco de presentación, pero su pantalla debe ser una captura verificable y no puede quedar recortada.
+- Checkpoint Hero de landing - 2026-07-25: la promesa principal debe expresar con claridad libertad frente a la pornografía, sin prometer curación clínica. Los marcos de teléfono deben conservar la captura completa, usar proporciones visualmente realistas y no llevar rótulos superpuestos sobre el producto.
 - La misión debe quedar respaldada temprano por cifras con población, contexto, fuente y enlace. No presentar asociaciones neurocientíficas como causalidad, diagnóstico o una división falsa entre “cerebro limpio” y “cerebro contaminado”.
 - Palabra se comunica como devocional diario más un catálogo escalable de planes de distinta duración y futuros autores con revisión humana, teológica y editorial; nunca como un único ritmo fijo de siete días.
 - Todo rediseño público requiere QA real en escritorio y móvil, control de desbordamiento, carga de imágenes, enlaces válidos y revisión visual antes del despliegue.
