@@ -11,7 +11,9 @@ await mkdir(path.join(output, "fonts"), { recursive: true });
 
 await Promise.all([
   copyFile(path.join(assets, "icon.png"), path.join(output, "brand-mark.png")),
-  copyFile(path.join(assets, "landing-hero-product.png"), path.join(output, "landing-hero-product.png")),
+  copyFile(path.join(assets, "landing-app-refugio.png"), path.join(output, "app-refugio.png")),
+  copyFile(path.join(assets, "landing-app-palabra.png"), path.join(output, "app-palabra.png")),
+  copyFile(path.join(assets, "landing-app-community.png"), path.join(output, "app-community.png")),
   copyFile(path.join(fonts, "lexend-deca", "400Regular", "LexendDeca_400Regular.ttf"), path.join(output, "fonts", "lexend-regular.ttf")),
   copyFile(path.join(fonts, "lexend-deca", "700Bold", "LexendDeca_700Bold.ttf"), path.join(output, "fonts", "lexend-bold.ttf")),
 ]);
@@ -19,7 +21,7 @@ await Promise.all([
 await writeFile(path.join(output, "index.html"), page(), "utf8");
 await writeFile(path.join(output, "robots.txt"), "User-agent: *\nAllow: /\nSitemap: https://clean4jesus.com/sitemap.xml\n", "utf8");
 await writeFile(path.join(output, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://clean4jesus.com/</loc></url></urlset>`, "utf8");
-await writeFile(path.join(output, "_headers"), "/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/brand-mark.png\n  Cache-Control: public, max-age=31536000, immutable\n/landing-hero-product.png\n  Cache-Control: public, max-age=31536000, immutable\n", "utf8");
+await writeFile(path.join(output, "_headers"), "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n/*.png\n  Cache-Control: public, max-age=31536000, immutable\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n", "utf8");
 
 function page() {
   return `<!doctype html>
@@ -27,31 +29,167 @@ function page() {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Clean4Jesus: protección digital, Palabra y comunidad para volver a caminar con intención.">
-  <meta name="theme-color" content="#09183d">
-  <meta property="og:title" content="Clean4Jesus | Vuelve a caminar con intención">
-  <meta property="og:description" content="Una herramienta de protección digital, Palabra y comunidad cristiana.">
-  <meta property="og:image" content="https://clean4jesus.com/landing-hero-product.png">
-  <title>Clean4Jesus | Protección que te devuelve a lo importante</title>
+  <meta name="description" content="Clean4Jesus reúne protección digital, devocionales cristocéntricos y una comunidad moderada para ayudarte a recuperar claridad.">
+  <meta name="theme-color" content="#ffffff">
+  <meta property="og:title" content="Clean4Jesus | Protección digital con propósito">
+  <meta property="og:description" content="Protección local, Palabra y comunidad para volver a elegir con libertad.">
+  <meta property="og:image" content="https://clean4jesus.com/app-refugio.png">
+  <title>Clean4Jesus | Protección digital con propósito</title>
   <style>
-    @font-face{font-family:Lexend;src:url('/fonts/lexend-regular.ttf')}@font-face{font-family:Lexend;src:url('/fonts/lexend-bold.ttf');font-weight:700}
-    :root{--navy:#09183d;--navy-2:#122a61;--ink:#142035;--muted:#617084;--paper:#f6f7fa;--white:#fff;--line:#d9e0e8;--lime:#c8f15a;--sun:#f2ba45;--blue:#4a79d4;--rose:#bf657b;--max:1180px}*{box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--paper);color:var(--ink);font:16px/1.62 Lexend,Arial,sans-serif;margin:0}a{color:inherit}button,a{font:inherit}.shell{margin:auto;max-width:var(--max);padding-left:28px;padding-right:28px}.skip{background:var(--lime);color:var(--navy);left:-999px;padding:10px 16px;position:absolute;top:8px;z-index:10}.skip:focus{left:8px}.eyebrow{color:var(--blue);font:700 12px/1 Lexend,sans-serif;letter-spacing:.12em;text-transform:uppercase}.site-nav{align-items:center;display:flex;height:80px;justify-content:space-between;position:relative;z-index:2}.brand{align-items:center;color:var(--white);display:inline-flex;font:700 22px Lexend,sans-serif;gap:10px;text-decoration:none}.brand img{border-radius:12px;height:36px;width:36px}.brand .four{color:var(--lime)}.nav-links{align-items:center;color:#dce5fb;display:flex;font-size:13px;gap:25px}.nav-links a{text-decoration:none}.nav-links a:hover{text-decoration:underline}.nav-cta,.button{align-items:center;background:var(--lime);border:0;border-radius:999px;color:var(--navy);display:inline-flex;font:700 14px Lexend,sans-serif;gap:9px;justify-content:center;min-height:50px;padding:0 22px;text-decoration:none;transition:transform .2s ease,background .2s ease}.nav-cta:hover,.button:hover{background:#d8fb7b;transform:translateY(-2px)}.nav-cta:focus-visible,.button:focus-visible,.source-list a:focus-visible{outline:3px solid var(--sun);outline-offset:4px}.hero{background:var(--navy);color:var(--white);overflow:hidden}.hero-grid{align-items:center;display:grid;grid-template-columns:.9fr 1.1fr;min-height:665px;padding-bottom:54px;padding-top:28px}.hero-copy{padding:54px 0 62px;position:relative;z-index:1}.hero-copy .eyebrow{color:var(--lime)}h1,h2,h3,p{margin-top:0}h1{font:700 clamp(45px,6vw,78px)/.99 Lexend,sans-serif;letter-spacing:-.055em;margin-bottom:26px;max-width:720px}.hero-copy p{color:#c9d4ec;font-size:18px;max-width:520px}.hero-actions{align-items:center;display:flex;flex-wrap:wrap;gap:18px;margin-top:34px}.hero-link{color:#e8efff;font:700 14px Lexend,sans-serif;text-decoration:none}.hero-link:hover{text-decoration:underline}.hero-meta{border-left:1px solid rgba(255,255,255,.25);color:#c9d4ec;font-size:13px;margin-top:48px;max-width:490px;padding-left:16px}.hero-visual{align-self:stretch;margin:0;min-height:485px;position:relative}.hero-visual img{height:100%;left:0;object-fit:cover;position:absolute;top:0;width:100%}.hero-visual:after{border:1px solid rgba(200,241,90,.9);bottom:38px;content:'';height:58px;position:absolute;right:22px;width:58px}.trust-strip{background:var(--lime);color:var(--navy)}.trust-row{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;min-height:95px}.trust-row>*{align-items:center;border-right:1px solid rgba(9,24,61,.25);display:flex;font:700 13px Lexend,sans-serif;padding:18px 22px}.trust-row>*:first-child{font-size:15px;padding-left:0}.trust-row>*:last-child{border:0}.section{padding-bottom:120px;padding-top:120px}.intro-grid{display:grid;gap:68px;grid-template-columns:.78fr 1.22fr}.intro-grid h2,.section-title h2,.evidence-copy h2,.closing h2{font:700 clamp(37px,4.6vw,62px)/1.05 Lexend,sans-serif;letter-spacing:-.045em;margin:14px 0 0}.intro-copy{font-size:18px;max-width:675px;padding-top:45px}.intro-copy p{color:var(--muted);margin-bottom:23px}.principles{border-top:1px solid var(--line);margin-top:40px}.principle{align-items:start;border-bottom:1px solid var(--line);display:grid;gap:22px;grid-template-columns:80px 1fr auto;padding:30px 0}.principle-number{color:var(--blue);font:700 13px Lexend,sans-serif;padding-top:4px}.principle h3{font:700 29px/1.18 Lexend,sans-serif;letter-spacing:-.03em;margin:0}.principle p{color:var(--muted);font-size:15px;margin:8px 0 0;max-width:600px}.principle-mark{border:1px solid var(--line);border-radius:50%;color:var(--blue);font:700 20px/42px Lexend,sans-serif;height:44px;text-align:center;width:44px}.dark-section{background:#0d1e49;color:var(--white)}.system-grid{display:grid;gap:62px;grid-template-columns:.9fr 1.1fr}.system-grid h2{font:700 clamp(38px,4.4vw,58px)/1.06 Lexend,sans-serif;letter-spacing:-.045em;margin:13px 0 0}.system-copy{color:#c6d2ed;max-width:460px}.system-list{border-top:1px solid rgba(255,255,255,.22)}.system-item{border-bottom:1px solid rgba(255,255,255,.22);display:grid;gap:22px;grid-template-columns:75px 1fr;padding:29px 0}.system-item span{color:var(--lime);font:700 13px Lexend,sans-serif}.system-item h3{font:700 26px/1.18 Lexend,sans-serif;letter-spacing:-.025em;margin:0}.system-item p{color:#c6d2ed;font-size:15px;margin:8px 0 0;max-width:570px}.evidence{background:#eef2fa}.evidence-grid{display:grid;gap:70px;grid-template-columns:.86fr 1.14fr}.evidence-copy p{color:var(--muted);max-width:460px}.evidence-cards{border-top:1px solid #bfcbdd}.evidence-card{border-bottom:1px solid #bfcbdd;padding:29px 0}.evidence-card strong{color:var(--blue);display:block;font:700 12px Lexend,sans-serif;letter-spacing:.1em;text-transform:uppercase}.evidence-card h3{font:700 28px/1.17 Lexend,sans-serif;letter-spacing:-.03em;margin:11px 0}.evidence-card p{color:#54657b;font-size:15px;margin:0}.evidence-card a{color:var(--navy);display:inline-block;font:700 14px Lexend,sans-serif;margin-top:13px}.statement{background:var(--sun);padding:88px 0}.statement-grid{display:grid;gap:70px;grid-template-columns:1fr 1fr}.statement blockquote{font:700 clamp(34px,4.4vw,57px)/1.08 Lexend,sans-serif;letter-spacing:-.04em;margin:0}.statement aside{border-left:1px solid rgba(9,24,61,.35);font-size:16px;padding-left:26px}.statement aside p{margin-bottom:9px}.statement aside small{font:700 12px Lexend,sans-serif;letter-spacing:.08em;text-transform:uppercase}.beta{background:var(--navy);color:var(--white);padding:110px 0}.beta-grid{align-items:end;display:grid;gap:50px;grid-template-columns:1fr auto}.beta h2{font:700 clamp(39px,5vw,66px)/1.03 Lexend,sans-serif;letter-spacing:-.05em;max-width:780px}.beta p{color:#c6d2ed;max-width:630px}.beta-note{font-size:13px}.beta .button{align-self:center;white-space:nowrap}.footer{background:#07132f;color:#b8c6e2;padding:34px 0}.footer-row{align-items:center;display:flex;gap:24px;justify-content:space-between}.footer .brand{font-size:18px}.footer-links{display:flex;flex-wrap:wrap;font-size:13px;gap:18px}.footer-links a{text-decoration:none}.footer-links a:hover{text-decoration:underline}.footer small{font-size:12px;white-space:nowrap}@media(max-width:900px){.hero-grid{grid-template-columns:1fr;min-height:auto;padding-top:0}.hero-copy{padding-bottom:35px;padding-top:34px}.hero-visual{height:470px;min-height:0}.trust-row{grid-template-columns:1fr 1fr}.trust-row>*{border-bottom:1px solid rgba(9,24,61,.25)}.trust-row>*:first-child{grid-column:span 2;padding-left:0}.intro-grid,.system-grid,.evidence-grid{gap:38px;grid-template-columns:1fr}.intro-copy{padding-top:0}.section{padding-bottom:88px;padding-top:88px}.statement-grid{gap:28px;grid-template-columns:1fr}.beta-grid{align-items:start;grid-template-columns:1fr}.beta .button{justify-self:start}}@media(max-width:640px){body{font-size:16px}.shell{padding-left:22px;padding-right:22px}.site-nav{height:68px}.nav-links{display:none}.nav-cta{min-height:42px;padding:0 15px}.brand{font-size:19px}.hero-copy{padding-top:36px}.hero-copy p{font-size:17px}.hero-visual{height:355px;margin:0 -22px}.hero-visual:after{bottom:18px;right:22px}.trust-row>*{font-size:11px;padding:16px 12px}.trust-row>*:first-child{font-size:13px}.section{padding-bottom:68px;padding-top:68px}.principle{gap:14px;grid-template-columns:46px 1fr;padding:25px 0}.principle h3{font-size:24px}.principle-mark{display:none}.system-item{gap:14px;grid-template-columns:48px 1fr}.system-item h3{font-size:23px}.statement{padding:66px 0}.beta{padding:74px 0}.footer-row{align-items:start;flex-direction:column}.footer-links{gap:12px}.footer small{white-space:normal}}
+    @font-face{font-family:Lexend;src:url('/fonts/lexend-regular.ttf');font-display:swap}
+    @font-face{font-family:Lexend;src:url('/fonts/lexend-bold.ttf');font-display:swap;font-weight:700}
+    :root{--navy:#101c5b;--navy-deep:#09133d;--blue:#2d4fac;--ink:#17211d;--muted:#68756f;--paper:#f5f7fa;--white:#fff;--line:#d9e0dc;--gold:#f2b53c;--gold-soft:#fff3d7;--red:#cf2a2d;--max:1200px}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{background:var(--paper);color:var(--ink);font:16px/1.6 Lexend,Arial,sans-serif;margin:0;overflow-x:hidden}
+    a{color:inherit}button,a{font:inherit}
+    img{display:block;max-width:100%}
+    .shell{margin:auto;max-width:var(--max);padding-left:28px;padding-right:28px}
+    .skip{background:var(--gold);color:var(--navy-deep);left:-999px;padding:10px 16px;position:absolute;top:8px;z-index:20}.skip:focus{left:8px}
+    .eyebrow{color:var(--blue);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+    .site-nav{align-items:center;display:flex;height:82px;justify-content:space-between}
+    .brand{align-items:center;color:var(--navy);display:inline-flex;font-size:21px;font-weight:700;gap:10px;text-decoration:none}
+    .brand img{border-radius:10px;height:38px;width:38px}.brand .four{color:var(--navy)}
+    .nav-links{align-items:center;color:#44505a;display:flex;font-size:13px;gap:25px}.nav-links a{text-decoration:none}.nav-links a:hover{text-decoration:underline}
+    .button{align-items:center;background:var(--navy);border:0;border-radius:999px;color:var(--white);display:inline-flex;font-size:14px;font-weight:700;gap:9px;justify-content:center;min-height:52px;padding:0 24px;text-decoration:none;transition:transform .2s ease,background .2s ease}
+    .button:hover{background:var(--blue);transform:translateY(-2px)}.button:active{transform:scale(.98)}
+    .button.gold{background:var(--gold);color:var(--navy-deep)}.button.gold:hover{background:#ffc95d}
+    .button:focus-visible,.text-link:focus-visible,.sources a:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+    .hero{background:var(--white);border-bottom:1px solid var(--line)}
+    .hero-grid{align-items:center;display:grid;gap:55px;grid-template-columns:1.03fr .97fr;min-height:680px;padding-bottom:70px;padding-top:30px}
+    .hero-copy{padding:45px 0}.hero-copy h1{color:var(--navy-deep);font-size:clamp(47px,6.1vw,82px);font-weight:700;letter-spacing:-.055em;line-height:.98;margin:18px 0 27px;max-width:690px}
+    .hero-copy>p{color:#56645f;font-size:18px;max-width:570px}.hero-actions{align-items:center;display:flex;flex-wrap:wrap;gap:20px;margin-top:34px}
+    .text-link{color:var(--navy);font-size:14px;font-weight:700;text-decoration:none}.text-link:hover{text-decoration:underline}
+    .hero-proof{border-left:3px solid var(--gold);color:#596762;font-size:13px;margin-top:45px;max-width:520px;padding:3px 0 3px 16px}
+    .product-stage{align-items:center;background:var(--navy);display:flex;justify-content:center;min-height:575px;overflow:hidden;padding:38px;position:relative}
+    .mobile-product{display:none}
+    .product-stage:before{border:1px solid rgba(255,255,255,.2);content:"";inset:24px;pointer-events:none;position:absolute}
+    .phone{background:#0b0f18;border:8px solid #0b0f18;border-radius:41px;box-shadow:0 28px 70px rgba(3,8,29,.38);height:535px;overflow:hidden;position:relative;width:289px}
+    .phone:before{background:#0b0f18;border-radius:0 0 12px 12px;content:"";height:16px;left:50%;position:absolute;top:0;transform:translateX(-50%);width:90px;z-index:2}
+    .phone img{height:100%;object-fit:cover;object-position:top;width:100%}
+    .real-label{background:var(--gold);bottom:34px;color:var(--navy-deep);font-size:11px;font-weight:700;letter-spacing:.08em;padding:9px 13px;position:absolute;right:32px;text-transform:uppercase}
+    .numbers{background:var(--navy-deep);color:var(--white);padding:78px 0}
+    .numbers-head{align-items:end;display:flex;gap:40px;justify-content:space-between;margin-bottom:46px}.numbers-head h2{font-size:clamp(34px,4.3vw,56px);letter-spacing:-.04em;line-height:1.05;margin:12px 0 0;max-width:690px}.numbers-head p{color:#c9d2ee;margin:0;max-width:360px}
+    .number-grid{border-bottom:1px solid rgba(255,255,255,.2);border-top:1px solid rgba(255,255,255,.2);display:grid;grid-template-columns:repeat(3,1fr)}
+    .stat{min-height:230px;padding:30px}.stat+ .stat{border-left:1px solid rgba(255,255,255,.2)}.stat strong{color:var(--gold);display:block;font-size:clamp(53px,6vw,78px);letter-spacing:-.06em;line-height:1}.stat h3{font-size:19px;line-height:1.25;margin:22px 0 10px}.stat p{color:#bfc9e6;font-size:13px;margin:0}.stat a{color:var(--white);display:inline-block;font-size:12px;margin-top:15px}
+    .section{padding-bottom:108px;padding-top:108px}.section-title{display:grid;gap:44px;grid-template-columns:.78fr 1.22fr;margin-bottom:55px}.section-title h2{color:var(--navy-deep);font-size:clamp(36px,4.8vw,61px);letter-spacing:-.045em;line-height:1.05;margin:13px 0 0}.section-title p{color:var(--muted);font-size:18px;margin:42px 0 0;max-width:650px}
+    .science{background:var(--white)}
+    .science-grid{display:grid;gap:0;grid-template-columns:1fr 1fr}
+    .science-panel{border:1px solid var(--line);min-height:355px;padding:38px}.science-panel+ .science-panel{border-left:0}.science-panel.observed{background:#eef2ff;border-top:5px solid var(--blue)}.science-panel.limits{background:var(--gold-soft);border-top:5px solid var(--gold)}
+    .science-panel .tag{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.science-panel h3{color:var(--navy-deep);font-size:29px;letter-spacing:-.03em;line-height:1.15;margin:17px 0}.science-panel p{color:#54615c;font-size:15px}.science-panel ul{margin:23px 0 0;padding-left:20px}.science-panel li{margin-bottom:9px}
+    .study-note{border-bottom:1px solid var(--line);color:#52605a;display:grid;font-size:13px;gap:25px;grid-template-columns:155px 1fr;padding:26px 0}.study-note strong{color:var(--navy);font-size:12px;letter-spacing:.08em;text-transform:uppercase}.study-note a{color:var(--navy);font-weight:700}
+    .product{background:#eef2f8}.screens{display:grid;gap:26px;grid-template-columns:repeat(3,1fr)}
+    .screen-card{background:var(--white);border:1px solid var(--line);overflow:hidden}.screen-frame{background:#e8edf8;height:430px;overflow:hidden;padding:24px 24px 0}.screen-frame img{border:5px solid #101724;border-bottom:0;border-radius:28px 28px 0 0;box-shadow:0 18px 35px rgba(9,19,61,.18);height:100%;margin:auto;object-fit:cover;object-position:top;width:220px}
+    .screen-copy{padding:27px}.screen-copy span{color:var(--blue);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.screen-copy h3{color:var(--navy-deep);font-size:25px;letter-spacing:-.025em;margin:8px 0 9px}.screen-copy p{color:var(--muted);font-size:14px;margin:0}
+    .palabra{background:var(--white)}.palabra-grid{align-items:center;display:grid;gap:80px;grid-template-columns:1fr 1fr}.palabra-copy h2,.privacy h2,.beta h2{color:var(--navy-deep);font-size:clamp(38px,4.8vw,61px);letter-spacing:-.045em;line-height:1.05;margin:15px 0 26px}.palabra-copy p{color:var(--muted);font-size:17px;max-width:540px}
+    .path-list{border-top:1px solid var(--line)}.path{border-bottom:1px solid var(--line);display:grid;gap:20px;grid-template-columns:54px 1fr;padding:27px 0}.path b{align-items:center;background:var(--navy);color:var(--white);display:flex;height:48px;justify-content:center;width:48px}.path h3{font-size:22px;margin:0 0 6px}.path p{font-size:14px;margin:0}
+    .privacy{background:var(--gold-soft)}.privacy-grid{display:grid;gap:70px;grid-template-columns:1fr .9fr}.privacy-points{border-left:1px solid #d6bc7d;padding-left:35px}.privacy-points p{border-bottom:1px solid #dfca98;margin:0;padding:22px 0}.privacy-points strong{color:var(--navy);display:block;margin-bottom:5px}
+    .beta{background:var(--navy);color:var(--white);padding:105px 0}.beta-grid{align-items:end;display:grid;gap:50px;grid-template-columns:1fr auto}.beta h2{color:var(--white);max-width:780px}.beta p{color:#c9d2ee;max-width:640px}.beta .button{white-space:nowrap}
+    .footer{background:var(--navy-deep);color:#c6cee5;padding:36px 0}.footer-row{align-items:center;display:flex;gap:25px;justify-content:space-between}.footer .brand{color:var(--white);font-size:18px}.footer-links{display:flex;flex-wrap:wrap;font-size:12px;gap:18px}.footer-links a{text-decoration:none}.footer-links a:hover{text-decoration:underline}.footer small{font-size:11px}
+    .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}.reveal.visible{opacity:1;transform:none}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.button{transition:none}}
+    @media(max-width:900px){.hero-grid{gap:20px;grid-template-columns:1fr}.hero-copy{padding-bottom:25px}.product-stage{min-height:545px}.numbers-head{align-items:start;flex-direction:column}.number-grid{grid-template-columns:1fr}.stat{min-height:0}.stat+ .stat{border-left:0;border-top:1px solid rgba(255,255,255,.2)}.section-title,.palabra-grid,.privacy-grid{gap:34px;grid-template-columns:1fr}.section-title p{margin-top:0}.screens{grid-template-columns:1fr}.screen-card{display:grid;grid-template-columns:.9fr 1.1fr}.science-grid{grid-template-columns:1fr}.science-panel+ .science-panel{border-left:1px solid var(--line);border-top:0}.beta-grid{align-items:start;grid-template-columns:1fr}.beta .button{justify-self:start}}
+    @media(max-width:640px){.shell{padding-left:21px;padding-right:21px}.site-nav{height:70px}.nav-links{display:none}.brand{font-size:18px}.hero-grid{min-height:auto;padding-bottom:45px;padding-top:18px}.hero-copy{padding-top:24px}.hero-copy h1{font-size:43px;margin-bottom:24px}.hero-copy>p{font-size:16px}.desktop-product{display:none}.mobile-product{display:flex;margin:0 0 28px;min-height:370px;padding:23px}.mobile-product:before{inset:13px}.mobile-product .phone{border-radius:28px;height:340px;width:184px}.mobile-product .real-label{bottom:auto;left:18px;right:auto;top:18px}.numbers{padding:61px 0}.numbers-head{margin-bottom:32px}.stat{padding:28px 0}.section{padding-bottom:72px;padding-top:72px}.section-title{margin-bottom:38px}.science-panel{min-height:0;padding:27px 23px}.study-note{grid-template-columns:1fr;gap:7px}.screen-card{display:block}.screen-frame{height:395px}.palabra-grid{gap:45px}.privacy-points{padding-left:21px}.beta{padding:74px 0}.footer-row{align-items:flex-start;flex-direction:column}.footer-links{gap:12px}}
   </style>
 </head>
 <body>
-  <!-- Design contract: Midnight sanctuary. Official mark and product photography lead; editorial type, evidence with limits, no fake device UI or decorative gradients. -->
   <a class="skip" href="#contenido">Saltar al contenido</a>
-  <header class="hero" id="inicio"><div class="shell site-nav"><a class="brand" href="#inicio" aria-label="Clean4Jesus, inicio"><img src="/brand-mark.png" alt=""><span>Clean<span class="four">4</span>Jesus</span></a><nav class="nav-links" aria-label="Navegación"><a href="#como-funciona">Cómo funciona</a><a href="#evidencia">Evidencia</a><a href="#seguridad">Privacidad</a></nav><a class="nav-cta" href="#beta">Acceso beta <span aria-hidden="true">→</span></a></div><div class="shell hero-grid"><div class="hero-copy"><div class="eyebrow">Protección digital con propósito</div><h1>Vuelve a elegir lo que te hace bien.</h1><p>Clean4Jesus reúne protección, una pausa guiada, Palabra y comunidad en un lugar diseñado para recuperar claridad cuando más la necesitas.</p><div class="hero-actions"><a class="button" href="#beta">Quiero acceso a la beta <span aria-hidden="true">→</span></a><a class="hero-link" href="#como-funciona">Conoce el camino ↓</a></div><p class="hero-meta">La protección sensible se diseña desde el dispositivo. Tu correo no aparece en la comunidad y no vendemos tu actividad.</p></div><figure class="hero-visual"><img src="/landing-hero-product.png" alt="Teléfono Android real mostrando la pantalla Refugio diario de Clean4Jesus"></figure></div></header>
-  <div class="trust-strip"><div class="shell trust-row"><strong>Un lugar para detenerte antes de seguir por impulso.</strong><span>Protección local</span><span>Palabra diaria</span><span>Comunidad moderada</span></div></div>
+  <header class="hero" id="inicio">
+    <div class="shell site-nav">
+      <a class="brand" href="#inicio" aria-label="Clean4Jesus, inicio"><img src="/brand-mark.png" alt=""><span>Clean<span class="four">4</span>Jesus</span></a>
+      <nav class="nav-links" aria-label="Navegación"><a href="#evidencia">Evidencia</a><a href="#producto">La app</a><a href="#palabra">Palabra</a><a href="#privacidad">Privacidad</a></nav>
+      <a class="button" href="#beta">Acceso beta</a>
+    </div>
+    <div class="shell hero-grid">
+      <div class="hero-copy reveal">
+        <div class="eyebrow">Protección digital con propósito</div>
+        <h1>Detén el impulso. Recupera tu decisión.</h1>
+        <figure class="product-stage mobile-product" aria-label="Interfaz real de Clean4Jesus">
+          <div class="phone"><img src="/app-refugio.png" alt="Captura real de la pantalla Refugio de Clean4Jesus"></div>
+          <figcaption class="real-label">Interfaz real · beta interna</figcaption>
+        </figure>
+        <p>Clean4Jesus combina protección local, una pausa de rescate, devocionales cristocéntricos y comunidad moderada para ayudarte a volver a lo importante.</p>
+        <div class="hero-actions"><a class="button gold" href="#beta">Quiero acceso a la beta <span aria-hidden="true">→</span></a><a class="text-link" href="#evidencia">Ver la evidencia ↓</a></div>
+        <p class="hero-proof">La actividad sensible se procesa en el dispositivo. No vendemos tu información ni publicamos tu correo en la comunidad.</p>
+      </div>
+      <figure class="product-stage desktop-product reveal">
+        <div class="phone"><img src="/app-refugio.png" alt="Captura real de la pantalla Refugio de Clean4Jesus"></div>
+        <figcaption class="real-label">Interfaz real · beta interna</figcaption>
+      </figure>
+    </div>
+  </header>
+
   <main id="contenido">
-    <section class="section"><div class="shell intro-grid"><div><div class="eyebrow">No es vigilancia</div><h2>Es una forma de volver a estar presente.</h2></div><div class="intro-copy"><p>La vergüenza suele aislar. Clean4Jesus busca hacer lo contrario: crear una pausa útil, recordarte quién eres y dejarte elegir el siguiente paso con calma.</p><p>No promete sustituir atención clínica, pastoral o de emergencia. Es una herramienta de apoyo para quienes desean vivir su vida digital con más intención.</p></div></div><div class="shell principles"><article class="principle"><span class="principle-number">01 / REFUGIO</span><div><h3>Detén el momento antes de que te arrastre.</h3><p>Capas de protección y una pantalla de interrupción personalizable que te devuelve a una decisión consciente.</p></div><span class="principle-mark">↗</span></article><article class="principle"><span class="principle-number">02 / PALABRA</span><div><h3>Un ritmo de siete días, no un sermón interminable.</h3><p>Lecturas breves, planes guiados y prácticas concretas para caminar un día a la vez.</p></div><span class="principle-mark">↗</span></article><article class="principle"><span class="principle-number">03 / COMUNIDAD</span><div><h3>Acompañamiento sin exhibirte.</h3><p>Testimonios, pedidos de oración y respuestas moderadas. Tu correo no es parte del feed.</p></div><span class="principle-mark">↗</span></article></div></section>
-    <section class="dark-section" id="como-funciona"><div class="shell section system-grid"><div><div class="eyebrow" style="color:var(--lime)">Una respuesta concreta</div><h2>Cuando el impulso sube, la experiencia baja el ruido.</h2></div><div class="system-copy"><p>El producto está pensado para una secuencia humana: preparar antes, detenerse durante y volver a caminar después. No para castigar ni para convertir un tropiezo en identidad.</p><div class="system-list"><article class="system-item"><span>01</span><div><h3>Prepara tu Refugio</h3><p>Configura las capas y los apoyos que quieres tener disponibles antes de un momento vulnerable.</p></div></article><article class="system-item"><span>02</span><div><h3>Recibe una pausa</h3><p>Una señal sensible puede abrir una interrupción y un rescate guiado de 60 segundos para respirar y volver a decidir.</p></div></article><article class="system-item"><span>03</span><div><h3>Retoma el camino</h3><p>Palabra y comunidad ofrecen un siguiente paso concreto sin negar lo que pasó ni dramatizarlo.</p></div></article></div></div></div></section>
-    <section class="evidence" id="evidencia"><div class="shell section evidence-grid"><div class="evidence-copy"><div class="eyebrow">Evidencia, no miedo</div><h2>Una conversación que merece cuidado.</h2><p>Hablamos de datos verificables y de sus límites. El objetivo no es etiquetar ni diagnosticar: es abrir espacio para prevención, conversación y ayuda oportuna.</p></div><div class="evidence-cards"><article class="evidence-card"><strong>Alcance</strong><h3>La exposición temprana existe.</h3><p>Ofcom reportó una edad promedio de primera exposición a pornografía online de 13 años en la investigación que cita para sus medidas de protección infantil.</p><a href="https://www.ofcom.org.uk/online-safety/protecting-children/implementing-the-online-safety-act-protecting-children" target="_blank" rel="noreferrer">Consultar fuente ↗</a></article><article class="evidence-card"><strong>Rigor</strong><h3>Asociación no es una sentencia.</h3><p>La literatura sobre uso problemático encuentra asociaciones con malestar psicológico y craving. Eso no convierte a cada persona en un diagnóstico ni demuestra causalidad individual.</p><a href="https://pubmed.ncbi.nlm.nih.gov/38026725/" target="_blank" rel="noreferrer">Consultar revisión ↗</a></article><article class="evidence-card"><strong>Responsabilidad</strong><h3>La prevención necesita contexto.</h3><p>Las experiencias digitales de adolescentes exigen educación, acompañamiento y herramientas adecuadas a cada familia y situación.</p><a href="https://www.esafety.gov.au/research/adolescent-encounters-with-online-pornography" target="_blank" rel="noreferrer">Consultar investigación ↗</a></article></div></div></section>
-    <section class="statement"><div class="shell statement-grid"><blockquote>“La libertad no es vivir sin límites; es volver a elegir lo que te hace bien.”</blockquote><aside><p>Clean4Jesus se construye desde una convicción cristiana de dignidad, gracia y responsabilidad. Eso guía el producto; las afirmaciones médicas se limitan a lo que las fuentes permiten decir.</p><small>Principio editorial de Clean4Jesus</small></aside></div></section>
-    <section class="section" id="seguridad"><div class="shell intro-grid"><div><div class="eyebrow">Privacidad con claridad</div><h2>El acceso profundo exige una explicación honesta.</h2></div><div class="intro-copy"><p>Algunas capas de protección requieren permisos del dispositivo. Clean4Jesus explica para qué sirve cada permiso, evita enviar contenido sensible a un servidor y no vende tu actividad.</p><p>La comunidad tiene reglas, moderación y controles de reporte. Puedes revisar nuestros compromisos antes de crear una cuenta.</p><a class="button" href="https://legal.clean4jesus.com/privacidad" target="_blank" rel="noreferrer">Leer privacidad y seguridad <span aria-hidden="true">→</span></a></div></div></section>
-    <section class="beta" id="beta"><div class="shell beta-grid"><div><div class="eyebrow" style="color:var(--lime)">Próxima apertura</div><h2>La beta comienza con personas que quieren caminar acompañadas.</h2><p>El acceso se habilitará cuando Android e iOS terminen sus pruebas cerradas. Puedes escribirnos para recibir novedades oficiales y participar cuando llegue el momento.</p><p class="beta-note">No publicamos enlaces de tienda ni códigos QR hasta que sean reales y verificables.</p></div><a class="button" href="mailto:soporte@clean4jesus.com?subject=Quiero%20acceso%20a%20la%20beta">Quiero acceso beta <span aria-hidden="true">→</span></a></div></section>
+    <section class="numbers" id="evidencia">
+      <div class="shell">
+        <div class="numbers-head reveal">
+          <div><div class="eyebrow" style="color:var(--gold)">Por qué existe Clean4Jesus</div><h2>La exposición llega temprano. La conversación no puede llegar tarde.</h2></div>
+          <p>Cifras públicas con población y contexto visibles. No usamos miedo ni convertimos asociaciones en diagnósticos.</p>
+        </div>
+        <div class="number-grid reveal">
+          <article class="stat"><strong>13</strong><h3>Edad promedio de primera exposición</h3><p>Investigación citada por Ofcom sobre exposición infantil a pornografía online.</p><a href="https://www.ofcom.org.uk/online-safety/protecting-children/implementing-the-online-safety-act-protecting-children" target="_blank" rel="noreferrer">Fuente: Ofcom ↗</a></article>
+          <article class="stat"><strong>39,1%</strong><h3>La encontró antes de los 13 años</h3><p>Entre adolescentes australianos de 16–18 que habían encontrado pornografía online.</p><a href="https://www.esafety.gov.au/research/adolescent-encounters-with-online-pornography" target="_blank" rel="noreferrer">Fuente: eSafety ↗</a></article>
+          <article class="stat"><strong>74,8%</strong><h3>La había encontrado alguna vez</h3><p>Encuesta nacional de eSafety a 1.004 adolescentes australianos de 16–18 años.</p><a href="https://www.esafety.gov.au/research/adolescent-encounters-with-online-pornography" target="_blank" rel="noreferrer">Fuente: eSafety ↗</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="science section">
+      <div class="shell">
+        <div class="section-title reveal"><div><div class="eyebrow">Cerebro y conducta</div><h2>La neurociencia importa. Sus límites también.</h2></div><p>No existe un escaneo que permita dividir personas entre “cerebro limpio” y “cerebro contaminado”. Sí existen estudios que observan diferencias y asociaciones en circuitos de recompensa, atención y respuesta a señales.</p></div>
+        <div class="science-grid reveal">
+          <article class="science-panel observed"><span class="tag">Lo observado</span><h3>Las señales pueden adquirir un peso desproporcionado.</h3><p>En hombres que buscaban tratamiento por uso problemático, un estudio fMRI encontró mayor respuesta del estriado ventral ante señales que predecían imágenes eróticas, relacionada con la motivación por verlas y con la severidad reportada.</p><ul><li>28 hombres buscando tratamiento</li><li>24 participantes de comparación</li><li>Respuesta a la señal, no una “prueba de daño”</li></ul></article>
+          <article class="science-panel limits"><span class="tag">Lo que no demuestra</span><h3>Una imagen cerebral no diagnostica a una persona.</h3><p>Un estudio transversal de 64 hombres encontró asociaciones entre horas reportadas y medidas del circuito frontoestriatal. Los propios autores señalan dos explicaciones posibles: consecuencia de la exposición o una condición previa.</p><ul><li>No establece causalidad individual</li><li>No estudió a toda la población</li><li>No justifica vergüenza ni afirmaciones universales</li></ul></article>
+        </div>
+        <div class="study-note reveal"><strong>Estudio fMRI 2017</strong><span>Gola et al., hombres que buscaban tratamiento por uso problemático. <a href="https://pubmed.ncbi.nlm.nih.gov/28409565/" target="_blank" rel="noreferrer">PubMed ↗</a></span></div>
+        <div class="study-note reveal"><strong>Estudio MRI 2014</strong><span>Kühn y Gallinat, 64 hombres adultos sanos; diseño transversal. <a href="https://pubmed.ncbi.nlm.nih.gov/24871202/" target="_blank" rel="noreferrer">PubMed ↗</a></span></div>
+      </div>
+    </section>
+
+    <section class="product section" id="producto">
+      <div class="shell">
+        <div class="section-title reveal"><div><div class="eyebrow">El producto real</div><h2>Protección, formación y compañía.</h2></div><p>Estas son pantallas reales de la beta interna. No son renders, conceptos ni funciones inventadas para la landing.</p></div>
+        <div class="screens">
+          <article class="screen-card reveal"><div class="screen-frame"><img src="/app-refugio.png" alt="Pantalla real de Refugio"></div><div class="screen-copy"><span>01 · Refugio</span><h3>Prepara capas antes del momento vulnerable.</h3><p>Protección local, PIN, VPN y Accesibilidad explicados con claridad.</p></div></article>
+          <article class="screen-card reveal"><div class="screen-frame"><img src="/app-palabra.png" alt="Pantalla real de Palabra"></div><div class="screen-copy"><span>02 · Palabra</span><h3>Un siguiente paso cristocéntrico.</h3><p>Devocional diario, aplicación concreta y acceso a planes temáticos.</p></div></article>
+          <article class="screen-card reveal"><div class="screen-frame"><img src="/app-community.png" alt="Pantalla real de Comunidad"></div><div class="screen-copy"><span>03 · Comunidad</span><h3>Acompañamiento sin exhibirte.</h3><p>Testimonios, oración y respuestas con moderación y correo privado.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="palabra section" id="palabra">
+      <div class="shell palabra-grid">
+        <div class="palabra-copy reveal"><div class="eyebrow">Palabra</div><h2>No es un único ritmo de siete días. Es un catálogo vivo.</h2><p>Clean4Jesus ofrece un devocional diario y planes por temas como ansiedad, recaída, identidad y pureza digital. Cada plan avanza día a día, pero su duración depende de su propósito.</p><p>La arquitectura editorial ya permite publicar contenido desde la nube. El siguiente paso es incorporar autores y colaboradores cristianos con revisión humana, teológica y editorial antes de publicar.</p></div>
+        <div class="path-list reveal">
+          <article class="path"><b>01</b><div><h3>Devocional diario</h3><p>Una lectura breve para volver a centrar el corazón en Cristo.</p></div></article>
+          <article class="path"><b>02</b><div><h3>Planes temáticos</h3><p>Recorridos de distinta duración, con progreso y lectura por día.</p></div></article>
+          <article class="path"><b>03</b><div><h3>Autores con revisión</h3><p>Contenido futuro de pastores, líderes y autores invitados; nunca publicación automática sin control.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="privacy section" id="privacidad">
+      <div class="shell privacy-grid">
+        <div class="reveal"><div class="eyebrow">Privacidad verificable</div><h2>Un permiso profundo exige una explicación profunda.</h2><p>Clean4Jesus necesita capacidades especiales para interrumpir contenido en Android. La app explica cada permiso, mantiene el historial sensible fuera de la comunidad y no vende actividad personal.</p><a class="button" href="https://legal.clean4jesus.com/privacidad" target="_blank" rel="noreferrer">Leer privacidad y seguridad →</a></div>
+        <div class="privacy-points reveal"><p><strong>Procesamiento local</strong>El bloqueo analiza señales en el dispositivo.</p><p><strong>Comunidad separada</strong>Tu correo no aparece en publicaciones ni respuestas.</p><p><strong>Control humano</strong>Los falsos positivos no cambian reglas automáticamente.</p></div>
+      </div>
+    </section>
+
+    <section class="beta" id="beta">
+      <div class="shell beta-grid">
+        <div class="reveal"><div class="eyebrow" style="color:var(--gold)">Beta cerrada</div><h2>Estamos construyendo una protección que merezca tu confianza.</h2><p>Android está en pruebas internas e iOS en preparación. No publicaremos enlaces de tienda ni códigos QR hasta que sean reales y verificables.</p></div>
+        <a class="button gold" href="mailto:soporte@clean4jesus.com?subject=Quiero%20acceso%20a%20la%20beta">Quiero acceso a la beta →</a>
+      </div>
+    </section>
   </main>
-  <footer class="footer"><div class="shell footer-row"><a class="brand" href="#inicio"><img src="/brand-mark.png" alt=""><span>Clean<span class="four">4</span>Jesus</span></a><div class="footer-links"><a href="https://legal.clean4jesus.com/privacidad">Privacidad</a><a href="https://legal.clean4jesus.com/terminos">Términos</a><a href="https://legal.clean4jesus.com/comunidad">Comunidad</a><a href="mailto:soporte@clean4jesus.com">soporte@clean4jesus.com</a></div><small>© 2026 Clean4Jesus</small></div></footer>
+
+  <footer class="footer"><div class="shell footer-row"><a class="brand" href="#inicio"><img src="/brand-mark.png" alt=""><span>Clean4Jesus</span></a><div class="footer-links"><a href="https://legal.clean4jesus.com/privacidad">Privacidad</a><a href="https://legal.clean4jesus.com/terminos">Términos</a><a href="https://legal.clean4jesus.com/comunidad">Comunidad</a><a href="mailto:soporte@clean4jesus.com">soporte@clean4jesus.com</a></div><small>© 2026 Clean4Jesus</small></div></footer>
+  <script>
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
+    }), { threshold: .12 });
+    document.querySelectorAll('.reveal').forEach(element => observer.observe(element));
+  </script>
 </body>
 </html>`;
 }

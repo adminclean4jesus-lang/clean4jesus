@@ -54,7 +54,11 @@ Este documento es memoria operativa del proyecto. Antes de modificar la app, lee
 
 ## Diseno
 
-- Checkpoint Landing oficial - 2026-07-25: la landing usa el logo oficial, una visual de producto realista en `assets/landing-hero-product.png` y una dirección editorial azul medianoche/lima. No volver a usar un teléfono construido con CSS, degradados decorativos, QR sin enlace real ni afirmaciones médicas sin fuente y límite explícito. Cualquier rediseño público requiere QA móvil y escritorio antes del despliegue.
+- Checkpoint Landing oficial corregido - 2026-07-25: la paleta pública usa azul marino, blanco y dorado; el verde lima queda rechazado porque no pertenece a la identidad aprobada de Clean4Jesus.
+- La landing solo puede mostrar capturas reales de la aplicación. Queda prohibido inventar dashboards, estados, prácticas o funciones dentro de mockups. El teléfono puede construirse como marco de presentación, pero su pantalla debe ser una captura verificable y no puede quedar recortada.
+- La misión debe quedar respaldada temprano por cifras con población, contexto, fuente y enlace. No presentar asociaciones neurocientíficas como causalidad, diagnóstico o una división falsa entre “cerebro limpio” y “cerebro contaminado”.
+- Palabra se comunica como devocional diario más un catálogo escalable de planes de distinta duración y futuros autores con revisión humana, teológica y editorial; nunca como un único ritmo fijo de siete días.
+- Todo rediseño público requiere QA real en escritorio y móvil, control de desbordamiento, carga de imágenes, enlaces válidos y revisión visual antes del despliegue.
 
 - Disenar como app movil primero; la web de Expo es solo una forma de probar.
 - Usar Expo Router, React Native, React Native Paper, `@expo/vector-icons` y Reanimated.
