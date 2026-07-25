@@ -20,6 +20,10 @@ Las afirmaciones publicas se limitan a datos citados y revisables:
 
 Antes de una campana pagada, Growth y Legal revisan fecha, metodologia, contexto geográfico y copy de cada afirmacion.
 
+## Investigación Responsable
+
+La ampliación investigativa vive en [RESEARCH-EVIDENCE-PROTOCOL.md](./RESEARCH-EVIDENCE-PROTOCOL.md). El sitio no usa la frase "daño cerebral" como diagnóstico o afirmación universal: describe procesos asociados al uso problemático y hace visibles los límites de la evidencia.
+
 ## Descarga Y QR
 
 No se publica un QR de descarga hasta contar con URLs reales y aprobadas de Google Play y App Store. Mientras tanto el CTA abre el correo publico `soporte@clean4jesus.com` para solicitar acceso beta. Esto evita enviar personas a un enlace inexistente o presentar una beta interna como producto publico.

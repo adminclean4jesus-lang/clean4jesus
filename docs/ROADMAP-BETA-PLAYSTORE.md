@@ -666,6 +666,11 @@ La primera tarea concreta de la siguiente iteracion es **PIN de interrupcion fun
 - Las estadisticas publicas usan fuentes regulatorias y revision academica; el copy separa asociacion de causalidad y no promete cura, diagnostico ni bloqueo perfecto.
 - El QR de descarga queda bloqueado de forma intencional hasta tener URLs reales de beta o tiendas; el CTA actual permite solicitar acceso beta mediante el correo publico.
 
+### Evidencia Editorial Responsable - 25 De Julio De 2026
+
+- Se incorpora Daniela Pardo como Research & Evidence Lead y se registra el protocolo de fuentes, límites y revisión humana para cualquier copy público sensible.
+- La landing añade una experiencia visual de investigación que diferencia exposición, uso problemático, procesos asociados, bienestar y prevención de menores sin usar diagnósticos ni causalidad falsa.
+
 ## Preparacion iOS Sin Membresia - 25 De Julio De 2026
 
 - Se agrego un manifiesto de readiness y una comprobacion automatica: `npm run test:ios:readiness` separa la base tecnica ya lista de los requisitos que solo puede activar el titular de Apple Developer.
