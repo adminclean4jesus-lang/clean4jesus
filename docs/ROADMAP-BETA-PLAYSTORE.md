@@ -658,3 +658,9 @@ La primera tarea concreta de la siguiente iteracion es **PIN de interrupcion fun
 - Se creo la frontera multiplataforma, la ruta honesta de preparacion iOS, perfiles EAS para simulador/preview/produccion y contratos de prueba para impedir que iOS marque el Refugio como activo sin evidencia nativa.
 - QA de base aprobado: TypeScript, 150 pruebas unitarias, configuracion Expo iOS y exportacion del bundle iOS. No se genero release: faltan Apple Developer Program, entitlement Family Controls, extensiones Swift, iPhone fisico y TestFlight.
 - Siguiente hito: activar firma Apple y solicitar Family Controls; despues implementar Device Activity, Managed Settings, Shield Configuration y Shield Action con pruebas en dispositivo real.
+
+## Preparacion iOS Sin Membresia - 25 De Julio De 2026
+
+- Se agrego un manifiesto de readiness y una comprobacion automatica: `npm run test:ios:readiness` separa la base tecnica ya lista de los requisitos que solo puede activar el titular de Apple Developer.
+- Se documento el handoff `docs/IOS-APPLE-HANDOFF.md`: App Store Connect, Family Controls, App Group, APNs, OAuth iOS, extensiones Swift y TestFlight se activaran cuando exista la membresia y un Mac con Xcode.
+- El equipo puede continuar ahora con la interfaz compartida, i18n, Supabase, contenido, legal, QA y metadata. La proteccion nativa iOS queda deliberadamente pendiente y nunca se presentara como activa sin evidencia de un iPhone real.

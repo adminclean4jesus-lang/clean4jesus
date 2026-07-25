@@ -86,6 +86,7 @@
     "supabase:auth:push": "node scripts/push-auth-captcha.mjs",
     "test:supabase:auth-push-launcher": "node scripts/verify-auth-config-push-launcher.mjs",
     "test:runtime-gate": "node scripts/verify-runtime-version-gate.mjs",
+    "test:ios:readiness": "node scripts/verify-ios-release-readiness.mjs",
     "test:supabase:security": "node scripts/verify-supabase-security.mjs",
       "test:supabase:negative": "node scripts/verify-supabase-negative-contracts.mjs",
       "content:devotional:seed": "node scripts/generate-devotional-catalog-seed.mjs",

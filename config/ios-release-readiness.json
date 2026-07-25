@@ -1,0 +1,32 @@
+{
+  "appleDeveloper": {
+    "enrolled": false,
+    "teamId": null
+  },
+  "appStoreConnect": {
+    "appCreated": false,
+    "appStoreId": null
+  },
+  "familyControls": {
+    "entitlementApproved": false,
+    "appGroupId": null,
+    "extensionsImplemented": false,
+    "deviceValidated": false
+  },
+  "networkExtension": {
+    "decision": "pending",
+    "entitlementApproved": false
+  },
+  "notifications": {
+    "apnsKeyConfigured": false,
+    "deviceValidated": false
+  },
+  "googleOAuth": {
+    "iosClientConfigured": false,
+    "deviceValidated": false
+  },
+  "testFlight": {
+    "internalBuildUploaded": false,
+    "privacyDeclared": false
+  }
+}
