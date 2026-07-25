@@ -32,6 +32,17 @@ test("la navegacion persistente conserva cuatro destinos legibles", async ({ pag
   await expect(page.getByTestId("devotional-open-plans")).toBeVisible();
   const todayMode = page.getByTestId("devotional-mode-today");
   const plansMode = page.getByTestId("devotional-mode-plans");
+  const todayModeBox = await todayMode.boundingBox();
+  const plansModeBox = await plansMode.boundingBox();
+  expect(todayModeBox).not.toBeNull();
+  expect(plansModeBox).not.toBeNull();
+  expect((todayModeBox?.width ?? 0)).toBeLessThan(100);
+  expect((plansModeBox?.width ?? 0)).toBeLessThan(100);
+  expect((plansModeBox?.x ?? 0) - ((todayModeBox?.x ?? 0) + (todayModeBox?.width ?? 0))).toBeGreaterThanOrEqual(6);
+  expect((plansModeBox?.x ?? 0) + (plansModeBox?.width ?? 0) - (todayModeBox?.x ?? 0)).toBeLessThan(200);
+  await expect(page.getByText("Sigue solo lo que ya estás caminando", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Para aplicar", { exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("devotional-open-plans")).toContainText("Ir a planes");
   const tabBackgrounds = await Promise.all(
     ["refugio", "palabra", "comunidad", "ajustes"].map((key) =>
       page.getByTestId(`persistent-tab-${key}`).evaluate((element) => getComputedStyle(element).backgroundColor),

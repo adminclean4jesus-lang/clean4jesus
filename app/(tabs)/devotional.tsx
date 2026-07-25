@@ -6,20 +6,17 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-na
 
 import { AppHeader } from "@/components/AppHeader";
 import { AppLoadingExperience } from "@/components/AppLoadingExperience";
-import { InfoCard } from "@/components/InfoCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { WordArtwork } from "@/components/WordArtwork";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useDevotionalCatalog } from "@/features/devotionalPlans/DevotionalCatalogProvider";
 import {
-  getCurrentPlanDay,
   getDevotionalPlanProgress,
   getMissedPlanDaysCount,
   getSuggestedPlanDay,
 } from "@/features/devotionalPlans/devotionalPlanService";
 import { getPlanVisual, getThemeVisual } from "@/features/devotionalPlans/planVisuals";
-import { getWordSecondaryText } from "@/features/i18n/wordSecondaryText";
 import {
   emptyHabitState,
   getHabits,
@@ -72,27 +69,9 @@ export default function DevotionalScreen() {
   const [planProgress, setPlanProgress] = useState<DevotionalPlanProgress>({});
   const [viewMode, setViewMode] = useState<"today" | "plans">("today");
   const today = todayKey();
-  const secondaryCopy = getWordSecondaryText(language);
   const planCardArtworkWidth = Math.max(240, Math.min(viewportWidth - 64, 520));
   const devotionalVisual = getThemeVisual(devotional.theme, language);
   const readToday = habits?.lastDevotionalReadDate === today;
-
-  const activePlan = useMemo(() => {
-    const enrolled = localizedPlans
-      .map((plan) => ({
-        completed: planProgress[plan.id]?.completedDays.length ?? 0,
-        enrollment: planProgress[plan.id],
-        plan,
-      }))
-      .filter((item) => item.enrollment)
-      .sort((left, right) => {
-        const leftRatio = left.completed / left.plan.dayCount;
-        const rightRatio = right.completed / right.plan.dayCount;
-        return rightRatio - leftRatio;
-      });
-
-    return enrolled[0] ?? null;
-  }, [localizedPlans, planProgress]);
 
   const activePlans = useMemo(() => {
     return localizedPlans
@@ -220,34 +199,7 @@ export default function DevotionalScreen() {
                 <Text style={styles.verseReference}>{devotional.reference}</Text>
               </View>
 
-              <View style={styles.narrativeStrip}>
-                <View style={styles.narrativeBadge}>
-                  <MaterialCommunityIcons color={colors.primary} name="leaf" size={16} />
-                </View>
-                <View style={styles.narrativeCopy}>
-                  <Text style={styles.narrativeTitle}>{devotionalVisual.kicker}</Text>
-                  <Text numberOfLines={4} style={styles.narrativeBody}>
-                      {readToday
-                       ? secondaryCopy.readDoneBody
-                      : devotional.reflection}
-                  </Text>
-                </View>
-              </View>
             </LinearGradient>
-          </View>
-
-          <View>
-          <InfoCard style={styles.reflectCard} tone="light">
-            <View style={styles.sectionTitleRow}>
-              <MaterialCommunityIcons color={colors.primary} name="compass-outline" size={18} />
-              <Text style={styles.sectionEyebrow}>{uiText(language, "word.apply")}</Text>
-            </View>
-            <Text style={styles.reflectQuestion}>{devotional.question}</Text>
-            <View style={styles.practicePanel}>
-              <Text style={styles.practiceKicker}>{uiText(language, "word.concreteStep")}</Text>
-              <Text style={styles.practiceText}>{devotional.practice}</Text>
-            </View>
-          </InfoCard>
           </View>
 
           <View>
@@ -258,52 +210,11 @@ export default function DevotionalScreen() {
             />
           </View>
 
-          <View style={styles.planHeader}>
-            <View style={styles.planHeaderCopy}>
-              <Text style={styles.sectionEyebrow}>{uiText(language, "word.activePlans")}</Text>
-              <Text style={styles.planHeaderTitle}>{uiText(language, "word.activePlansTitle")}</Text>
-              <Text style={styles.planHeaderBody}>
-                {uiText(language, "word.activePlansBody")}
-              </Text>
-            </View>
-            <Pressable onPress={() => handleModeChange("plans")} style={({ pressed }) => [styles.planCounter, pressed && styles.planCounterPressed]} testID="devotional-open-plans">
-              <Text style={styles.planCounterText}>{uiText(language, "word.plans")}</Text>
-            </Pressable>
-          </View>
+          <Text style={styles.sectionEyebrow}>{uiText(language, "word.activePlans")}</Text>
 
-          {activePlan ? (
-            <View>
-              <PlanSpotlightCard
-                completed={activePlan.completed}
-                enrollment={activePlan.enrollment}
-                onPress={() => router.push(`/plans/${activePlan.plan.id}`)}
-                plan={activePlan.plan}
-                progress={activePlan.plan.dayCount ? activePlan.completed / activePlan.plan.dayCount : 0}
-              />
-            </View>
-          ) : (
-            <View>
-              <InfoCard style={styles.emptyPlanCard} tone="outline">
-                <View style={styles.emptyPlanTop}>
-                  <View style={styles.emptyPlanIcon}>
-                    <MaterialCommunityIcons color={colors.primaryDark} name="book-heart-outline" size={20} />
-                  </View>
-                  <View style={styles.emptyPlanCopy}>
-                    <Text style={styles.sectionEyebrow}>{uiText(language, "word.nextStep")}</Text>
-                    <Text style={styles.emptyPlanTitle}>{uiText(language, "word.startPlan")}</Text>
-                    <Text style={styles.emptyPlanBody}>
-                      {uiText(language, "word.startPlanBody")}
-                    </Text>
-                  </View>
-                </View>
-                <PrimaryButton label={uiText(language, "word.explorePlans")} onPress={() => handleModeChange("plans")} />
-              </InfoCard>
-            </View>
-          )}
-
-          {activePlans.length > 1 ? (
+          {activePlans.length > 0 ? (
             <View style={styles.activeList}>
-              {activePlans.slice(1, 3).map(({ enrollment, plan }) => (
+              {activePlans.map(({ enrollment, plan }) => (
                 <ActivePlanRow
                   enrollment={enrollment}
                   key={plan.id}
@@ -312,7 +223,16 @@ export default function DevotionalScreen() {
                 />
               ))}
             </View>
-          ) : null}
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => handleModeChange("plans")}
+              style={({ pressed }) => [styles.goToPlansButton, pressed && styles.modeChipPressed]}
+              testID="devotional-open-plans"
+            >
+              <Text style={styles.goToPlansButtonText}>{uiText(language, "word.goToPlans")}</Text>
+            </Pressable>
+          )}
         </>
       ) : (
         <>
@@ -411,74 +331,6 @@ function ModeChip({ active, label, onPress, testID }: { active: boolean; label: 
   );
 }
 
-function PlanSpotlightCard({
-  completed,
-  enrollment,
-  onPress,
-  plan,
-  progress,
-}: {
-  completed: number;
-  enrollment: DevotionalPlanEnrollment | null | undefined;
-  onPress: () => void;
-  plan: DevotionalPlanSummary;
-  progress: number;
-}) {
-  const { colors } = useAppAppearance();
-  const { language } = useI18n();
-  const styles = useDevotionalStyles();
-  const visual = getPlanVisual(plan.id, language);
-  const nextDay = getSuggestedPlanDay(plan.id, enrollment);
-  const nextReading = nextDay ? plan.dayTitles.find((day) => day.day === nextDay) : null;
-  const missedDays = getMissedPlanDaysCount(plan.id, enrollment);
-  const currentDay = enrollment ? getCurrentPlanDay(enrollment) : null;
-
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.spotlightCard, pressed && styles.planRowPressed]}>
-      <LinearGradient
-        colors={[colors.surfaceAlt, colors.surface, colors.accentSoft]}
-        style={styles.spotlightGradient}
-      >
-        <View style={styles.spotlightTop}>
-          <View style={styles.spotlightCopy}>
-            <Text style={styles.sectionEyebrow}>{flowText(language, "plan.continue")}</Text>
-            <Text style={styles.spotlightTitle}>{plan.title}</Text>
-            <Text style={styles.spotlightBody}>{visual.promise}</Text>
-          </View>
-          <View style={styles.spotlightArtFrame}>
-            <WordArtwork height={112} motif={visual.motif} tone={visual.tone} width={112} />
-          </View>
-        </View>
-        <View style={styles.spotlightFooter}>
-          <View style={styles.spotlightProgress}>
-            <Text style={styles.spotlightMeta}>{missedDays > 0 ? flowText(language, "plan.resume") : flowText(language, "plan.currentDay")}</Text>
-            <Text style={styles.spotlightValue}>{nextDay ?? Math.min(completed + 1, plan.dayCount)}</Text>
-          </View>
-          <View style={styles.spotlightProgress}>
-            <Text style={styles.spotlightMeta}>{flowText(language, "plan.progressShort")}</Text>
-            <Text style={styles.spotlightValue}>{Math.round(progress * 100)}%</Text>
-          </View>
-        </View>
-        {nextReading ? (
-          <View style={styles.spotlightThread}>
-            <Text style={styles.spotlightThreadLabel}>
-              {missedDays > 0 ? flowText(language, "plan.pendingShort", { count: missedDays }) : flowText(language, "plan.nextReading")}
-            </Text>
-            <Text style={styles.spotlightThreadTitle}>
-              {flowText(language, "day.day")} {nextReading.day}: {nextReading.title}
-            </Text>
-            <Text style={styles.spotlightThreadBody}>
-              {currentDay && nextReading.day < currentDay
-                ? flowText(language, "plan.returnCalmly")
-                : plan.subtitle}
-            </Text>
-          </View>
-        ) : null}
-      </LinearGradient>
-    </Pressable>
-  );
-}
-
 function ActivePlanRow({
   enrollment,
   onPress,
@@ -544,26 +396,24 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
     textTransform: "lowercase",
   },
   modeSwitch: {
-    backgroundColor: colors.surfaceAlt,
-    borderColor: colors.border,
-    borderRadius: 14,
-    borderWidth: 1,
+    alignSelf: "flex-start",
     flexDirection: "row",
-    gap: 4,
-    padding: 4,
+    gap: 8,
   },
   contentStack: {
     gap: 24,
   },
   modeChip: {
     alignItems: "center",
-    backgroundColor: "transparent",
-    borderRadius: 10,
-    flex: 1,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
     justifyContent: "center",
-    minHeight: 40,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    minHeight: 36,
+    minWidth: 64,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   modeChipActive: {
     backgroundColor: colors.primaryDark,
@@ -923,6 +773,23 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
   },
   activeList: {
     gap: 10,
+  },
+  goToPlansButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: colors.surface,
+    borderColor: colors.primary,
+    borderRadius: 999,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 36,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  goToPlansButtonText: {
+    color: colors.primaryDark,
+    fontFamily: fonts.label,
+    fontSize: 12.5,
   },
   activeRowCard: {
     alignItems: "center",
