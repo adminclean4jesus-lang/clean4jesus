@@ -54,6 +54,8 @@ Este documento es memoria operativa del proyecto. Antes de modificar la app, lee
 
 ## Diseno
 
+- Checkpoint Landing oficial - 2026-07-25: la landing usa el logo oficial, una visual de producto realista en `assets/landing-hero-product.png` y una dirección editorial azul medianoche/lima. No volver a usar un teléfono construido con CSS, degradados decorativos, QR sin enlace real ni afirmaciones médicas sin fuente y límite explícito. Cualquier rediseño público requiere QA móvil y escritorio antes del despliegue.
+
 - Disenar como app movil primero; la web de Expo es solo una forma de probar.
 - Usar Expo Router, React Native, React Native Paper, `@expo/vector-icons` y Reanimated.
 - La direccion visual del reset debe sentirse premium, compacta y espiritual, no como dashboard generico.
