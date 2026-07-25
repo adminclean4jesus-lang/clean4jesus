@@ -6,6 +6,8 @@ Valentina Cruz aprueba una migración por capacidades, no un port directo de And
 
 ## Estado al 2026-07-25
 
+La preparación sin coste está cerrada: existe una ruta iPhone honesta, contrato TypeScript para el futuro puente Swift, matriz QA y documentación de App Store. La membresía Apple está en proceso de activación; ningún control se marca como activo antes de tener evidencia de dispositivo físico.
+
 | Área | Estado | Decisión |
 | --- | --- | --- |
 | Interfaz, Comunidad, Palabra, idiomas, Perfil | Compartida | Lista para compilar en iOS tras QA visual |

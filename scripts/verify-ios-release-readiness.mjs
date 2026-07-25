@@ -20,6 +20,9 @@ check("Perfil simulador", Boolean(easConfig.build?.["ios-simulator"]?.ios?.simul
 check("Perfil TestFlight", easConfig.build?.production?.ios?.simulator === false, "Production debe preparar un binario para dispositivo real.");
 check("Frontera de plataforma", existsSync(path.join(root, "src/features/shield/protectionPlatform.ts")), "iOS no puede reutilizar el motor Android.");
 check("Ruta iOS honesta", existsSync(path.join(root, "app/ios-protection.tsx")), "El usuario debe ver el estado real antes de tener proteccion nativa.");
+check("Ruta de preparacion iPhone", existsSync(path.join(root, "app/ios-readiness.tsx")), "La preparacion compartida debe explicar pendientes sin prometer proteccion activa.");
+check("Contrato de permisos iOS", existsSync(path.join(root, "src/features/iosProtection/iosProtectionContract.ts")), "El puente Swift debe tener un contrato versionado antes de crearlo.");
+check("Matriz QA iPhone", existsSync(path.join(root, "docs/IOS-DEVICE-QA-MATRIX.md")), "Cada capacidad nativa necesita evidencia de un dispositivo real.");
 check("Arquitectura documentada", existsSync(path.join(root, "docs/ADR-006-IOS-PROTECTION-ARCHITECTURE.md")), "La decision de plataforma debe quedar versionada.");
 check("Guia Apple", existsSync(path.join(root, "docs/IOS-APPLE-HANDOFF.md")), "La configuracion externa debe poder retomarse sin improvisar.");
 check("Apple Developer", readiness.appleDeveloper.enrolled && Boolean(readiness.appleDeveloper.teamId), "Requiere membresia Apple Developer y Team ID.");

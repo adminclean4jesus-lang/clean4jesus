@@ -47,6 +47,8 @@ Este documento es memoria operativa del proyecto. Antes de modificar la app, lee
 - La experiencia base es "escudo primero": el usuario activa la proteccion y solo entonces entra al resto de la app.
 - Objetivo de lanzamiento: Clean4Jesus debe publicarse para Android y iOS. Se busca paridad funcional y de experiencia, no copiar literalmente la implementacion nativa: Android usa sus APIs de VPN/Accesibilidad e iOS debera usar exclusivamente las APIs y capacidades permitidas por Apple.
 - No prometer que iOS puede replicar `AccessibilityService` de Android. Antes de implementar el bloqueo en iOS, validar capacidades, entitlement, revision de Apple y limites reales de Family Controls, Network Extension y Managed Settings.
+- Checkpoint de preparación iOS del 25 de julio de 2026: interfaz, navegación, Palabra, Comunidad, Perfil, idiomas, login por correo y contratos de permisos están preparados para la capa compartida. La ruta `/ios-readiness` comunica el estado real; Family Controls, APNs, OAuth iOS, extensiones Swift y TestFlight siguen pendientes hasta contar con Apple Developer activo y evidencia en un iPhone real.
+- El contrato `src/features/iosProtection/iosProtectionContract.ts` no es una implementación nativa ni autoriza protección simulada. Conectar sus métodos solo después de crear el App Group, targets Swift y entitlement aprobados por Apple.
 - Diferenciadores aprobados para el siguiente ciclo: Rescate de 60 segundos, reporte privado de falsos positivos y resumen semanal de acompanamiento sin historial de navegacion.
 - Widgets Android/iOS son parte del roadmap previo al lanzamiento, pero no deben mostrar contenido sensible en pantalla bloqueada.
 

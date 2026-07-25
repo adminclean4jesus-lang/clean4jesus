@@ -1,13 +1,14 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { InfoCard } from "@/components/InfoCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
+import { getIosReadinessItems } from "@/features/iosProtection/iosProtectionContract";
 import { SupportedLanguage } from "@/features/i18n/i18n";
 import { getProtectionPlatformDescriptor } from "@/features/shield/protectionPlatform";
 import { fonts, ThemeColors } from "@/theme";
@@ -89,6 +90,10 @@ export default function IosProtectionScreen() {
         <Text style={styles.waiting}>{copy.waiting}</Text>
       </InfoCard>
 
+      <Pressable onPress={() => router.push("/ios-readiness")} style={styles.readinessLink}>
+        <MaterialCommunityIcons color={colors.primary} name="clipboard-check-outline" size={18} />
+        <Text style={styles.readinessText}>Ver preparación para iPhone ({getIosReadinessItems().filter((item) => item.ready).length}/{getIosReadinessItems().length})</Text>
+      </Pressable>
       <PrimaryButton label={copy.close} onPress={() => router.replace("/(tabs)")} />
     </Screen>
   );
@@ -103,6 +108,8 @@ function createStyles(colors: ThemeColors) {
     cardTitle: { color: colors.text, fontFamily: fonts.heading, fontSize: 16, lineHeight: 23 },
     eyebrow: { color: colors.primary, fontFamily: fonts.label, fontSize: 11, letterSpacing: 0.8, textTransform: "uppercase" },
     hero: { gap: 12, paddingTop: 20 },
+    readinessLink: { alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "center", paddingVertical: 7 },
+    readinessText: { color: colors.primary, fontFamily: fonts.heading, fontSize: 14 },
     iconWrap: { alignItems: "center", alignSelf: "flex-start", backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, height: 72, justifyContent: "center", width: 72 },
     title: { color: colors.text, fontFamily: fonts.display, fontSize: 30, lineHeight: 38 },
     waiting: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, lineHeight: 21 },
