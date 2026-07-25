@@ -317,16 +317,38 @@ function StreakBadge({ days }: { days: number }) {
 }
 
 function ModeChip({ active, label, onPress, testID }: { active: boolean; label: string; onPress: () => void; testID: string }) {
-  const styles = useDevotionalStyles();
   return (
     <Pressable
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={({ pressed }) => [styles.modeChip, active && styles.modeChipActive, pressed && styles.modeChipPressed]}
+      style={({ pressed }) => ({
+        alignItems: "center",
+        backgroundColor: active ? "#111B5C" : "#FFFFFF",
+        borderColor: "#111B5C",
+        borderRadius: 999,
+        borderWidth: 1,
+        justifyContent: "center",
+        minHeight: 38,
+        minWidth: 72,
+        opacity: pressed ? 0.82 : 1,
+        paddingHorizontal: 17,
+        paddingVertical: 8,
+      })}
       testID={testID}
     >
-      <Text style={[styles.modeChipText, active && styles.modeChipTextActive]}>{label}</Text>
+      <Text
+        style={{
+          color: active ? "#FFFFFF" : "#111B5C",
+          fontFamily: active ? fonts.label : fonts.bodyMedium,
+          fontSize: 13,
+          lineHeight: 18,
+          textAlign: "center",
+        }}
+        testID={`${testID}-label`}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -399,38 +421,13 @@ function createStyles(colors: ThemeColors, isDark: boolean) {
     alignSelf: "flex-start",
     flexDirection: "row",
     gap: 8,
+    minHeight: 38,
   },
   contentStack: {
     gap: 24,
   },
-  modeChip: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: 999,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 36,
-    minWidth: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  modeChipActive: {
-    backgroundColor: colors.primaryDark,
-    borderColor: colors.primaryDark,
-  },
   modeChipPressed: {
     opacity: 0.84,
-  },
-  modeChipText: {
-    color: colors.primaryDark,
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12.5,
-    textAlign: "center",
-  },
-  modeChipTextActive: {
-    color: "#FFFFFF",
-    fontFamily: fonts.label,
   },
   heroShell: {
     borderRadius: 28,

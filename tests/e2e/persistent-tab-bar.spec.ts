@@ -53,10 +53,15 @@ test("la navegacion persistente conserva cuatro destinos legibles", async ({ pag
 
   const todayBackground = await todayMode.evaluate((element) => getComputedStyle(element).backgroundColor);
   const plansBackground = await plansMode.evaluate((element) => getComputedStyle(element).backgroundColor);
-  expect(todayBackground).not.toBe(plansBackground);
+  const todayColor = await page.getByTestId("devotional-mode-today-label").evaluate((element) => getComputedStyle(element).color);
+  const plansColor = await page.getByTestId("devotional-mode-plans-label").evaluate((element) => getComputedStyle(element).color);
+  expect(todayBackground).toBe("rgb(17, 27, 92)");
+  expect(plansBackground).toBe("rgb(255, 255, 255)");
+  expect(todayColor).toBe("rgb(255, 255, 255)");
+  expect(plansColor).toBe("rgb(17, 27, 92)");
   await plansMode.click();
-  await expect.poll(() => plansMode.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(todayBackground);
-  await expect.poll(() => todayMode.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe(plansBackground);
+  await expect.poll(() => plansMode.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe("rgb(17, 27, 92)");
+  await expect.poll(() => todayMode.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe("rgb(255, 255, 255)");
 
   const footerBox = await footer.boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);

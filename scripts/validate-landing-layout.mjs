@@ -39,6 +39,10 @@ try {
     const page = await browser.newPage({ viewport });
     await page.goto(`http://127.0.0.1:${port}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(700);
+    const heroCopy = await page.locator(".hero-copy").innerText();
+    if (!heroCopy.includes("bloquea contenido adulto") || !heroCopy.includes("pantalla de protección")) {
+      throw new Error(`${viewport.name}: el primer viewport no explica claramente la función principal`);
+    }
     const hiddenReveals = await page.locator(".reveal:visible").evaluateAll(
       (elements) => elements.filter((element) => Number.parseFloat(getComputedStyle(element).opacity) < 0.99).length,
     );
