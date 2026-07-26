@@ -1,5 +1,11 @@
 # Clean4Jesus Version History
 
+## Checkpoint Selector Hoy / Planes - 2026-07-26
+
+- El selector nativo `Hoy / Planes` queda aprobado y congelado tras validación en Pixel.
+- El estado activo debe conservar fondo azul con texto blanco; el estado inactivo, fondo claro con texto azul.
+- La optimización de batería queda pendiente de medición real del usuario y no modifica este checkpoint.
+
 ## Candidata De Selector Nativo Y Eficiencia - 2026-07-26
 
 - Se corrige la causa nativa del selector `Hoy / Planes`: los estados visuales usan estilos directos y `android_ripple`, sin callbacks de estilo que Fabric puede omitir en el APK.
