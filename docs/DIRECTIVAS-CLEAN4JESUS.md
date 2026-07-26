@@ -108,7 +108,7 @@ Este documento es memoria operativa del proyecto. Antes de modificar la app, lee
 - Si el PIN confirma un falso positivo de contenido, permitir solo la huella local exacta de ese incidente durante 20 segundos. El Refugio sigue activo y cualquier contenido distinto vuelve a evaluarse.
 - Las palabras sensibles deben coincidir por tokens completos, no como subcadenas dentro de otras palabras ni al unir limites visuales. Casos inocuos como `adultos`, `seguros` + `excursiones` no deben activar `adult` o `sex`.
 - No crear aprendizaje automatico global con texto capturado. Los falsos positivos se corrigen localmente con huellas no reversibles; cualquier mejora compartida futura debe usar reglas revisadas y telemetria agregada sin texto, URL ni historial.
-- `InterruptionActivity` usa `FLAG_SECURE` intencionalmente: la captura o grabacion aparece negra para proteger la imagen personal, el motivo y la entrada del PIN.
+- Decision de producto del 25 de julio de 2026: `InterruptionActivity` permite capturas y grabacion de la interrupcion para documentar falsos positivos y compartir evidencia de QA. La pantalla advierte que una imagen personal puede quedar incluida. Al desplegar el panel del PIN, la Activity activa `FLAG_SECURE`; al cancelarlo o volver a la interrupcion, lo retira. No dejar el PIN capturable ni volver a bloquear las capturas de toda la interrupcion sin revision explicita de Producto y Privacidad.
 - Las apps limitadas deben mostrar tiempo usado y tiempo restante del dia de forma visible. La version actual usa el conteo local aproximado de Accesibilidad; no venderlo como precision perfecta hasta evaluar UsageStatsManager.
 
 ## Habitos

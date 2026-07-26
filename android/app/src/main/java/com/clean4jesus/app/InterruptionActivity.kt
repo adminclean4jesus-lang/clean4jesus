@@ -177,7 +177,6 @@ class InterruptionActivity : Activity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
     window.statusBarColor = Color.WHITE
@@ -209,6 +208,7 @@ class InterruptionActivity : Activity() {
 
   private fun renderInterruption(sourceIntent: Intent) {
     isRescueScreen = false
+    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     rescueAnimator?.cancel()
     rescueHandler.removeCallbacksAndMessages(null)
     val bg = Color.parseColor("#F8F9FA")
@@ -531,6 +531,7 @@ class InterruptionActivity : Activity() {
     }
 
     revealPinButton.setOnClickListener {
+      window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
       revealPinButton.visibility = View.GONE
       pinPanel.visibility = View.VISIBLE
       pinInput.requestFocus()
@@ -540,6 +541,7 @@ class InterruptionActivity : Activity() {
       pinInput.setText("")
       pinPanel.visibility = View.GONE
       revealPinButton.visibility = View.VISIBLE
+      window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 
     pinPanel.addView(unlockTitle)
@@ -558,6 +560,19 @@ class InterruptionActivity : Activity() {
       gravity = Gravity.CENTER_HORIZONTAL
       setLineSpacing(0f, 1.12f)
       setPadding(dp(10), dp(10), dp(10), 0)
+    }
+
+    val captureNotice = TextView(this).apply {
+      text = when (language) {
+        "en" -> "Screenshots may include your personalized image."
+        "fr" -> "Les captures peuvent inclure votre image personnalisée."
+        "pt" -> "As capturas podem incluir sua imagem personalizada."
+        else -> "Las capturas pueden incluir tu imagen personalizada."
+      }
+      setTextColor(muted)
+      textSize = 11f
+      gravity = Gravity.CENTER_HORIZONTAL
+      setPadding(dp(10), dp(4), dp(10), 0)
     }
 
     val secondaryButton = actionButton(
@@ -602,6 +617,7 @@ class InterruptionActivity : Activity() {
       content.addView(unlockCard)
     }
     content.addView(privacy)
+    content.addView(captureNotice)
     content.addView(secondaryButton)
 
     root.addView(content)
@@ -610,6 +626,7 @@ class InterruptionActivity : Activity() {
 
   private fun renderRescue(sourceIntent: Intent) {
     isRescueScreen = true
+    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     rescueAnimator?.cancel()
     rescueHandler.removeCallbacksAndMessages(null)
 
