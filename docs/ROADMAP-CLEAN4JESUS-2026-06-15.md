@@ -750,3 +750,17 @@ Hecho en esta sesion:
 Siguiente hito:
 
 - Probar este comportamiento en APK real y seguir afinando falsos positivos inocentes sin tocar checkpoints ya aprobados.
+
+### Sesion 56. Capturas Seguras En Interrupcion
+
+Fecha: 2026-07-25
+
+Hecho en esta sesion:
+
+- Se habilitaron capturas de la pantalla de interrupcion y del rescate para facilitar QA, soporte y revision visual.
+- La zona del PIN permanece protegida dinamicamente con `FLAG_SECURE` y se incorporo una advertencia sobre imagenes personalizadas.
+- Se genero el APK interno actual y se aprobaron 154 pruebas unitarias, TypeScript y compilacion Android sin alterar el motor de proteccion.
+
+Siguiente hito:
+
+- Continuar la preparacion iOS cuando Apple active la membresia, manteniendo Android y sus checkpoints congelados.

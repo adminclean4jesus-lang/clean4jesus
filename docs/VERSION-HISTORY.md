@@ -792,3 +792,10 @@ Primera version estable que consolida el MVP actual.
 - Se aprobaron como siguientes experiencias Rescate de 60 segundos, reporte privado de falsos positivos y resumen semanal de acompanamiento.
 - Se incorporo iOS como objetivo obligatorio de lanzamiento con paridad funcional, sujeto a las capacidades y politicas nativas permitidas por Apple.
 - Se definio la ruta final: producto, widgets, seguridad, legal, QA, beta cerrada y publicacion gradual en Google Play y App Store.
+
+# Sesion 2026-07-25 - Capturas Seguras Para QA
+
+- La interrupcion y el rescate permiten capturas para documentar y revisar su interfaz.
+- El formulario del PIN activa proteccion de pantalla mientras contiene informacion sensible.
+- Se agrego una advertencia de privacidad para imagenes personalizadas.
+- APK `current` regenerado y validado con 154 pruebas unitarias.
