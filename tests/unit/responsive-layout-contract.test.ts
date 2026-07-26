@@ -25,4 +25,13 @@ describe("responsive mobile layout contract", () => {
     expect(source).not.toContain('maxWidth: "55%"');
     expect(source).not.toContain("styles.planCardArtwork");
   });
+
+  it("uses native-safe direct styles for the Hoy and Planes controls", () => {
+    const source = readFileSync(resolve("app/(tabs)/devotional.tsx"), "utf8");
+    const modeChip = source.match(/function ModeChip[\s\S]*?\n}\n\nfunction ActivePlanRow/)?.[0] ?? "";
+
+    expect(modeChip).toContain("android_ripple");
+    expect(modeChip).toContain('backgroundColor: active ? "#111B5C" : "#FFFFFF"');
+    expect(modeChip).not.toContain("style={({ pressed })");
+  });
 });

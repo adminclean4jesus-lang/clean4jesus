@@ -21,6 +21,8 @@ import java.util.UUID
 
 class Clean4JesusAccessibilityService : AccessibilityService() {
   private var lastInterruptionAt = 0L
+  private var lastFullTreeScanAt = 0L
+  private var lastFullTreeScanPackage: String? = null
   private var foregroundPackage: String? = null
   private var foregroundStartedAt = 0L
   private val mainHandler = Handler(Looper.getMainLooper())
@@ -34,6 +36,10 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_APP_LANGUAGE = "app_language"
     private const val PREF_APP_USAGE_PREFIX = "app_usage_"
     private const val MAX_TRACKED_EVENT_GAP_MS = 15_000L
+    private const val FULL_TREE_SCAN_INTERVAL_MS = 800L
+    private const val MAX_FULL_TREE_NODES = 160
+    private const val MAX_SOURCE_TREE_NODES = 48
+    private const val MAX_SIGNAL_TEXT_CHARS = 12_000
     const val PREF_APP_UNLOCK_PREFIX = "app_unlock_"
     private const val PREF_FALSE_POSITIVE_PREFIX = "false_positive_"
     const val PREF_ACCOUNTABILITY_ENDPOINT = "accountability_endpoint"
@@ -257,13 +263,16 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
       return
     }
 
+    val scanFullTree = shouldScanFullTree(event, packageName)
     val visibleText = buildString {
       event.text?.forEach { append(it.toString()).append(' ') }
       event.beforeText?.let { append(it.toString()).append(' ') }
-      append(collectText(rootInActiveWindow, 0))
-      event.source?.text?.let { append(it.toString()).append(' ') }
-      event.source?.contentDescription?.let { append(it.toString()).append(' ') }
-    }.normalizeForSignals()
+      if (scanFullTree) {
+        append(collectText(rootInActiveWindow, MAX_FULL_TREE_NODES))
+      } else {
+        append(collectText(event.source, MAX_SOURCE_TREE_NODES))
+      }
+    }.take(MAX_SIGNAL_TEXT_CHARS).normalizeForSignals()
 
     val fingerprint = signalFingerprint(packageName, visibleText)
     if (isApprovedFalsePositive(packageName, fingerprint)) return
@@ -292,8 +301,31 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     super.onDestroy()
   }
 
-  private fun collectText(node: AccessibilityNodeInfo?, depth: Int): String {
-    if (node == null || depth > 7) return ""
+  private fun shouldScanFullTree(event: AccessibilityEvent, packageName: String): Boolean {
+    val now = SystemClock.elapsedRealtime()
+    val immediateScan = event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+      event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED
+    val packageChanged = lastFullTreeScanPackage != packageName
+    val intervalElapsed = now - lastFullTreeScanAt >= FULL_TREE_SCAN_INTERVAL_MS
+
+    if (!immediateScan && !packageChanged && !intervalElapsed) {
+      return false
+    }
+
+    lastFullTreeScanAt = now
+    lastFullTreeScanPackage = packageName
+    return true
+  }
+
+  private fun collectText(node: AccessibilityNodeInfo?, maxNodes: Int): String {
+    if (node == null || maxNodes <= 0) return ""
+    val remainingNodes = intArrayOf(maxNodes)
+    return collectText(node, 0, remainingNodes)
+  }
+
+  private fun collectText(node: AccessibilityNodeInfo?, depth: Int, remainingNodes: IntArray): String {
+    if (node == null || depth > 7 || remainingNodes[0] <= 0) return ""
+    remainingNodes[0] -= 1
 
     val current = buildString {
       node.text?.let { append(it.toString()).append(' ') }
@@ -303,7 +335,8 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
     val children = StringBuilder()
     for (index in 0 until node.childCount) {
-      children.append(collectText(node.getChild(index), depth + 1))
+      if (remainingNodes[0] <= 0) break
+      children.append(collectText(node.getChild(index), depth + 1, remainingNodes))
     }
 
     return current + children.toString()

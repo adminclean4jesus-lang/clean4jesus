@@ -63,6 +63,19 @@ describe("Android native protection contracts", () => {
     expect(serviceConfig).not.toContain("com.nu.production");
   });
 
+  it("coalesces expensive accessibility tree scans without delaying typed searches", () => {
+    const source = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+
+    expect(source).toContain("FULL_TREE_SCAN_INTERVAL_MS = 800L");
+    expect(source).toContain("MAX_FULL_TREE_NODES = 160");
+    expect(source).toContain("MAX_SOURCE_TREE_NODES = 48");
+    expect(source).toContain("MAX_SIGNAL_TEXT_CHARS = 12_000");
+    expect(source).toContain("event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED");
+    expect(source).toContain("shouldScanFullTree(event, packageName)");
+    expect(source).toContain("collectText(event.source, MAX_SOURCE_TREE_NODES)");
+    expect(source).not.toContain("append(collectText(rootInActiveWindow, 0))");
+  });
+
   it("reads persisted app usage with the same wall clock used by accessibility", () => {
     const moduleSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt");
     const usageMethod = moduleSource.match(/fun getAppProtectionUsage[\s\S]*?\n  }\n/)?.[0] ?? "";

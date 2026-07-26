@@ -321,8 +321,9 @@ function ModeChip({ active, label, onPress, testID }: { active: boolean; label: 
     <Pressable
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
+      android_ripple={{ color: active ? "#33417E" : "#E8ECFA", borderless: false }}
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         alignItems: "center",
         backgroundColor: active ? "#111B5C" : "#FFFFFF",
         borderColor: "#111B5C",
@@ -331,10 +332,10 @@ function ModeChip({ active, label, onPress, testID }: { active: boolean; label: 
         justifyContent: "center",
         minHeight: 38,
         minWidth: 72,
-        opacity: pressed ? 0.82 : 1,
+        overflow: "hidden",
         paddingHorizontal: 17,
         paddingVertical: 8,
-      })}
+      }}
       testID={testID}
     >
       <Text

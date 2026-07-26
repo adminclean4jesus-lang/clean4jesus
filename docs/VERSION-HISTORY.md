@@ -1,5 +1,13 @@
 # Clean4Jesus Version History
 
+## Candidata De Selector Nativo Y Eficiencia - 2026-07-26
+
+- Se corrige la causa nativa del selector `Hoy / Planes`: los estados visuales usan estilos directos y `android_ripple`, sin callbacks de estilo que Fabric puede omitir en el APK.
+- Se reduce el trabajo del servicio de Accesibilidad sin cambiar reglas ni cobertura: los eventos repetitivos se agrupan, los recorridos tienen limites de frecuencia y nodos, y la escritura o apertura de pantalla sigue analizandose de inmediato.
+- Se preservan sin cambios VPN, PIN, pantalla de interrupcion, dominios, palabras, navegadores, redes sociales, bancos y YouTube.
+- QA aprobado: TypeScript, 156 pruebas unitarias, compilacion Kotlin y pruebas E2E del selector. El efecto real sobre bateria y temperatura queda pendiente de medicion comparativa en Pixel 9.
+- APK local regenerada desde una compilacion limpia y rotada a `artifacts/apk/current/Clean4Jesus-current.apk`.
+
 ## Candidata De Navegacion Y Landing - 2026-07-25
 
 - Palabra recupera el selector segmentado `Hoy / Planes`, con estado activo visible y areas tactiles estables.
