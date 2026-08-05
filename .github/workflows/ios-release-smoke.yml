@@ -34,10 +34,10 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          mkdir -p .qa-gate
-          npx tsc --noEmit > .qa-gate/typescript.log 2>&1
+          mkdir -p qa-gate
+          npx tsc --noEmit > qa-gate/typescript.log 2>&1
           status=$?
-          echo "typescript=$status" >> .qa-gate/results.txt
+          echo "typescript=$status" >> qa-gate/results.txt
           exit $status
 
       - name: Verify unit-test contract
@@ -45,10 +45,10 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          mkdir -p .qa-gate
-          npm run test:unit > .qa-gate/unit-tests.log 2>&1
+          mkdir -p qa-gate
+          npm run test:unit > qa-gate/unit-tests.log 2>&1
           status=$?
-          echo "unit_tests=$status" >> .qa-gate/results.txt
+          echo "unit_tests=$status" >> qa-gate/results.txt
           exit $status
 
       - name: Verify Expo configuration contract
@@ -56,10 +56,10 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          mkdir -p .qa-gate
-          npx expo-doctor > .qa-gate/expo-doctor.log 2>&1
+          mkdir -p qa-gate
+          npx expo-doctor > qa-gate/expo-doctor.log 2>&1
           status=$?
-          echo "expo_doctor=$status" >> .qa-gate/results.txt
+          echo "expo_doctor=$status" >> qa-gate/results.txt
           exit $status
 
       - name: Enforce JavaScript and architecture contracts
@@ -116,7 +116,7 @@ jobs:
         with:
           name: ios-release-startup-evidence
           path: |
-            .qa-gate
+            qa-gate
             ~/.maestro/tests
             ios/build/Logs
           if-no-files-found: ignore
