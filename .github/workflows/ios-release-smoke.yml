@@ -62,7 +62,14 @@ jobs:
           echo "expo_doctor=$status" >> qa-gate/results.txt
           exit $status
 
-      - name: Enforce JavaScript and architecture contracts
+      - name: Collect QA contract summary
+        id: contract_summary
+        if: always()
+        run: |
+          summary="$(tr '\n' ',' < qa-gate/results.txt | sed 's/,$//')"
+          echo "summary=$summary" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce contracts ${{ steps.contract_summary.outputs.summary }}
         if: ${{ steps.typescript.outcome == 'failure' || steps.unit_tests.outcome == 'failure' || steps.expo_doctor.outcome == 'failure' }}
         run: exit 1
 
