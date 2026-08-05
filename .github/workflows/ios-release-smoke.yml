@@ -33,6 +33,7 @@ jobs:
         id: typescript
         continue-on-error: true
         run: |
+          set +e
           mkdir -p .qa-gate
           npx tsc --noEmit > .qa-gate/typescript.log 2>&1
           status=$?
@@ -43,6 +44,7 @@ jobs:
         id: unit_tests
         continue-on-error: true
         run: |
+          set +e
           mkdir -p .qa-gate
           npm run test:unit > .qa-gate/unit-tests.log 2>&1
           status=$?
@@ -53,6 +55,7 @@ jobs:
         id: expo_doctor
         continue-on-error: true
         run: |
+          set +e
           mkdir -p .qa-gate
           npx expo-doctor > .qa-gate/expo-doctor.log 2>&1
           status=$?
