@@ -35,3 +35,12 @@ Android usa `VpnService`, `AccessibilityService` y una `Activity` nativa de inte
 ## Criterio de salida
 
 Solo se puede marcar `iOS protection ready` cuando existan: entitlement, extensiones firmadas, autorización nativa aprobada, prueba en iPhone real de escudo y límite de tiempo, pruebas de regresión y revisión de privacidad/App Store.
+
+## Implementación candidata 1.3.16
+
+- La app principal guarda selección, idioma y estado en `group.com.clean4jesus.app` y programa un evento diario con `DeviceActivityCenter`.
+- `ManagedSettings.WebContentSettings.FilterPolicy.auto` aporta filtrado adulto de Apple. Su cobertura real por navegador se documentará desde pruebas físicas; no se promete inspección de texto ni cobertura universal.
+- `Clean4JesusDeviceActivityMonitor` aplica el Shield a los tokens seleccionados cuando se alcanza el umbral y lo limpia al iniciar el siguiente intervalo.
+- `Clean4JesusShieldConfiguration` presenta marca y copy local ES/EN/FR/PT sin conocer el nombre de la app o dominio protegido.
+- `Clean4JesusShieldAction` registra la intención de rescate en el App Group y cierra la app o navegador protegido. Al abrir Clean4Jesus después, la app consume la intención y presenta el rescate. El rescate no retira el Shield.
+- Los targets se regeneran desde `targets/` mediante `@bacons/apple-targets@4.0.7`. Esto conserva CNG, pero exige validar la generación Xcode en macOS/EAS antes de release.

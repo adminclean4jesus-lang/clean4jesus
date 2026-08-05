@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";

@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useMemo, useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -8,6 +8,7 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { getPinLockoutRemainingMs, verifyPin } from "@/features/pin/pinService";
+import { iosProtectionNativeContract } from "@/features/iosProtection/iosProtectionContract";
 import { isCompletePin, normalizePinInput, pinLength } from "@/features/pin/pinValidation";
 import { disableShield } from "@/features/shield/shieldService";
 import { fonts, ThemeColors } from "@/theme";
@@ -20,7 +21,7 @@ export default function PinVerifyScreen() {
   const { language } = useI18n();
   const copy = getPinText(language);
   const styles = usePinVerifyStyles();
-  const { action } = useLocalSearchParams<{ action?: string }>();
+  const { action, minutes } = useLocalSearchParams<{ action?: string; minutes?: string }>();
   const [pin, setPin] = useState("");
 
   async function handleVerify() {
@@ -38,6 +39,23 @@ export default function PinVerifyScreen() {
 
     if (action === "disable-shield") {
       await disableShield();
+    }
+
+    if (action === "activate-ios-refuge") {
+      const parsedMinutes = Number(minutes);
+      if (!Number.isInteger(parsedMinutes) || parsedMinutes < 1 || parsedMinutes > 1_440) {
+        Alert.alert("Clean4Jesus", "El límite diario no es válido.");
+        return;
+      }
+      await iosProtectionNativeContract.activateRefuge(parsedMinutes);
+      router.replace("/ios-protection");
+      return;
+    }
+
+    if (action === "disable-ios-refuge") {
+      await iosProtectionNativeContract.clearRefuge();
+      router.replace("/ios-protection");
+      return;
     }
 
     router.replace("/(tabs)");

@@ -1,0 +1,22 @@
+appId: com.clean4jesus.app
+name: iOS Release startup stability
+tags:
+  - ios
+  - release
+  - startup
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
+    timeout: 20000
+- repeat:
+    times: 20
+    commands:
+      - stopApp
+      - launchApp
+      - extendedWaitUntil:
+          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
+          timeout: 20000
+      - assertVisible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"

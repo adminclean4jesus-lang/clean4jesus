@@ -1,14 +1,4 @@
-import "../global.css";
 
-import { Inter_400Regular, useFonts } from "@expo-google-fonts/inter";
-import { LexendDeca_700Bold } from "@expo-google-fonts/lexend-deca";
-import {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-} from "@expo-google-fonts/plus-jakarta-sans";
-import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -18,7 +8,6 @@ import { PaperProvider } from "react-native-paper";
 import { PersistentTabBar } from "@/components/PersistentTabBar";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { AppearanceProvider, useAppAppearance } from "@/features/appearance/AppearanceProvider";
-import { primeDevotionalReminderPermissionsOnLaunch } from "@/features/devotionalPlans/devotionalReminderService";
 import { DevotionalCatalogProvider } from "@/features/devotionalPlans/DevotionalCatalogProvider";
 import { configureFalsePositiveReporting } from "@/features/falsePositive/falsePositiveReportingService";
 import { I18nProvider, useI18n } from "@/features/i18n/I18nProvider";
@@ -30,78 +19,73 @@ import { useSegments } from "expo-router";
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
-  const [loaded] = useFonts({
-    Inter_400Regular,
-    LexendDeca_700Bold,
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-  });
 
   useEffect(() => {
-    if (Platform.OS === "web") {
+    if (Platform.OS !== "android") {
       return;
     }
 
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const route = response.notification.request.content.data?.route;
-      if (typeof route === "string" && isAllowedNotificationRoute(route)) {
-        router.push(route as Parameters<typeof router.push>[0]);
-        void Notifications.clearLastNotificationResponseAsync();
-      }
-    });
+    let disposed = false;
+    let removeSubscription: (() => void) | undefined;
 
-    void Notifications.getLastNotificationResponseAsync().then((response) => {
-      const route = response?.notification.request.content.data?.route;
-      if (typeof route === "string" && isAllowedNotificationRoute(route)) {
-        router.push(route as Parameters<typeof router.push>[0]);
-        void Notifications.clearLastNotificationResponseAsync();
-      }
+    void import("expo-notifications").then((Notifications) => {
+      if (disposed) return;
+
+      const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+        const route = response.notification.request.content.data?.route;
+        if (typeof route === "string" && isAllowedNotificationRoute(route)) {
+          router.push(route as Parameters<typeof router.push>[0]);
+          void Notifications.clearLastNotificationResponseAsync();
+        }
+      });
+      removeSubscription = () => subscription.remove();
+
+      void Notifications.getLastNotificationResponseAsync().then((response) => {
+        const route = response?.notification.request.content.data?.route;
+        if (typeof route === "string" && isAllowedNotificationRoute(route)) {
+          router.push(route as Parameters<typeof router.push>[0]);
+          void Notifications.clearLastNotificationResponseAsync();
+        }
+      });
     });
 
     return () => {
-      subscription.remove();
+      disposed = true;
+      removeSubscription?.();
     };
   }, [router]);
 
   useEffect(() => {
-    if (Platform.OS === "web") {
+    if (Platform.OS !== "android") {
       return undefined;
     }
 
     const timeout = setTimeout(() => {
-      void primeDevotionalReminderPermissionsOnLaunch();
+      void import("@/features/devotionalPlans/devotionalReminderService").then(
+        ({ primeDevotionalReminderPermissionsOnLaunch }) => primeDevotionalReminderPermissionsOnLaunch(),
+      );
     }, 700);
 
     return () => clearTimeout(timeout);
   }, []);
 
-  if (!loaded) {
-    return null;
-  }
-
-  const showPersistentTabBar = segments[0] === "(tabs)" || segments[0] === "plans";
-
   return (
     <AppearanceProvider>
-      <RootContent loaded={loaded} router={router} segments={segments} />
+      <RootContent router={router} segments={segments} />
     </AppearanceProvider>
   );
 }
 
 function RootContent({
-  loaded,
   router,
   segments,
 }: {
-  loaded: boolean;
   router: ReturnType<typeof useRouter>;
   segments: string[];
 }) {
   const { colors, isDark, ready } = useAppAppearance();
 
-  if (!loaded || !ready) {
+  if (!ready) {
     return null;
   }
 
@@ -124,8 +108,8 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
   }, []);
 
   return (
-    <DevotionalCatalogProvider>
-      <VersionGateProvider>
+    <VersionGateProvider>
+      <DevotionalCatalogProvider>
         <AuthProvider>
         <StatusBar style={isDark ? "light" : "dark"} />
         <Stack
@@ -139,6 +123,7 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="ios-protection" options={{ headerShown: false }} />
+          <Stack.Screen name="ios-rescue" options={{ headerShown: false }} />
           <Stack.Screen name="ios-readiness" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
@@ -155,8 +140,8 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
         </Stack>
         {showPersistentTabBar ? <PersistentTabBar /> : null}
         </AuthProvider>
-      </VersionGateProvider>
-    </DevotionalCatalogProvider>
+      </DevotionalCatalogProvider>
+    </VersionGateProvider>
   );
 }
 
