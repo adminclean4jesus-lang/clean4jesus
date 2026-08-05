@@ -118,6 +118,7 @@ jobs:
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
       - name: Run 20 repeated cold launches
+        timeout-minutes: 10
         run: "$HOME/.maestro/bin/maestro test .maestro/ios-startup-smoke.yml"
 
       - name: Capture Clean4Jesus native crash evidence
