@@ -25,7 +25,9 @@ jobs:
           cache: npm
 
       - name: Install locked dependencies
-        run: npm ci
+        # NODE_ENV=production is correct for the app bundle, but this gate also
+        # needs the pinned TypeScript and Vitest dev tools before Xcode starts.
+        run: npm ci --include=dev
 
       # Keep these separate so the GitHub API identifies the exact failed gate
       # even when the credential used to monitor Actions cannot read raw logs.
