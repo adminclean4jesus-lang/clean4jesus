@@ -27,11 +27,26 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Verify JavaScript and architecture contracts
-        run: |
-          npx tsc --noEmit
-          npm run test:unit
-          npx expo-doctor
+      # Keep these separate so the GitHub API identifies the exact failed gate
+      # even when the credential used to monitor Actions cannot read raw logs.
+      - name: Verify TypeScript contract
+        id: typescript
+        continue-on-error: true
+        run: npx tsc --noEmit
+
+      - name: Verify unit-test contract
+        id: unit_tests
+        continue-on-error: true
+        run: npm run test:unit
+
+      - name: Verify Expo configuration contract
+        id: expo_doctor
+        continue-on-error: true
+        run: npx expo-doctor
+
+      - name: Enforce JavaScript and architecture contracts
+        if: ${{ steps.typescript.outcome == 'failure' || steps.unit_tests.outcome == 'failure' || steps.expo_doctor.outcome == 'failure' }}
+        run: exit 1
 
       - name: Generate the iOS native project
         run: npx expo prebuild --platform ios --clean

@@ -61,6 +61,7 @@ Este documento es memoria operativa del proyecto. Antes de modificar la app, lee
 ## Eficiencia De Trabajo
 
 - Mantener la misma calidad tecnica y de producto usando la menor cantidad razonable de tokens, tiempo y llamadas a herramientas.
+- **Graphify obligatorio primero:** antes de buscar, inspeccionar o volver a investigar cualquier aspecto del repositorio, consultar `graphify-out/graph.json` mediante `graphify query` con una pregunta estrecha y un presupuesto bajo. Reutilizar ese resultado; ampliar el presupuesto, leer archivos o ejecutar herramientas adicionales solo si el grafo no responde la duda concreta. Actualizar el grafo incrementalmente solo cuando cambie materialmente la arquitectura o el usuario lo solicite.
 - Leer primero estas directivas y reutilizar el contexto ya comprobado; no repetir auditorias, busquedas, builds ni lecturas completas sin una razon concreta.
 - Investigar en paralelo cuando sea posible, limitar la salida de herramientas a lo necesario y resumir hallazgos en vez de volcar logs extensos.
 - Comunicar avances y resultados de forma breve, clara y accionable. Ampliar detalles solo cuando ayuden a decidir, diagnosticar un fallo o documentar un riesgo.
