@@ -86,6 +86,7 @@ jobs:
           node -e "const p=require('./ios/Podfile.properties.json'); if(p.newArchEnabled !== 'false'){throw new Error('iOS New Architecture is still enabled: '+p.newArchEnabled)}; console.log('iOS newArchEnabled=false')"
 
       - name: Compile the Release simulator app
+        timeout-minutes: 25
         run: |
           xcodebuild \
             -workspace ios/Clean4Jesus.xcworkspace \
