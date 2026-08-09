@@ -1,5 +1,4 @@
 import { getRuntimePlatform } from '@/features/platform/runtimePlatform';
-import { iosProtectionService } from '../iosProtection/iosProtectionService.ios';
 
 export type ProtectionPlatformCapability = {
   available: boolean;
@@ -51,9 +50,10 @@ export async function getShieldPlatformCapabilities(): Promise<ShieldPlatformCap
   }
 
   if (platform === 'ios') {
-    const iosCaps = await iosProtectionService.getProtectionCapabilities();
     return {
-      isSupported: iosCaps.supportsFamilyControls,
+      // The shared layer stays conservative; the native iOS service verifies
+      // Family Controls entitlement and authorization before enabling shields.
+      isSupported: false,
       platformName: 'ios',
       mechanism: 'family_controls_managed_settings',
     };
