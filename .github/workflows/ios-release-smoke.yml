@@ -39,6 +39,8 @@ jobs:
           mkdir -p qa-gate
           npx tsc --noEmit > qa-gate/typescript.log 2>&1
           status=$?
+          echo '--- TypeScript output ---'
+          cat qa-gate/typescript.log
           echo "typescript=$status" >> qa-gate/results.txt
           exit $status
 
@@ -50,6 +52,8 @@ jobs:
           mkdir -p qa-gate
           npm run test:unit > qa-gate/unit-tests.log 2>&1
           status=$?
+          echo '--- Unit test output ---'
+          cat qa-gate/unit-tests.log
           echo "unit_tests=$status" >> qa-gate/results.txt
           exit $status
 
@@ -61,6 +65,8 @@ jobs:
           mkdir -p qa-gate
           npx expo-doctor > qa-gate/expo-doctor.log 2>&1
           status=$?
+          echo '--- Expo Doctor output ---'
+          cat qa-gate/expo-doctor.log
           echo "expo_doctor=$status" >> qa-gate/results.txt
           exit $status
 
@@ -70,6 +76,14 @@ jobs:
         run: |
           summary="$(tr '\n' ',' < qa-gate/results.txt | sed 's/,$//')"
           echo "summary=$summary" >> "$GITHUB_OUTPUT"
+
+      - name: Upload QA contract logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-qa-contract-logs
+          path: qa-gate
+          if-no-files-found: warn
 
       - name: Enforce contracts ${{ steps.contract_summary.outputs.summary }}
         if: ${{ steps.typescript.outcome == 'failure' || steps.unit_tests.outcome == 'failure' || steps.expo_doctor.outcome == 'failure' }}
