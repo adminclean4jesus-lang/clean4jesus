@@ -6,8 +6,6 @@ tags:
   - startup
 ---
 - launchApp:
-    clearState: true
-    clearKeychain: true
 - extendedWaitUntil:
     visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
     timeout: 20000

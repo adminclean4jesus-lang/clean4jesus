@@ -39,4 +39,11 @@ describe("iOS native architecture safety", () => {
     expect(packageJson.dependencies).not.toHaveProperty("react-native-worklets");
     expect(packageJson.dependencies).not.toHaveProperty("nativewind");
   });
+
+  it("does not uninstall the simulator app before the iOS startup smoke assertion", () => {
+    const startupSmoke = readFileSync(resolve(process.cwd(), ".maestro/ios-startup-smoke.yml"), "utf8");
+
+    expect(startupSmoke).not.toMatch(/clearState:\s*true/);
+    expect(startupSmoke).not.toMatch(/clearKeychain:\s*true/);
+  });
 });

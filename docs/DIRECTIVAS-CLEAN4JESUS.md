@@ -2,6 +2,8 @@
 
 ## Incidente iOS 1.3.16: cierre nativo de arranque - 2026-08-04
 
+- Correccion del gate de simulador (2026-08-08): el primer smoke Release no demostro un crash de la candidata Legacy. Maestro ejecutaba `clearState` y `clearKeychain`, lo que desinstalo `com.clean4jesus.app` antes de la asercion; la captura posterior era la pantalla de inicio y Maestro no encontro ningun crash del bundle. El smoke ahora conserva la instalacion limpia realizada por CI y un test prohíbe reintroducir esas opciones. Repetir el gate completo antes de atribuir cualquier resultado a la app.
+
 - Las builds 4 a 7 comparten la misma frontera de fallo de React Native Nueva Arquitectura: una `NSException` de un TurboModule `void` llega a `ObjCTurboModule::performVoidMethodInvocation`; en las builds 5 a 7, `convertNSExceptionToJSError` accede a Hermes desde la cola nativa y termina en `EXC_BAD_ACCESS`. El patrón coincide con el defecto abierto `react-native#53960` para RN 0.81.x. No seguir corrigiendo fuentes, timers, providers, Family Controls ni credenciales como causa de este incidente.
 - Corrección candidata: Legacy Architecture exclusivamente en iOS mediante `expo-build-properties`; Android conserva `newArchEnabled=true`. Reanimated queda en 3.19.5, compatible con RN 0.81 en Paper y Fabric, y se retiran Worklets/NativeWind no usados para que iOS Legacy pueda compilar.
 - Gate automático `tests/unit/iosArchitectureSafety.test.ts`: debe comprobar iOS Legacy, Android New Architecture, Reanimated 3.19 y ausencia de Worklets/NativeWind. No eliminar ni debilitar este contrato.
