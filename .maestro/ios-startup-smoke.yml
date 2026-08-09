@@ -5,7 +5,7 @@ tags:
   - release
   - startup
 ---
-- launchApp:
+- launchApp
 - extendedWaitUntil:
     visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
     timeout: 20000
