@@ -15,7 +15,7 @@
     "ios": {
       "appleTeamId": "Z7NA7KP494",
       "bundleIdentifier": "com.clean4jesus.app",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

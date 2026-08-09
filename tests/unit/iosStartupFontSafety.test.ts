@@ -19,9 +19,11 @@ describe("iOS startup font safety", () => {
 
   it("does not load bundled fonts dynamically during application startup", () => {
     const layout = readFileSync(resolve(process.cwd(), "app/_layout.tsx"), "utf8");
+    const theme = readFileSync(resolve(process.cwd(), "src/theme.ts"), "utf8");
 
     expect(layout).not.toContain("useFonts(");
     expect(layout).not.toContain("@expo-google-fonts/");
+    expect(theme).toContain('Platform.OS === "ios" ? "System"');
   });
 
   it("does not bundle or register an icon font during startup", () => {
