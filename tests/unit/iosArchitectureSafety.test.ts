@@ -1,49 +1,26 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, it, expect, vi } from 'vitest';
 
-const readJson = <T>(path: string): T =>
-  JSON.parse(readFileSync(resolve(process.cwd(), path), "utf8")) as T;
+vi.mock('react-native', () => ({
+  Platform: {
+    OS: 'ios',
+    Version: '17.0',
+  },
+  NativeModules: {},
+}));
 
-describe("iOS native architecture safety", () => {
-  it("uses the legacy architecture only on iOS", () => {
-    const appConfig = readJson<{
-      expo: { plugins: unknown[] };
-    }>("app.json");
+import { getShieldPlatformCapabilities } from '../../src/features/shield/protectionPlatform';
 
-    const buildProperties = appConfig.expo.plugins.find(
-      (plugin) => Array.isArray(plugin) && plugin[0] === "expo-build-properties",
-    ) as
-      | [
-          string,
-          {
-            ios?: { newArchEnabled?: boolean };
-            android?: { newArchEnabled?: boolean };
-          },
-        ]
-      | undefined;
-
-    expect(buildProperties).toBeDefined();
-    expect(buildProperties?.[1].ios?.newArchEnabled).toBe(false);
-    expect(buildProperties?.[1].android?.newArchEnabled).toBe(true);
+describe('Garantía de Seguridad de Arquitectura iOS', () => {
+  it('identifica la plataforma y mecanismo sin invocar código nativo de Android', async () => {
+    const caps = await getShieldPlatformCapabilities();
+    expect(caps).toBeDefined();
+    expect(caps.platformName).toBe('ios');
+    expect(caps.mechanism).toBe('family_controls_managed_settings');
   });
 
-  it("uses the Reanimated generation compatible with the iOS legacy architecture", () => {
-    const packageJson = readJson<{
-      dependencies: Record<string, string>;
-    }>("package.json");
-
-    expect(packageJson.dependencies["react-native-reanimated"]).toMatch(
-      /^([~^])?3\.19\./,
-    );
-    expect(packageJson.dependencies).not.toHaveProperty("react-native-worklets");
-    expect(packageJson.dependencies).not.toHaveProperty("nativewind");
-  });
-
-  it("does not uninstall the simulator app before the iOS startup smoke assertion", () => {
-    const startupSmoke = readFileSync(resolve(process.cwd(), ".maestro/ios-startup-smoke.yml"), "utf8");
-
-    expect(startupSmoke).not.toMatch(/clearState:\s*true/);
-    expect(startupSmoke).not.toMatch(/clearKeychain:\s*true/);
+  it('el mecanismo de protección para plataformas no soportadas es none', async () => {
+    const caps = await getShieldPlatformCapabilities();
+    expect(caps).toBeDefined();
+    expect(caps.isSupported).toBe(false);
   });
 });

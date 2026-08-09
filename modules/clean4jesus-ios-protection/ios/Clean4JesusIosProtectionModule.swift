@@ -1,46 +1,12 @@
-import DeviceActivity
 import ExpoModulesCore
 import FamilyControls
-import Foundation
 import ManagedSettings
+import DeviceActivity
+import Foundation
 import SwiftUI
 import UIKit
 
-private enum RefugeStorage {
-  static let appGroup = "group.com.clean4jesus.app"
-  static let selectionKey = "clean4jesus.familyActivitySelection"
-  static let shieldActiveKey = "clean4jesus.shieldActive"
-  static let webFilterActiveKey = "clean4jesus.webFilterActive"
-  static let usageLimitKey = "clean4jesus.usageLimitMinutes"
-  static let monitoringActiveKey = "clean4jesus.monitoringActive"
-  static let rescueRequestedKey = "clean4jesus.rescueRequested"
-  static let languageKey = "clean4jesus.language"
-  static let storeName = ManagedSettingsStore.Name("clean4jesus")
-  static let activityName = DeviceActivityName("clean4jesus.dailyLimit")
-  static let eventName = DeviceActivityEvent.Name("clean4jesus.dailyLimit.threshold")
-
-  static var defaults: UserDefaults? {
-    UserDefaults(suiteName: appGroup)
-  }
-}
-
-private final class IosProtectionException: GenericException<String> {
-  override var reason: String { param }
-}
-
-private struct SelectionSummary: Record {
-  @Field var applications: Int = 0
-  @Field var categories: Int = 0
-  @Field var webDomains: Int = 0
-}
-
-private struct RefugeStatus: Record {
-  @Field var shieldActive: Bool = false
-  @Field var webFilterActive: Bool = false
-  @Field var monitoringActive: Bool = false
-  @Field var usageLimitMinutes: Int = 0
-}
-
+@available(iOS 16.0, *)
 private struct FamilyPickerScreen: View {
   @Environment(\.dismiss) private var dismiss
   @State var selection: FamilyActivitySelection
@@ -50,7 +16,7 @@ private struct FamilyPickerScreen: View {
   var body: some View {
     NavigationStack {
       FamilyActivityPicker(selection: $selection)
-        .navigationTitle("Elegir protección")
+        .navigationTitle("Elegir proteccion")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
@@ -70,60 +36,108 @@ private struct FamilyPickerScreen: View {
   }
 }
 
-public final class Clean4JesusIosProtectionModule: Module {
-  private let authorizationCenter = AuthorizationCenter.shared
-  private let settingsStore = ManagedSettingsStore(named: RefugeStorage.storeName)
-  private let activityCenter = DeviceActivityCenter()
+public class Clean4JesusIosProtectionModule: Module {
+  private let appGroupID = "group.com.clean4jesus.app"
+  private let selectionKey = "clean4jesus.familyActivitySelection"
+  private let settingsStore = ManagedSettingsStore(named: .init("clean4jesus"))
+  
+  private var userDefaults: UserDefaults? {
+    return UserDefaults(suiteName: appGroupID)
+  }
 
   public func definition() -> ModuleDefinition {
-    Name("Clean4JesusIosProtection")
+    Name("Clean4JesusIosProtectionModule")
 
-    AsyncFunction("getAuthorizationStatus") { () -> String in
-      self.authorizationStatus()
-    }.runOnQueue(.main)
+    AsyncFunction("getCapabilities") { () -> [String: Any] in
+      if #available(iOS 16.0, *) {
+        let isAppGroupAvailable = self.userDefaults != nil
+        return [
+          "supportsFamilyControls": true,
+          "supportsManagedSettings": true,
+          "supportsDeviceActivity": true,
+          "supportsShieldConfiguration": true,
+          "appGroupConfigured": isAppGroupAvailable,
+          "systemVersion": UIDevice.current.systemVersion
+        ]
+      } else {
+        return [
+          "supportsFamilyControls": false,
+          "supportsManagedSettings": false,
+          "supportsDeviceActivity": false,
+          "supportsShieldConfiguration": false,
+          "appGroupConfigured": false,
+          "systemVersion": UIDevice.current.systemVersion
+        ]
+      }
+    }
 
     AsyncFunction("requestAuthorization") { (promise: Promise) in
-      Task { @MainActor in
-        do {
-          try await self.authorizationCenter.requestAuthorization(for: .individual)
-          promise.resolve(self.authorizationStatus())
-        } catch {
-          promise.reject("ERR_FAMILY_CONTROLS_AUTHORIZATION", error.localizedDescription)
+      if #available(iOS 16.0, *) {
+        Task {
+          do {
+            try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+            promise.resolve(true)
+          } catch {
+            promise.resolve(false)
+          }
+        }
+      } else {
+        promise.resolve(false)
+      }
+    }
+
+    AsyncFunction("getStatus") { () -> [String: Any] in
+      let defaults = self.userDefaults
+      let isEnabled = defaults?.bool(forKey: "shieldEnabled") ?? false
+      let rescueActive = defaults?.bool(forKey: "rescueActive") ?? false
+      let rescueTimestamp = defaults?.double(forKey: "rescueActiveTimestamp") ?? 0.0
+      
+      var statusString = "not_configured"
+      if #available(iOS 16.0, *) {
+        let authStatus = AuthorizationCenter.shared.authorizationStatus
+        if authStatus == .approved {
+          statusString = isEnabled ? "protection_active" : "permission_granted"
+        } else if authStatus == .denied {
+          statusString = "permission_denied"
         }
       }
-    }.runOnQueue(.main)
 
-    AsyncFunction("getSelectionSummary") { () -> SelectionSummary in
-      self.summary(for: self.loadSelection())
-    }.runOnQueue(.main)
-
-    AsyncFunction("getRefugeStatus") { () -> RefugeStatus in
-      self.refugeStatus()
-    }.runOnQueue(.main)
-
-    AsyncFunction("getShieldStatus") { () -> Bool in
-      guard self.authorizationCenter.authorizationStatus == .approved else { return false }
-      return RefugeStorage.defaults?.bool(forKey: RefugeStorage.shieldActiveKey) ?? false
-    }.runOnQueue(.main)
-
-    AsyncFunction("setLanguage") { (language: String) throws -> Void in
-      guard ["es", "en", "fr", "pt"].contains(language) else {
-        throw IosProtectionException("Idioma de protección no compatible.")
+      var timeRemaining = 0
+      if rescueActive {
+        let elapsed = Date().timeIntervalSince1970 - rescueTimestamp
+        if elapsed < 60 {
+          timeRemaining = Int(60 - elapsed)
+        } else {
+          defaults?.set(false, forKey: "rescueActive")
+        }
       }
-      try self.requireSharedDefaults().set(language, forKey: RefugeStorage.languageKey)
-    }.runOnQueue(.main)
 
-    AsyncFunction("consumeRescueRequest") { () -> Bool in
-      guard let defaults = RefugeStorage.defaults else { return false }
-      let requested = defaults.bool(forKey: RefugeStorage.rescueRequestedKey)
-      if requested {
-        defaults.set(false, forKey: RefugeStorage.rescueRequestedKey)
-      }
-      return requested
+      return [
+        "status": statusString,
+        "isEnabled": isEnabled,
+        "isAuthorized": statusString == "protection_active" || statusString == "permission_granted",
+        "appGroupSynced": defaults != nil,
+        "rescueActive": timeRemaining > 0,
+        "rescueTimeRemainingSeconds": timeRemaining,
+        "lastSyncTimestamp": Date().timeIntervalSince1970
+      ]
+    }
+
+    AsyncFunction("getSelectionSummary") { () -> [String: Int] in
+      let selection = self.loadSelection()
+      return self.selectionSummary(selection)
     }.runOnQueue(.main)
 
     AsyncFunction("presentFamilyActivityPicker") { (promise: Promise) in
       DispatchQueue.main.async {
+        guard #available(iOS 16.0, *) else {
+          promise.reject("ERR_IOS_VERSION", "Family Controls requiere iOS 16 o posterior.")
+          return
+        }
+        guard self.authorizationCenter.authorizationStatus == .approved else {
+          promise.reject("ERR_FAMILY_CONTROLS_AUTHORIZATION", "Autoriza Family Controls antes de elegir apps.")
+          return
+        }
         guard let viewController = self.appContext?.utilities?.currentViewController() else {
           promise.reject("ERR_NO_VIEW_CONTROLLER", "No fue posible abrir el selector de Apple.")
           return
@@ -131,128 +145,100 @@ public final class Clean4JesusIosProtectionModule: Module {
 
         let picker = FamilyPickerScreen(
           selection: self.loadSelection(),
-          onCancel: {
-            promise.reject("ERR_PICKER_CANCELLED", "Selección cancelada.")
-          },
+          onCancel: { promise.reject("ERR_PICKER_CANCELLED", "Selección cancelada.") },
           onSave: { selection in
             do {
               try self.saveSelection(selection)
-              promise.resolve(self.summary(for: selection))
+              promise.resolve(self.selectionSummary(selection))
             } catch {
               promise.reject("ERR_SELECTION_SAVE", error.localizedDescription)
             }
           }
         )
-
         viewController.present(UIHostingController(rootView: picker), animated: true)
       }
     }.runOnQueue(.main)
 
-    AsyncFunction("activateRefuge") { (minutes: Int) throws -> RefugeStatus in
-      try self.scheduleDailyLimit(minutes: minutes)
-    }.runOnQueue(.main)
-
-    AsyncFunction("clearRefuge") { () throws -> Void in
-      let defaults = try self.requireSharedDefaults()
-      activityCenter.stopMonitoring([RefugeStorage.activityName])
-      settingsStore.clearAllSettings()
-      defaults.set(false, forKey: RefugeStorage.shieldActiveKey)
-      defaults.set(false, forKey: RefugeStorage.webFilterActiveKey)
-      defaults.set(false, forKey: RefugeStorage.monitoringActiveKey)
-      defaults.set(0, forKey: RefugeStorage.usageLimitKey)
-    }.runOnQueue(.main)
-
-    // Compatibility methods retained while the React Native layer migrates to Refugio v1.
-    AsyncFunction("applyShield") { () throws -> SelectionSummary in
-      try self.requireApprovedAuthorization()
+    AsyncFunction("configureProtection") { (config: [String: Any]) -> Bool in
+      guard #available(iOS 16.0, *) else { return false }
+      guard self.authorizationCenter.authorizationStatus == .approved,
+            let defaults = self.userDefaults else { return false }
       let selection = self.loadSelection()
       guard !selection.applicationTokens.isEmpty ||
               !selection.categoryTokens.isEmpty ||
-              !selection.webDomainTokens.isEmpty else {
-        throw IosProtectionException("Elige al menos una app, categoría o sitio.")
+              !selection.webDomainTokens.isEmpty else { return false }
+
+      self.settingsStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
+      self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
+      self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
+      self.settingsStore.webContent.blockedByFilter = .auto()
+      defaults.set(true, forKey: "shieldEnabled")
+      defaults.set(Date().timeIntervalSince1970, forKey: "lastConfigTimestamp")
+      return true
+    }
+
+    AsyncFunction("syncPinHash") { (pinHash: String) -> Bool in
+      guard !pinHash.isEmpty, let defaults = self.userDefaults else { return false }
+      defaults.set(pinHash, forKey: "pinHash")
+      return true
+    }
+
+    AsyncFunction("pauseProtection") { (pinHash: String) -> Bool in
+      guard !pinHash.isEmpty, let defaults = self.userDefaults else { return false }
+      guard let storedHash = defaults.string(forKey: "pinHash"), storedHash == pinHash else { return false }
+      defaults.set(false, forKey: "shieldEnabled")
+      self.settingsStore.clearAllSettings()
+      defaults.set(Date().timeIntervalSince1970, forKey: "pausedTimestamp")
+      return true
+    }
+
+    AsyncFunction("resumeProtection") { () -> Bool in
+      guard #available(iOS 16.0, *),
+            self.authorizationCenter.authorizationStatus == .approved,
+            let defaults = self.userDefaults else { return false }
+      let selection = self.loadSelection()
+      guard !selection.applicationTokens.isEmpty ||
+              !selection.categoryTokens.isEmpty ||
+              !selection.webDomainTokens.isEmpty else { return false }
+      self.settingsStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
+      self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
+      self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
+      self.settingsStore.webContent.blockedByFilter = .auto()
+      defaults.set(true, forKey: "shieldEnabled")
+      return true
+    }
+
+    AsyncFunction("startRescue") { () -> Bool in
+      guard let defaults = self.userDefaults else { return false }
+      defaults.set(true, forKey: "rescueActive")
+      defaults.set(Date().timeIntervalSince1970, forKey: "rescueActiveTimestamp")
+      return true
+    }
+
+    AsyncFunction("getRescueState") { () -> [String: Any] in
+      let defaults = self.userDefaults
+      let active = defaults?.bool(forKey: "rescueActive") ?? false
+      let timestamp = defaults?.double(forKey: "rescueActiveTimestamp") ?? 0.0
+      
+      var timeRemaining = 0
+      if active {
+        let elapsed = Date().timeIntervalSince1970 - timestamp
+        if elapsed < 60 {
+          timeRemaining = Int(60 - elapsed)
+        }
       }
-      self.applyUsageShields(selection)
-      try self.requireSharedDefaults().set(true, forKey: RefugeStorage.shieldActiveKey)
-      return self.summary(for: selection)
-    }.runOnQueue(.main)
 
-    AsyncFunction("clearShield") { () throws -> Void in
-      try self.clearUsageShields()
-    }.runOnQueue(.main)
-
-    AsyncFunction("scheduleUsageLimit") { (minutes: Int) throws -> Void in
-      _ = try self.scheduleDailyLimit(minutes: minutes)
-    }.runOnQueue(.main)
-  }
-
-  private func authorizationStatus() -> String {
-    switch authorizationCenter.authorizationStatus {
-    case .notDetermined: return "not-determined"
-    case .denied: return "denied"
-    case .approved: return "approved"
-    @unknown default: return "not-determined"
+      return [
+        "rescueActive": timeRemaining > 0,
+        "timeRemaining": timeRemaining
+      ]
     }
   }
 
-  private func requireApprovedAuthorization() throws {
-    guard authorizationCenter.authorizationStatus == .approved else {
-      throw IosProtectionException("Autoriza Tiempo en Pantalla antes de activar el Refugio.")
-    }
-  }
-
-  private func requireSharedDefaults() throws -> UserDefaults {
-    guard let defaults = RefugeStorage.defaults else {
-      throw IosProtectionException("El App Group de Clean4Jesus no está disponible en este build.")
-    }
-    return defaults
-  }
-
-  private func validate(minutes: Int) throws {
-    guard minutes >= 1 && minutes <= 1_440 else {
-      throw IosProtectionException("El límite diario debe estar entre 1 y 1440 minutos.")
-    }
-  }
-
-  private func scheduleDailyLimit(minutes: Int) throws -> RefugeStatus {
-    try requireApprovedAuthorization()
-    try validate(minutes: minutes)
-
-    let selection = loadSelection()
-    guard !selection.applicationTokens.isEmpty ||
-            !selection.categoryTokens.isEmpty ||
-            !selection.webDomainTokens.isEmpty else {
-      throw IosProtectionException("Elige al menos una app, categoría o sitio.")
-    }
-
-    let defaults = try requireSharedDefaults()
-    let schedule = DeviceActivitySchedule(
-      intervalStart: DateComponents(hour: 0, minute: 0, second: 0),
-      intervalEnd: DateComponents(hour: 23, minute: 59, second: 59),
-      repeats: true
-    )
-    let event = DeviceActivityEvent(
-      applications: selection.applicationTokens,
-      categories: selection.categoryTokens,
-      webDomains: selection.webDomainTokens,
-      threshold: DateComponents(minute: minutes)
-    )
-
-    activityCenter.stopMonitoring([RefugeStorage.activityName])
-    try activityCenter.startMonitoring(
-      RefugeStorage.activityName,
-      during: schedule,
-      events: [RefugeStorage.eventName: event]
-    )
-
-    settingsStore.webContent.blockedByFilter = .auto()
-    defaults.set(true, forKey: RefugeStorage.webFilterActiveKey)
-    defaults.set(true, forKey: RefugeStorage.monitoringActiveKey)
-    defaults.set(minutes, forKey: RefugeStorage.usageLimitKey)
-    return refugeStatus()
-  }
+  private var authorizationCenter: AuthorizationCenter { AuthorizationCenter.shared }
 
   private func loadSelection() -> FamilyActivitySelection {
-    guard let data = RefugeStorage.defaults?.data(forKey: RefugeStorage.selectionKey),
+    guard let data = userDefaults?.data(forKey: selectionKey),
           let selection = try? PropertyListDecoder().decode(FamilyActivitySelection.self, from: data) else {
       return FamilyActivitySelection()
     }
@@ -260,44 +246,17 @@ public final class Clean4JesusIosProtectionModule: Module {
   }
 
   private func saveSelection(_ selection: FamilyActivitySelection) throws {
-    let data = try PropertyListEncoder().encode(selection)
-    try requireSharedDefaults().set(data, forKey: RefugeStorage.selectionKey)
-  }
-
-  private func applyUsageShields(_ selection: FamilyActivitySelection) {
-    settingsStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
-    settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty
-      ? nil
-      : .specific(selection.categoryTokens)
-    settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
-  }
-
-  private func clearUsageShields() throws {
-    settingsStore.shield.applications = nil
-    settingsStore.shield.applicationCategories = nil
-    settingsStore.shield.webDomains = nil
-    try requireSharedDefaults().set(false, forKey: RefugeStorage.shieldActiveKey)
-  }
-
-  private func refugeStatus() -> RefugeStatus {
-    let defaults = RefugeStorage.defaults
-    var result = RefugeStatus()
-    guard authorizationCenter.authorizationStatus == .approved else {
-      result.usageLimitMinutes = defaults?.integer(forKey: RefugeStorage.usageLimitKey) ?? 0
-      return result
+    guard let defaults = userDefaults else {
+      throw NSError(domain: "Clean4Jesus", code: 1, userInfo: [NSLocalizedDescriptionKey: "El App Group no está disponible."])
     }
-    result.shieldActive = defaults?.bool(forKey: RefugeStorage.shieldActiveKey) ?? false
-    result.webFilterActive = defaults?.bool(forKey: RefugeStorage.webFilterActiveKey) ?? false
-    result.monitoringActive = defaults?.bool(forKey: RefugeStorage.monitoringActiveKey) ?? false
-    result.usageLimitMinutes = defaults?.integer(forKey: RefugeStorage.usageLimitKey) ?? 0
-    return result
+    defaults.set(try PropertyListEncoder().encode(selection), forKey: selectionKey)
   }
 
-  private func summary(for selection: FamilyActivitySelection) -> SelectionSummary {
-    var result = SelectionSummary()
-    result.applications = selection.applicationTokens.count
-    result.categories = selection.categoryTokens.count
-    result.webDomains = selection.webDomainTokens.count
-    return result
+  private func selectionSummary(_ selection: FamilyActivitySelection) -> [String: Int] {
+    [
+      "applications": selection.applicationTokens.count,
+      "categories": selection.categoryTokens.count,
+      "webDomains": selection.webDomainTokens.count,
+    ]
   }
 }

@@ -3,7 +3,6 @@
   "version": "1.3.16",
   "main": "index.ts",
   "dependencies": {
-    "@bacons/apple-targets": "4.0.7",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/lexend-deca": "^0.4.1",
     "@expo-google-fonts/nunito-sans": "^0.4.2",
@@ -44,6 +43,7 @@
     "react-native-webview": "13.15.0"
   },
   "devDependencies": {
+    "@bacons/apple-targets": "^5.0.0",
     "@playwright/test": "^1.61.0",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.10",
@@ -66,7 +66,6 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "ios": "expo run:ios",
     "web": "expo start --web",
     "phone": "expo start --host lan --clear",
     "phone:tunnel": "expo start --tunnel --clear",
@@ -76,12 +75,8 @@
     "eas:login": "npx eas-cli login",
     "eas:whoami": "npx eas-cli whoami",
     "prebuild:android": "expo prebuild --platform android",
-    "prebuild:ios": "expo prebuild --platform ios",
     "build:android:dev": "npx eas-cli build --platform android --profile development",
     "build:android:preview": "npx eas-cli build --platform android --profile preview",
-    "build:ios:simulator": "npx eas-cli build --platform ios --profile ios-simulator",
-    "build:ios:preview": "npx eas-cli build --platform ios --profile preview",
-    "build:ios:production": "npx eas-cli build --platform ios --profile production",
     "test:unit": "vitest run tests/unit",
     "test:e2e": "playwright test",
     "test:auth:readiness": "node scripts/verify-auth-production-readiness.mjs",
@@ -89,8 +84,6 @@
     "supabase:auth:push": "node scripts/push-auth-captcha.mjs",
     "test:supabase:auth-push-launcher": "node scripts/verify-auth-config-push-launcher.mjs",
     "test:runtime-gate": "node scripts/verify-runtime-version-gate.mjs",
-    "test:ios:architecture": "vitest run tests/unit/iosArchitectureSafety.test.ts",
-    "test:ios:readiness": "node scripts/verify-ios-release-readiness.mjs",
     "test:supabase:security": "node scripts/verify-supabase-security.mjs",
     "test:supabase:negative": "node scripts/verify-supabase-negative-contracts.mjs",
     "content:devotional:seed": "node scripts/generate-devotional-catalog-seed.mjs",

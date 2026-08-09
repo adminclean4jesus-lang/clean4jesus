@@ -1,13 +1,9 @@
-/** @type {import('@bacons/apple-targets/app.plugin').ConfigFunction} */
-module.exports = (config) => ({
+module.exports = {
   type: "shield-config",
-  name: "Clean4JesusShieldConfiguration",
-  displayName: "Clean4Jesus Shield",
-  bundleIdentifier: ".ShieldConfiguration",
+  name: "ShieldConfigurationExtension",
   deploymentTarget: "16.0",
-  frameworks: ["ManagedSettings", "ManagedSettingsUI", "UIKit"],
   entitlements: {
     "com.apple.developer.family-controls": true,
-    "com.apple.security.application-groups": config.ios.entitlements["com.apple.security.application-groups"],
-  },
-});
+    "com.apple.security.application-groups": ["group.com.clean4jesus.app"]
+  }
+};
