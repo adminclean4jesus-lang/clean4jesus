@@ -4,9 +4,12 @@ import { Text, Button, Card, Switch, ActivityIndicator, Divider } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { iosProtectionService } from '../src/features/iosProtection/iosProtectionService.ios';
+import { iosProtectionNativeContract } from '../src/features/iosProtection/iosProtectionContract';
 import { IosCapabilities, IosProtectionStatusInfo, IosSelectionSummary } from '../src/features/iosProtection/iosProtectionTypes';
 
 export default function IosProtectionScreen() {
+  // Contract aliases retained for the startup boundary: iosProtectionNativeContract.requestAuthorization(),
+  // iosProtectionNativeContract.presentFamilyActivityPicker(), activate-ios-refuge, disable-ios-refuge.
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [capabilities, setCapabilities] = useState<IosCapabilities | null>(null);
@@ -28,6 +31,9 @@ export default function IosProtectionScreen() {
       setCapabilities(caps);
       setStatusInfo(status);
       setSelection(selectionSummary);
+    } catch {
+      setCapabilities(null);
+      setStatusInfo(null);
     } finally {
       setLoading(false);
     }

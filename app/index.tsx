@@ -21,6 +21,7 @@ import { fonts, ThemeColors } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function GateScreen() {
+  // iOS uses the dedicated refuge flow (equivalent to <Redirect href="/ios-protection" />).
   if (Platform.OS === "ios") return <IosGateScreen />;
   return <AndroidGateScreen />;
 }

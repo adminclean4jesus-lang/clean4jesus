@@ -40,6 +40,7 @@ public class Clean4JesusIosProtectionModule: Module {
   private let appGroupID = "group.com.clean4jesus.app"
   private let selectionKey = "clean4jesus.familyActivitySelection"
   private let settingsStore = ManagedSettingsStore(named: .init("clean4jesus"))
+  private let activityCenter = DeviceActivityCenter()
   
   private var userDefaults: UserDefaults? {
     return UserDefaults(suiteName: appGroupID)
@@ -69,7 +70,7 @@ public class Clean4JesusIosProtectionModule: Module {
           "systemVersion": UIDevice.current.systemVersion
         ]
       }
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("requestAuthorization") { (promise: Promise) in
       if #available(iOS 16.0, *) {
@@ -84,7 +85,7 @@ public class Clean4JesusIosProtectionModule: Module {
       } else {
         promise.resolve(false)
       }
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("getStatus") { () -> [String: Any] in
       let defaults = self.userDefaults
@@ -121,7 +122,7 @@ public class Clean4JesusIosProtectionModule: Module {
         "rescueTimeRemainingSeconds": timeRemaining,
         "lastSyncTimestamp": Date().timeIntervalSince1970
       ]
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("getSelectionSummary") { () -> [String: Int] in
       let selection = self.loadSelection()
@@ -172,16 +173,17 @@ public class Clean4JesusIosProtectionModule: Module {
       self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
       self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
       self.settingsStore.webContent.blockedByFilter = .auto()
+      // DeviceActivity limits are started by the monitor extension: activityCenter.startMonitoring
       defaults.set(true, forKey: "shieldEnabled")
       defaults.set(Date().timeIntervalSince1970, forKey: "lastConfigTimestamp")
       return true
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("syncPinHash") { (pinHash: String) -> Bool in
       guard !pinHash.isEmpty, let defaults = self.userDefaults else { return false }
       defaults.set(pinHash, forKey: "pinHash")
       return true
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("pauseProtection") { (pinHash: String) -> Bool in
       guard !pinHash.isEmpty, let defaults = self.userDefaults else { return false }
@@ -190,7 +192,7 @@ public class Clean4JesusIosProtectionModule: Module {
       self.settingsStore.clearAllSettings()
       defaults.set(Date().timeIntervalSince1970, forKey: "pausedTimestamp")
       return true
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("resumeProtection") { () -> Bool in
       guard #available(iOS 16.0, *),
@@ -206,14 +208,14 @@ public class Clean4JesusIosProtectionModule: Module {
       self.settingsStore.webContent.blockedByFilter = .auto()
       defaults.set(true, forKey: "shieldEnabled")
       return true
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("startRescue") { () -> Bool in
       guard let defaults = self.userDefaults else { return false }
       defaults.set(true, forKey: "rescueActive")
       defaults.set(Date().timeIntervalSince1970, forKey: "rescueActiveTimestamp")
       return true
-    }
+    }.runOnQueue(.main)
 
     AsyncFunction("getRescueState") { () -> [String: Any] in
       let defaults = self.userDefaults
@@ -232,7 +234,7 @@ public class Clean4JesusIosProtectionModule: Module {
         "rescueActive": timeRemaining > 0,
         "timeRemaining": timeRemaining
       ]
-    }
+    }.runOnQueue(.main)
   }
 
   private var authorizationCenter: AuthorizationCenter { AuthorizationCenter.shared }
