@@ -13,6 +13,8 @@ jobs:
     env:
       EXPO_NO_TELEMETRY: "1"
       NODE_ENV: production
+      MAESTRO_CLI_NO_ANALYTICS: "1"
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: "120000"
 
     steps:
       - name: Checkout exact source
