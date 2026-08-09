@@ -6,15 +6,15 @@ import UIKit
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     let appGroupID = "group.com.clean4jesus.app"
     
-    override func configuration(shielding application: ApplicationToken) -> ShieldConfiguration {
+    override func configuration(shielding application: Application) -> ShieldConfiguration {
         return createClean4JesusShieldConfig()
     }
     
-    override func configuration(shielding application: ApplicationToken, in category: ActivityCategoryToken) -> ShieldConfiguration {
+    override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
         return createClean4JesusShieldConfig()
     }
     
-    override func configuration(shielding webDomain: WebDomainToken) -> ShieldConfiguration {
+    override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
         return createClean4JesusShieldConfig()
     }
     
