@@ -1,5 +1,12 @@
 ﻿# Directivas Clean4Jesus
 
+## Incidente iOS 1.3.16 (8): crash nativo reproducible — 2026-08-08
+
+- Las builds internas 7 y 8 cierran en iPhone XS con iOS 18.7.9 aproximadamente 0,14 segundos después del lanzamiento. Ambas tienen el mismo UUID del ejecutable (`0b42e7b0-c5b7-35f8-83e3-c597de4f61e5`), el mismo primer frame de aplicación (`Clean4Jesus + 4539272`) y la misma excepción: `NSInvalidArgumentException` al insertar un valor `nil` en `NSDictionary`, desde el hilo JavaScript de React Native.
+- Esto descarta como causa la firma, TestFlight, distribución Ad Hoc, Modo desarrollador y el cambio de tipografía de la build 8. No lanzar más builds funcionales especulativas ni cambiar fuentes, Hermes, arquitectura React Native o credenciales como reacción a este crash.
+- Veredicto del comité virtual (Tech Lead, Arquitectura, Engineering/QA, Seguridad y Operaciones): `NO-GO` para release o TestFlight. La CI de `da46e64` también falló antes del smoke porque una prueba conservaba la expectativa de `ios.buildNumber === "7"`; ninguna candidata puede declararse validada hasta que CI esté verde.
+- Antes de un parche funcional se exige obtener el `.dSYM`/`.xcarchive` del binario exacto de build 8 y simbolicar el reporte `.ips`. Si los símbolos no están disponibles, la única canaria permitida es diagnóstica, con una frontera nativa aislada y sin registrar datos sensibles; no cuenta como release.
+
 ## Incidente iOS 1.3.16: cierre nativo de arranque - 2026-08-04
 
 - Correccion del gate de simulador (2026-08-08): el primer smoke Release no demostro un crash de la candidata Legacy. Maestro ejecutaba `clearState` y `clearKeychain`, lo que desinstalo `com.clean4jesus.app` antes de la asercion; la captura posterior era la pantalla de inicio y Maestro no encontro ningun crash del bundle. El smoke ahora conserva la instalacion limpia realizada por CI y un test prohíbe reintroducir esas opciones. Repetir el gate completo antes de atribuir cualquier resultado a la app.
