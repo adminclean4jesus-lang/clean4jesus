@@ -23,6 +23,7 @@ class ShieldActionExtension: ShieldActionDelegate {
         case .primaryButtonPressed:
             // Activar pausa de rescate de 60 segundos
             defaults.set(true, forKey: "rescueActive")
+            defaults.set(true, forKey: "clean4jesus.rescueRequested")
             defaults.set(Date().timeIntervalSince1970, forKey: "rescueActiveTimestamp")
             completionHandler(.defer)
         case .secondaryButtonPressed:

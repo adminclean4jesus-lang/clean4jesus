@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View, ScrollView } from 'react-native';
 import { Text, Button, Card, Switch, ActivityIndicator, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +15,11 @@ export default function IosProtectionScreen() {
   const [capabilities, setCapabilities] = useState<IosCapabilities | null>(null);
   const [statusInfo, setStatusInfo] = useState<IosProtectionStatusInfo | null>(null);
   const [selection, setSelection] = useState<IosSelectionSummary>({ applications: 0, categories: 0, webDomains: 0 });
+
+  const refresh = useCallback(async () => {
+    try { await loadStatus(); } catch { /* estado no disponible durante arranque */ }
+  }, []);
+  const run = async () => refresh();
 
   useEffect(() => {
     loadStatus();
