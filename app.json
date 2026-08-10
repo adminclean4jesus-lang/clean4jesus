@@ -78,6 +78,10 @@
     ],
     "extra": {
       "router": {},
+      "supabase": {
+        "url": "https://moqlovsxklxcpihvheyc.supabase.co",
+        "publishableKey": "sb_publishable_33LHr0SmYA5RIpa5HWpE_A_Yv35VcDt"
+      },
       "eas": {
         "projectId": "11080973-79ad-4aa0-8a81-2a8148d732c4"
       }

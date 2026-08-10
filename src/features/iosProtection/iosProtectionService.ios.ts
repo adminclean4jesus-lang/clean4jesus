@@ -1,10 +1,18 @@
-import { Platform, NativeModules } from 'react-native';
+import { Platform } from 'react-native';
 import { IIosProtectionContract } from './iosProtectionContract';
 import { IosCapabilities, IosProtectionConfig, IosProtectionStatusInfo, IosSelectionSummary } from './iosProtectionTypes';
 import { INITIAL_IOS_PROTECTION_STATE } from './iosProtectionState';
 import { IosProtectionError, IOS_PROTECTION_ERROR_CODES } from './iosProtectionErrors';
 
-const NativeIosProtection = NativeModules.Clean4JesusIosProtectionModule;
+const NativeIosProtection = (() => {
+  if (Platform.OS !== 'ios') return null;
+  try {
+    const expoModules = (0, eval)('require')('expo-modules-core') as { requireNativeModule: (name: string) => unknown };
+    return expoModules.requireNativeModule('Clean4JesusIosProtectionModule') as Record<string, (...args: any[]) => any>;
+  } catch {
+    return null;
+  }
+})();
 
 class IosProtectionService implements IIosProtectionContract {
   private currentStatus: IosProtectionStatusInfo = { ...INITIAL_IOS_PROTECTION_STATE };

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View, ScrollView } from 'react-native';
+import { Alert, Linking, StyleSheet, View, ScrollView } from 'react-native';
 import { Text, Button, Card, Switch, ActivityIndicator, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -62,11 +62,15 @@ export default function IosProtectionScreen() {
       const granted = await iosProtectionService.requestAuthorization();
       await loadStatus();
       if (!granted) {
-        Alert.alert('Family Controls no fue autorizado', 'Apple no concedio el permiso. Revisa Screen Time y vuelve a intentarlo.');
+        Alert.alert(
+          'Family Controls no fue autorizado',
+          'En tu iPhone abre Ajustes → Tiempo en pantalla → Restricciones de contenido y privacidad. Activa Tiempo en pantalla y vuelve aquí. Después pulsa Solicitar permisos otra vez.',
+          [{ text: 'Cerrar' }, { text: 'Abrir Ajustes', onPress: () => void Linking.openURL('App-prefs:SCREEN_TIME') }],
+        );
       }
     } catch {
       await loadStatus();
-      Alert.alert('No se pudo solicitar Family Controls', 'No fue posible abrir la autorizacion de Apple en este dispositivo.');
+        Alert.alert('No se pudo solicitar Family Controls', 'Comprueba que Tiempo en pantalla esté activo y que este iPhone no esté administrado por un perfil que bloquee Family Controls.');
     }
   };
 
@@ -160,7 +164,7 @@ export default function IosProtectionScreen() {
 
         {!statusInfo?.isAuthorized && (
           <Button mode="contained" onPress={handleRequestAuth} buttonColor="#071F52" style={styles.button}>
-            Solicitar Permisos de Family Controls
+            1. Autorizar Family Controls en Apple
           </Button>
         )}
 
