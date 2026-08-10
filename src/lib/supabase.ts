@@ -1,13 +1,15 @@
 import "react-native-url-polyfill/auto";
 
 import { createClient, processLock, type SupabaseClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
 import { AppState, Platform } from "react-native";
 
 import { authStorage } from "@/lib/supabaseStorage";
 import type { Database } from "@/types/database";
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? "";
-const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? "";
+const publicSupabase = (Constants.expoConfig?.extra?.supabase ?? {}) as { url?: string; publishableKey?: string };
+const supabaseUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? publicSupabase.url ?? "").trim();
+const supabasePublishableKey = (process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? publicSupabase.publishableKey ?? "").trim();
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl.startsWith("https://") && supabasePublishableKey.length > 20,
