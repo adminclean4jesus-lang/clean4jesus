@@ -23,9 +23,11 @@ Apple Developer Program, App Store Connect, certificados, perfiles de firma, cla
 5. Crear un App Group privado, por ejemplo `group.com.clean4jesus.app`, para compartir seleccion y estado entre app, Device Activity Monitor y pantallas Shield.
 6. Crear una clave APNs para EAS/Expo y probar una notificacion en un iPhone real.
 7. Crear el cliente OAuth iOS de Google para `com.clean4jesus.app`, actualizar Supabase si hace falta y validar el retorno `clean4jesus://auth/callback`.
-8. Generar el proyecto nativo iOS con `npm run prebuild:ios` en macOS/Xcode, anadir los targets Swift y firmarlos con el mismo equipo.
-9. Implementar y probar: FamilyActivityPicker, Managed Settings, Device Activity Monitor, Shield Configuration y Shield Action.
-10. Ejecutar `npm run test:ios:readiness`, luego subir primero a TestFlight interno.
+8. Registrar los App IDs `com.clean4jesus.app.DeviceActivityMonitor`, `com.clean4jesus.app.ShieldConfiguration` y `com.clean4jesus.app.ShieldAction`; asignar Family Controls (Distribution) y App Group a cada uno.
+9. Generar el proyecto nativo iOS con `npm run prebuild:ios` en macOS/Xcode. Los targets se crean desde `targets/` y no se deben reconstruir manualmente dentro de `ios/`.
+10. Regenerar las credenciales EAS para que existan perfiles de aprovisionamiento válidos para la app principal y las tres extensiones.
+11. Probar: FamilyActivityPicker, filtro web adulto, umbral Device Activity, Shield, apertura/fallback del rescate y persistencia tras reinicio.
+12. Ejecutar `npm run test:ios:readiness`, luego subir primero a TestFlight interno.
 
 ## Limites que se mantienen
 

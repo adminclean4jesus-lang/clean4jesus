@@ -1,0 +1,8 @@
+{
+  "name": "clean4jesus-ios-protection",
+  "version": "1.0.0",
+  "description": "Módulo nativo Swift de protección iOS para Clean4Jesus usando Family Controls y Managed Settings",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "private": true
+}

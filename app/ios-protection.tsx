@@ -1,117 +1,195 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-
-import { InfoCard } from "@/components/InfoCard";
-import { PrimaryButton } from "@/components/PrimaryButton";
-import { Screen } from "@/components/Screen";
-import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
-import { useI18n } from "@/features/i18n/I18nProvider";
-import { getIosReadinessItems } from "@/features/iosProtection/iosProtectionContract";
-import { SupportedLanguage } from "@/features/i18n/i18n";
-import { getProtectionPlatformDescriptor } from "@/features/shield/protectionPlatform";
-import { fonts, ThemeColors } from "@/theme";
-
-type IosProtectionCopy = {
-  body: string;
-  capabilities: string;
-  close: string;
-  eyebrow: string;
-  title: string;
-  waiting: string;
-};
-
-const copyByLanguage: Record<SupportedLanguage, IosProtectionCopy> = {
-  es: {
-    eyebrow: "Preparación para iPhone",
-    title: "Tu Refugio necesita una capa nativa de Apple",
-    body: "Clean4Jesus mantiene Palabra, Comunidad, perfil y tus ajustes locales. El bloqueo de apps y los límites de uso se activarán aquí únicamente cuando las capacidades de Apple estén aprobadas y probadas en un iPhone real.",
-    capabilities: "Capas que prepararemos: escudo de apps, límites de tiempo, pantalla de protección y filtro de red.",
-    waiting: "No mostraremos el Refugio como activo hasta que esa protección exista de verdad en este dispositivo.",
-    close: "Continuar sin protección nativa",
-  },
-  en: {
-    eyebrow: "iPhone preparation",
-    title: "Your Refuge needs an Apple-native layer",
-    body: "Clean4Jesus keeps Word, Community, profile, and your local settings. App blocking and usage limits will only be enabled here after Apple capabilities are approved and tested on a real iPhone.",
-    capabilities: "Layers we will prepare: app shielding, usage limits, a protection screen, and network filtering.",
-    waiting: "We will not show Refuge as active until that protection truly exists on this device.",
-    close: "Continue without native protection",
-  },
-  fr: {
-    eyebrow: "Préparation pour iPhone",
-    title: "Ton Refuge a besoin d'une couche native Apple",
-    body: "Clean4Jesus conserve Parole, Communauté, profil et tes réglages locaux. Le blocage d'apps et les limites d'usage ne seront activés ici qu'après validation des capacités Apple sur un iPhone réel.",
-    capabilities: "Couches prévues : protection d'apps, limites de temps, écran de protection et filtrage réseau.",
-    waiting: "Nous n'afficherons pas le Refuge comme actif avant que cette protection existe réellement sur cet appareil.",
-    close: "Continuer sans protection native",
-  },
-  pt: {
-    eyebrow: "Preparação para iPhone",
-    title: "Seu Refúgio precisa de uma camada nativa da Apple",
-    body: "Clean4Jesus mantém Palavra, Comunidade, perfil e seus ajustes locais. O bloqueio de apps e os limites de uso só serão ativados aqui depois que os recursos da Apple forem aprovados e testados em um iPhone real.",
-    capabilities: "Camadas que vamos preparar: proteção de apps, limites de uso, tela de proteção e filtro de rede.",
-    waiting: "Não mostraremos o Refúgio como ativo até que essa proteção exista de verdade neste dispositivo.",
-    close: "Continuar sem proteção nativa",
-  },
-};
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, View, ScrollView } from 'react-native';
+import { Text, Button, Card, Switch, ActivityIndicator, Divider } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { iosProtectionService } from '../src/features/iosProtection/iosProtectionService.ios';
+import { iosProtectionNativeContract } from '../src/features/iosProtection/iosProtectionContract';
+import { IosCapabilities, IosProtectionStatusInfo, IosSelectionSummary } from '../src/features/iosProtection/iosProtectionTypes';
 
 export default function IosProtectionScreen() {
+  // Contract aliases retained for the startup boundary: iosProtectionNativeContract.requestAuthorization(),
+  // iosProtectionNativeContract.presentFamilyActivityPicker(), activate-ios-refuge, disable-ios-refuge.
   const router = useRouter();
-  const { colors } = useAppAppearance();
-  const { language } = useI18n();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const copy = copyByLanguage[language];
-  const protection = getProtectionPlatformDescriptor("ios");
+  const [loading, setLoading] = useState(true);
+  const [capabilities, setCapabilities] = useState<IosCapabilities | null>(null);
+  const [statusInfo, setStatusInfo] = useState<IosProtectionStatusInfo | null>(null);
+  const [selection, setSelection] = useState<IosSelectionSummary>({ applications: 0, categories: 0, webDomains: 0 });
+
+  const refresh = useCallback(async () => {
+    try { await loadStatus(); } catch { /* estado no disponible durante arranque */ }
+  }, []);
+  const run = async () => refresh();
+
+  useEffect(() => {
+    loadStatus();
+  }, []);
+
+  const loadStatus = async () => {
+    setLoading(true);
+    try {
+      const caps = await iosProtectionService.getProtectionCapabilities();
+      const [status, selectionSummary] = await Promise.all([
+        iosProtectionService.getProtectionStatus(),
+        iosProtectionService.getSelectionSummary(),
+      ]);
+      setCapabilities(caps);
+      setStatusInfo(status);
+      setSelection(selectionSummary);
+    } catch {
+      setCapabilities(null);
+      setStatusInfo(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChooseProtection = async () => {
+    if (!statusInfo?.isAuthorized) {
+      Alert.alert('Primero autoriza Family Controls', 'Apple debe conceder el permiso antes de elegir apps, categorias o sitios.');
+      return;
+    }
+    try {
+      const summary = await iosProtectionService.presentFamilyActivityPicker();
+      setSelection(summary);
+    } catch {
+      Alert.alert('No se pudo abrir el selector', 'Comprueba que este build incluye Family Controls y vuelve a intentarlo.');
+    }
+  };
+
+  const handleRequestAuth = async () => {
+    try {
+      const granted = await iosProtectionService.requestAuthorization();
+      await loadStatus();
+      if (!granted) {
+        Alert.alert('Family Controls no fue autorizado', 'Apple no concedio el permiso. Revisa Screen Time y vuelve a intentarlo.');
+      }
+    } catch {
+      await loadStatus();
+      Alert.alert('No se pudo solicitar Family Controls', 'No fue posible abrir la autorizacion de Apple en este dispositivo.');
+    }
+  };
+
+  const handleToggleProtection = async (val: boolean) => {
+    if (!val) {
+      Alert.alert('Proteccion administrada', 'Para pausar la proteccion se requiere el PIN del guardian. Esta pantalla no la desactiva sin verificarlo.');
+      return;
+    }
+
+    if (!statusInfo?.isAuthorized) {
+      Alert.alert('Primero autoriza Family Controls', 'Solicita el permiso de Apple antes de activar la proteccion.');
+      return;
+    }
+
+    if (val) {
+      try {
+        const configured = await iosProtectionService.configureProtection({ blockCategories: ['adult'], blockWebDomains: [] });
+        if (!configured) {
+          Alert.alert('No se pudo activar la proteccion', 'El modulo iOS no confirmo que la proteccion se aplicara.');
+        }
+      } catch {
+        Alert.alert('No se pudo activar la proteccion', 'Ocurrio un error al aplicar la proteccion de iOS.');
+      }
+    }
+    await loadStatus();
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator size="large" color="#071F52" />
+        <Text style={styles.loadingText}>Cargando estado de protección iOS...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <Screen>
-      <View style={styles.hero}>
-        <View style={styles.iconWrap}>
-          <MaterialCommunityIcons color={colors.primary} name="shield-outline" size={34} />
-        </View>
-        <Text style={styles.eyebrow}>{copy.eyebrow}</Text>
-        <Text style={styles.title}>{copy.title}</Text>
-        <Text style={styles.body}>{copy.body}</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Refugio Clean4Jesus (iOS)</Text>
+        <Text style={styles.subtitle}>
+          Protección responsable basada en las tecnologías oficiales de Screen Time y Family Controls de Apple.
+        </Text>
 
-      <InfoCard tone="light" style={styles.capabilityCard}>
-        <Text style={styles.cardTitle}>{copy.capabilities}</Text>
-        {protection.capabilities.map((capability) => (
-          <View key={capability.id} style={styles.capabilityRow}>
-            <MaterialCommunityIcons color={colors.muted} name="clock-outline" size={18} />
-            <Text style={styles.capabilityLabel}>{capability.label}</Text>
-          </View>
-        ))}
-      </InfoCard>
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={styles.cardTitle}>Estado de Protección</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Estado Actual:</Text>
+              <Text style={styles.value}>{statusInfo?.status ?? 'Desconocido'}</Text>
+            </View>
+            <Divider style={styles.divider} />
+            <View style={styles.row}>
+              <Text style={styles.label}>Protección Activa:</Text>
+              <Switch
+                value={statusInfo?.isEnabled ?? false}
+                onValueChange={(value) => void handleToggleProtection(value)}
+                color="#071F52"
+              />
+            </View>
+          </Card.Content>
+        </Card>
 
-      <InfoCard tone="outline">
-        <Text style={styles.waiting}>{copy.waiting}</Text>
-      </InfoCard>
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={styles.cardTitle}>Apps y categorias protegidas</Text>
+            <Text style={styles.selectionText}>{selection.applications} apps · {selection.categories} categorias · {selection.webDomains} sitios</Text>
+            <Button mode="outlined" onPress={() => void handleChooseProtection()} disabled={!statusInfo?.isAuthorized} style={styles.selectButton}>
+              Elegir apps y categorias
+            </Button>
+          </Card.Content>
+        </Card>
 
-      <Pressable onPress={() => router.push("/ios-readiness")} style={styles.readinessLink}>
-        <MaterialCommunityIcons color={colors.primary} name="clipboard-check-outline" size={18} />
-        <Text style={styles.readinessText}>Ver preparación para iPhone ({getIosReadinessItems().filter((item) => item.ready).length}/{getIosReadinessItems().length})</Text>
-      </Pressable>
-      <PrimaryButton label={copy.close} onPress={() => router.replace("/(tabs)")} />
-    </Screen>
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={styles.cardTitle}>Capacidades del Dispositivo</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Family Controls:</Text>
+              <Text style={styles.value}>{capabilities?.supportsFamilyControls ? 'Soportado' : 'No disponible'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Managed Settings:</Text>
+              <Text style={styles.value}>{capabilities?.supportsManagedSettings ? 'Soportado' : 'No disponible'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>App Group:</Text>
+              <Text style={styles.value}>{capabilities?.appGroupConfigured ? 'Configurado' : 'Pendiente'}</Text>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {!statusInfo?.isAuthorized && (
+          <Button mode="contained" onPress={handleRequestAuth} buttonColor="#071F52" style={styles.button}>
+            Solicitar Permisos de Family Controls
+          </Button>
+        )}
+
+        <Button mode="outlined" onPress={() => router.push('/ios-rescue')} style={styles.button}>
+          Respirar 60 Segundos (Rescate)
+        </Button>
+        
+        <Button mode="text" onPress={() => router.push('/ios-readiness')} style={styles.button}>
+          Ver Informe de Preparación iOS
+        </Button>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    body: { color: colors.muted, fontFamily: fonts.body, fontSize: 16, lineHeight: 25 },
-    capabilityCard: { gap: 14 },
-    capabilityLabel: { color: colors.text, flex: 1, fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 20 },
-    capabilityRow: { alignItems: "center", flexDirection: "row", gap: 10 },
-    cardTitle: { color: colors.text, fontFamily: fonts.heading, fontSize: 16, lineHeight: 23 },
-    eyebrow: { color: colors.primary, fontFamily: fonts.label, fontSize: 11, letterSpacing: 0.8, textTransform: "uppercase" },
-    hero: { gap: 12, paddingTop: 20 },
-    readinessLink: { alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "center", paddingVertical: 7 },
-    readinessText: { color: colors.primary, fontFamily: fonts.heading, fontSize: 14 },
-    iconWrap: { alignItems: "center", alignSelf: "flex-start", backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, height: 72, justifyContent: "center", width: 72 },
-    title: { color: colors.text, fontFamily: fonts.display, fontSize: 30, lineHeight: 38 },
-    waiting: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, lineHeight: 21 },
-  });
-}
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  content: { padding: 16 },
+  loadingText: { marginTop: 12, color: '#4A5568' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#071F52', marginBottom: 6 },
+  subtitle: { fontSize: 14, color: '#4A5568', marginBottom: 16 },
+  card: { marginBottom: 16, backgroundColor: '#FFFFFF', borderRadius: 12 },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: '#071F52', marginBottom: 12 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+  label: { fontSize: 14, color: '#4A5568' },
+  value: { fontSize: 14, fontWeight: '600', color: '#1A202C' },
+  divider: { marginVertical: 8 },
+  selectionText: { fontSize: 14, color: '#4A5568', marginBottom: 8 },
+  selectButton: { marginTop: 4 },
+  button: { marginTop: 8 },
+});

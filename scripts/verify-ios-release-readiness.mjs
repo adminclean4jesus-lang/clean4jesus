@@ -22,13 +22,20 @@ check("Frontera de plataforma", existsSync(path.join(root, "src/features/shield/
 check("Ruta iOS honesta", existsSync(path.join(root, "app/ios-protection.tsx")), "El usuario debe ver el estado real antes de tener proteccion nativa.");
 check("Ruta de preparacion iPhone", existsSync(path.join(root, "app/ios-readiness.tsx")), "La preparacion compartida debe explicar pendientes sin prometer proteccion activa.");
 check("Contrato de permisos iOS", existsSync(path.join(root, "src/features/iosProtection/iosProtectionContract.ts")), "El puente Swift debe tener un contrato versionado antes de crearlo.");
+check("App Group", readiness.familyControls.appGroupId === "group.com.clean4jesus.app" && appConfig.ios?.entitlements?.["com.apple.security.application-groups"]?.includes(readiness.familyControls.appGroupId), "La app y las extensiones deben compartir el App Group oficial.");
+check("Targets Screen Time en CNG", [
+  "targets/DeviceActivityMonitor/DeviceActivityMonitorExtension.swift",
+  "targets/ShieldConfiguration/ShieldConfigurationExtension.swift",
+  "targets/ShieldAction/ShieldActionExtension.swift",
+].every((file) => existsSync(path.join(root, file))) && appConfig.plugins?.includes("@bacons/apple-targets"), "Los tres targets deben regenerarse mediante Expo CNG.");
 check("Matriz QA iPhone", existsSync(path.join(root, "docs/IOS-DEVICE-QA-MATRIX.md")), "Cada capacidad nativa necesita evidencia de un dispositivo real.");
 check("Arquitectura documentada", existsSync(path.join(root, "docs/ADR-006-IOS-PROTECTION-ARCHITECTURE.md")), "La decision de plataforma debe quedar versionada.");
 check("Guia Apple", existsSync(path.join(root, "docs/IOS-APPLE-HANDOFF.md")), "La configuracion externa debe poder retomarse sin improvisar.");
 check("Apple Developer", readiness.appleDeveloper.enrolled && Boolean(readiness.appleDeveloper.teamId), "Requiere membresia Apple Developer y Team ID.");
 check("App Store Connect", readiness.appStoreConnect.appCreated && Boolean(readiness.appStoreConnect.appStoreId), "Crear el registro de la app antes de TestFlight.");
-check("Family Controls", readiness.familyControls.entitlementApproved && Boolean(readiness.familyControls.appGroupId), "Apple debe aprobar Family Controls y el App Group.");
-check("Extensiones de proteccion", readiness.familyControls.extensionsImplemented && readiness.familyControls.deviceValidated, "Device Activity y Shield requieren implementacion y prueba en iPhone real.");
+check("Family Controls app principal", readiness.familyControls.entitlementApproved && readiness.familyControls.mainAppEntitlementApproved, "El App ID principal debe conservar Family Controls (Distribution).");
+check("App IDs de extensiones", readiness.familyControls.extensionIdentifiersRegistered && readiness.familyControls.extensionEntitlementsApproved, "Registrar los tres bundle IDs y asignar Family Controls (Distribution) a cada uno.");
+check("Extensiones de proteccion", readiness.familyControls.extensionsImplemented && readiness.familyControls.deviceValidated, "Device Activity y Shield están implementados, pero requieren firma y prueba en iPhone real.");
 check("Notificaciones APNs", readiness.notifications.apnsKeyConfigured && readiness.notifications.deviceValidated, "Las notificaciones push iOS requieren APNs y evidencia en dispositivo.");
 check("Google OAuth iOS", readiness.googleOAuth.iosClientConfigured && readiness.googleOAuth.deviceValidated, "Configurar y probar el cliente OAuth para el bundle iOS.");
 check("TestFlight", readiness.testFlight.internalBuildUploaded && readiness.testFlight.privacyDeclared, "Subir una build firmada y completar App Privacy.");

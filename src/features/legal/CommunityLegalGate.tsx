@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import * as Linking from "expo-linking";
 import type { PropsWithChildren } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";

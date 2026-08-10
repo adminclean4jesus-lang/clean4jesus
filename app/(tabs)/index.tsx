@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, AppState, Pressable, StyleSheet, Text, View } from "react-native";

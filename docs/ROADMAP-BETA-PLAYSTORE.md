@@ -1,8 +1,22 @@
 # Clean4Jesus - Plan Maestro Hacia Play Store
 
 Fecha de corte: 2026-07-21  
-Version interna: `1.3.13`  
+Version interna: `1.3.16`
 Meta: publicar Clean4Jesus en Google Play para Android, sin QR, sin Metro y sin depender de un computador.
+
+## Incidente iOS TestFlight - 2026-07-27
+
+- `1.3.15 (3)` también falla al arrancar en el mismo iPhone, después de mostrar el gate de compatibilidad. La estrategia de enlazar la fuente de iconos estáticamente queda descartada y la submission EAS correspondiente fue cancelada.
+- La siguiente candidata elimina cualquier fuente de iconos y usa SVG locales. El único gate de avance es evidencia de apertura real estable en el iPhone XS; no se enviará a Apple antes de completar el QA local definido.
+- El primer IPA `1.3.13 (1)` fue firmado, subido y procesado correctamente en App Store Connect, pero se cerró en el primer arranque del iPhone de prueba.
+- El crash report identifica un `EXC_BAD_ACCESS` de `expo-font` durante el parseo de fuentes en ejecución. La candidata `1.3.14 (2)` retira esa carga dinámica; queda pendiente validación de apertura real antes de continuar con Screen Time, Family Controls y QA funcional iOS.
+
+## Sprint iOS 1.3.16 - 2026-08-04
+
+- `1.3.15 (3)` terminó correctamente en EAS el 4 de agosto de 2026. Se conserva como diagnóstico aislado de arranque mientras se prepara `1.3.16 (4)`.
+- Implementación local: filtro adulto de Apple, límite diario por selección, Device Activity Monitor, Shield Configuration, Shield Action y rescate de 60 segundos con PIN para activar o pausar.
+- Bloqueo externo: registrar los tres App IDs de extensiones, asignar Family Controls (Distribution), sincronizar el App Group y regenerar perfiles de aprovisionamiento.
+- Gate de release: prebuild/compile Swift en macOS o EAS, arranque real, umbral de 1-3 minutos, Shield, rescate, reinicio, permiso revocado, PIN y regresión completa de Comunidad/Palabra/Planes/Auth en iPhone XS.
 
 ## Cierre Legal Y De Privacidad - 2026-07-23
 

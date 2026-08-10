@@ -1,0 +1,7 @@
+{
+  "name": "clean4jesus-ios-protection",
+  "platforms": ["ios"],
+  "ios": {
+    "modules": ["Clean4JesusIosProtectionModule"]
+  }
+}

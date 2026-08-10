@@ -1,16 +1,19 @@
 {
   "appleDeveloper": {
-    "enrolled": false,
-    "teamId": null
+    "enrolled": true,
+    "teamId": "Z7NA7KP494"
   },
   "appStoreConnect": {
-    "appCreated": false,
-    "appStoreId": null
+    "appCreated": true,
+    "appStoreId": "6794878235"
   },
   "familyControls": {
-    "entitlementApproved": false,
-    "appGroupId": null,
-    "extensionsImplemented": false,
+    "entitlementApproved": true,
+    "mainAppEntitlementApproved": true,
+    "appGroupId": "group.com.clean4jesus.app",
+    "extensionsImplemented": true,
+    "extensionIdentifiersRegistered": true,
+    "extensionEntitlementsApproved": true,
     "deviceValidated": false
   },
   "networkExtension": {
@@ -26,7 +29,7 @@
     "deviceValidated": false
   },
   "testFlight": {
-    "internalBuildUploaded": false,
-    "privacyDeclared": false
+    "internalBuildUploaded": true,
+    "privacyDeclared": true
   }
 }

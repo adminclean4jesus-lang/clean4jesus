@@ -11,7 +11,12 @@ type NativeGuardianPin = {
   verifyGuardianPin?: (pin: string) => Promise<boolean>;
 };
 
+type NativeIosGuardianPin = {
+  syncPinHash?: (pinHash: string) => Promise<boolean>;
+};
+
 const nativeModule = NativeModules.Clean4JesusVpn as NativeGuardianPin | undefined;
+const iosNativeModule = NativeModules.Clean4JesusIosProtectionModule as NativeIosGuardianPin | undefined;
 const failedAttemptsKey = "clean4jesus.pin.failedAttempts";
 const lockedUntilKey = "clean4jesus.pin.lockedUntil";
 
@@ -21,7 +26,7 @@ export async function hasPin(): Promise<boolean> {
 
 export async function savePin(pin: string): Promise<void> {
   const pinHash = await hashPin(pin);
-  if (Platform.OS === "android" && !await syncPinToNative(pinHash)) {
+  if ((Platform.OS === "android" || Platform.OS === "ios") && !await syncPinToNative(pinHash)) {
     throw new Error("native_pin_sync_failed");
   }
   await setSecureItem(storageKeys.pin, pinHash);
@@ -68,12 +73,12 @@ export async function getStoredPin(): Promise<string | null> {
 }
 
 export async function syncPinToNative(pin?: string | null): Promise<boolean> {
-  if (Platform.OS !== "android" || !nativeModule?.syncGuardianPin) {
-    return false;
-  }
-
   const pinToSync = pin ?? (await getStoredPinHash());
   if (!pinToSync) return false;
+  if (Platform.OS === "ios" && iosNativeModule?.syncPinHash) {
+    return iosNativeModule.syncPinHash(pinToSync);
+  }
+  if (Platform.OS !== "android" || !nativeModule?.syncGuardianPin) return false;
   return nativeModule.syncGuardianPin(pinToSync);
 }
 

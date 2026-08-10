@@ -1,11 +1,17 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Platform } from "react-native";
 
 import { type AuthSessionErrorCode, isDefinitiveAuthError, isLocalSessionUsable, verifyAuthSession } from "@/features/auth/authSession";
 import { clearAccountabilityDevice } from "@/features/accountability/accountabilityService";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase";
 
 type AuthStatus = "loading" | "authenticated" | "anonymous" | "unconfigured";
+
+type PendingAuthVerification = {
+  operation: number;
+  session: Session | null;
+};
 
 type AuthContextValue = {
   error: AuthSessionErrorCode | null;
@@ -21,6 +27,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState<AuthSessionErrorCode | null>(null);
   const [status, setStatus] = useState<AuthStatus>(isSupabaseConfigured ? "loading" : "unconfigured");
+  const [pendingVerification, setPendingVerification] = useState<PendingAuthVerification | null>(null);
   const operationId = useRef(0);
   const sessionRef = useRef<Session | null>(null);
 
@@ -55,15 +62,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const supabase = getSupabaseClient();
     let cancelled = false;
 
-    const initialOperation = ++operationId.current;
-    void supabase.auth.getSession().then(({ data, error: sessionError }) => {
-      if (cancelled || initialOperation !== operationId.current) return;
-      if (sessionError) {
-        commitSession(null, "session_verification_failed");
-        return;
-      }
-      void verifyAndCommit(data.session, initialOperation);
-    });
+    // Preserve the validated Android auth lifecycle. The iOS path relies only
+    // on INITIAL_SESSION to avoid duplicating Keychain work during launch.
+    if (Platform.OS === "android") {
+      const initialOperation = ++operationId.current;
+      void supabase.auth.getSession().then(({ data: sessionData, error: sessionError }) => {
+        if (cancelled || initialOperation !== operationId.current) return;
+        if (sessionError) {
+          commitSession(null, "session_verification_failed");
+          return;
+        }
+        void verifyAndCommit(sessionData.session, initialOperation);
+      });
+    }
 
     const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
       const eventOperation = ++operationId.current;
@@ -73,11 +84,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
         return;
       }
 
-      setTimeout(() => {
-        if (!cancelled) {
-          void verifyAndCommit(nextSession, eventOperation);
-        }
-      }, 0);
+      if (Platform.OS === "android") {
+        setTimeout(() => {
+          if (!cancelled) void verifyAndCommit(nextSession, eventOperation);
+        }, 0);
+        return;
+      }
+
+      // INITIAL_SESSION is Supabase's single authoritative startup event.
+      // Queueing verification through React state lets this callback return
+      // before another auth method is called, without a Hermes timer.
+      if (event === "INITIAL_SESSION" || nextSession) {
+        setPendingVerification({ operation: eventOperation, session: nextSession });
+      } else {
+        commitSession(null, null);
+      }
     });
 
     return () => {
@@ -86,6 +107,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
       data.subscription.unsubscribe();
     };
   }, [commitSession, verifyAndCommit]);
+
+  useEffect(() => {
+    if (!pendingVerification) {
+      return;
+    }
+
+    void verifyAndCommit(pendingVerification.session, pendingVerification.operation);
+  }, [pendingVerification, verifyAndCommit]);
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured) return;

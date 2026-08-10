@@ -1,0 +1,155 @@
+name: iOS Release startup smoke
+
+on:
+  push:
+    branches:
+      - codex/ios-startup-gate
+  workflow_dispatch:
+
+jobs:
+  release-startup:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      EXPO_NO_TELEMETRY: "1"
+      NODE_ENV: production
+      MAESTRO_CLI_NO_ANALYTICS: "1"
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: "120000"
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        # NODE_ENV=production is correct for the app bundle, but this gate also
+        # needs the pinned TypeScript and Vitest dev tools before Xcode starts.
+        run: npm ci --include=dev
+
+      # Keep these separate so the GitHub API identifies the exact failed gate
+      # even when the credential used to monitor Actions cannot read raw logs.
+      - name: Verify TypeScript contract
+        id: typescript
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p qa-gate
+          npx tsc --noEmit > qa-gate/typescript.log 2>&1
+          status=$?
+          echo '--- TypeScript output ---'
+          cat qa-gate/typescript.log
+          echo "typescript=$status" >> qa-gate/results.txt
+          exit $status
+
+      - name: Verify unit-test contract
+        id: unit_tests
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p qa-gate
+          npm run test:unit > qa-gate/unit-tests.log 2>&1
+          status=$?
+          echo '--- Unit test output ---'
+          cat qa-gate/unit-tests.log
+          echo "unit_tests=$status" >> qa-gate/results.txt
+          exit $status
+
+      - name: Verify Expo configuration contract
+        id: expo_doctor
+        continue-on-error: true
+        run: |
+          set +e
+          mkdir -p qa-gate
+          npx expo-doctor > qa-gate/expo-doctor.log 2>&1
+          status=$?
+          echo '--- Expo Doctor output ---'
+          cat qa-gate/expo-doctor.log
+          echo "expo_doctor=$status" >> qa-gate/results.txt
+          exit $status
+
+      - name: Collect QA contract summary
+        id: contract_summary
+        if: always()
+        run: |
+          summary="$(tr '\n' ',' < qa-gate/results.txt | sed 's/,$//')"
+          echo "summary=$summary" >> "$GITHUB_OUTPUT"
+
+      - name: Upload QA contract logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-qa-contract-logs
+          path: qa-gate
+          if-no-files-found: warn
+
+      - name: Enforce contracts ${{ steps.contract_summary.outputs.summary }}
+        if: ${{ steps.typescript.outcome == 'failure' || steps.unit_tests.outcome == 'failure' || steps.expo_doctor.outcome == 'failure' }}
+        run: exit 1
+
+      - name: Generate the iOS native project
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods
+        run: npx pod-install ios
+
+      - name: Prove that iOS uses Legacy Architecture
+        run: |
+          node -e "const p=require('./ios/Podfile.properties.json'); if(p.newArchEnabled !== 'false'){throw new Error('iOS New Architecture is still enabled: '+p.newArchEnabled)}; console.log('iOS newArchEnabled=false')"
+
+      - name: Compile the Release simulator app
+        timeout-minutes: 25
+        run: |
+          xcodebuild \
+            -workspace ios/Clean4Jesus.xcworkspace \
+            -scheme Clean4Jesus \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Boot an available iPhone simulator
+        run: |
+          DEVICE_UDID=$(xcrun simctl list devices available --json | ruby -rjson -e 'data=JSON.parse(STDIN.read); phones=data["devices"].values.flatten.select { |d| d["name"].start_with?("iPhone") && d["isAvailable"] }; abort "No iPhone simulator available" if phones.empty?; puts phones.first["udid"]')
+          echo "DEVICE_UDID=$DEVICE_UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$DEVICE_UDID"
+          open -a Simulator
+          xcrun simctl bootstatus "$DEVICE_UDID" -b
+
+      - name: Install the Release app
+        run: |
+          APP_PATH=$(find ios/build/Build/Products/Release-iphonesimulator -maxdepth 1 -name 'Clean4Jesus.app' -print -quit)
+          test -n "$APP_PATH"
+          xcrun simctl install "$DEVICE_UDID" "$APP_PATH"
+
+      - name: Install Maestro locally
+        run: |
+          curl -Ls https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Run 20 repeated cold launches
+        timeout-minutes: 10
+        run: "$HOME/.maestro/bin/maestro test .maestro/ios-startup-smoke.yml"
+
+      - name: Capture Clean4Jesus native crash evidence
+        if: always()
+        run: |
+          mkdir -p qa-gate
+          xcrun simctl spawn "$DEVICE_UDID" log show --last 5m --style compact --predicate 'process == "Clean4Jesus"' > qa-gate/clean4jesus-simulator.log 2>&1 || true
+
+      - name: Upload simulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release-startup-evidence
+          path: |
+            qa-gate
+            ~/.maestro/tests
+            ios/build/Logs
+          if-no-files-found: ignore

@@ -24,18 +24,28 @@ const defaultSettings: DevotionalReminderSettings = {
 
 type PermissionSnapshot = "undetermined" | "denied" | "granted";
 let previewNotificationId: string | null = null;
+let notificationHandlerConfigured = false;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    priority: AndroidNotificationPriority.HIGH,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+function configureNotificationHandler() {
+  if (notificationHandlerConfigured || Platform.OS === "web") {
+    return;
+  }
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      priority: AndroidNotificationPriority.HIGH,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+  notificationHandlerConfigured = true;
+}
 
 export async function ensureDevotionalReminderChannel() {
+  configureNotificationHandler();
+
   if (Platform.OS !== "android") {
     return;
   }

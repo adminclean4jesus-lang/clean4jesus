@@ -1,5 +1,5 @@
 import { MD3DarkTheme, MD3LightTheme, configureFonts } from "react-native-paper";
-import { Appearance } from "react-native";
+import { Appearance, Platform } from "react-native";
 
 export const lightColors = {
   background: "#F8F9FA",
@@ -58,11 +58,14 @@ export type ThemeColors = { [Key in keyof typeof lightColors]: string };
 export const colors = Appearance.getColorScheme() === "dark" ? darkColors : lightColors;
 
 export const fonts = {
-  display: "LexendDeca_700Bold",
-  heading: "PlusJakartaSans_600SemiBold",
-  body: "Inter_400Regular",
-  bodyMedium: "PlusJakartaSans_500Medium",
-  label: "Inter_400Regular",
+  // These faces are not bundled in the iOS binary. Passing their names to
+  // UIKit during the first render can crash the React Native font bridge on
+  // iOS 18. Use the proven system face there; Android retains its typography.
+  display: Platform.OS === "ios" ? "System" : "LexendDeca_700Bold",
+  heading: Platform.OS === "ios" ? "System" : "PlusJakartaSans_600SemiBold",
+  body: Platform.OS === "ios" ? "System" : "Inter_400Regular",
+  bodyMedium: Platform.OS === "ios" ? "System" : "PlusJakartaSans_500Medium",
+  label: Platform.OS === "ios" ? "System" : "Inter_400Regular",
 } as const;
 
 const fontConfig = {
