@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, AppState, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ProgressBar } from "react-native-paper";
 
 import { AppHeader } from "@/components/AppHeader";
@@ -14,19 +14,30 @@ import { recordFall } from "@/features/habits/habitService";
 import { hasPin } from "@/features/pin/pinService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import { isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
+import { iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
 import { useShieldGate } from "@/features/shield/useShieldGate";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { uiText } from "@/features/i18n/uiText";
 import { fonts, ThemeColors } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
-type LayerKey = "pin" | "vpn" | "accessibility";
 
-const layerLabels = {
-  es: { accessibility: "Accesibilidad", pin: "PIN", vpn: "VPN local" },
-  en: { accessibility: "Accessibility", pin: "PIN", vpn: "Local VPN" },
-  fr: { accessibility: "Accessibilité", pin: "PIN", vpn: "VPN local" },
-  pt: { accessibility: "Acessibilidade", pin: "PIN", vpn: "VPN local" },
-} as const;
+const isIos = Platform.OS === "ios";
+
+type LayerKey = "pin" | "familyControls" | "vpn" | "accessibility";
+
+const layerLabels = isIos
+  ? {
+      es: { familyControls: "Family Controls", pin: "PIN" },
+      en: { familyControls: "Family Controls", pin: "PIN" },
+      fr: { familyControls: "Family Controls", pin: "PIN" },
+      pt: { familyControls: "Family Controls", pin: "PIN" },
+    } as const
+  : {
+      es: { accessibility: "Accesibilidad", pin: "PIN", vpn: "VPN local" },
+      en: { accessibility: "Accessibility", pin: "PIN", vpn: "Local VPN" },
+      fr: { accessibility: "Accessibilité", pin: "PIN", vpn: "VPN local" },
+      pt: { accessibility: "Acessibilidade", pin: "PIN", vpn: "VPN local" },
+    } as const;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -37,6 +48,7 @@ export default function HomeScreen() {
   const [pinReady, setPinReady] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
   const [accessibilityReady, setAccessibilityReady] = useState(false);
+  const [familyControlsReady, setFamilyControlsReady] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
@@ -53,39 +65,61 @@ export default function HomeScreen() {
     return () => subscription.remove();
   }, []);
 
-  const readiness = [pinReady, vpnReady, accessibilityReady].filter(Boolean).length / 3;
+  /* ── Readiness calculation differs by platform ── */
+  const totalLayers = isIos ? 2 : 3;
+  const readyCount = isIos
+    ? [pinReady, familyControlsReady].filter(Boolean).length
+    : [pinReady, vpnReady, accessibilityReady].filter(Boolean).length;
+  const readiness = readyCount / totalLayers;
   const refugeReady = enabled && readiness === 1;
   const coverageLabel = Math.round(readiness * 100);
-  const layers = layerLabels[language];
-  const missingLayers = [
-    !pinReady ? layers.pin : null,
-    !vpnReady ? layers.vpn : null,
-    !accessibilityReady ? layers.accessibility : null,
-  ].filter(Boolean) as string[];
+  const layers = (layerLabels as unknown as Record<string, Record<string, string>>)[language]
+    ?? (layerLabels as unknown as Record<string, Record<string, string>>).en;
+
+  const missingLayers = isIos
+    ? [!pinReady ? layers.pin : null, !familyControlsReady ? layers.familyControls : null].filter(Boolean) as string[]
+    : [!pinReady ? layers.pin : null, !vpnReady ? layers.vpn : null, !accessibilityReady ? layers.accessibility : null].filter(Boolean) as string[];
 
   async function refreshHomeState() {
     try {
-      const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
-        hasPin(),
-        isLocalDnsVpnActive(),
-        isAccessibilityInterventionActive(),
-      ]);
-      setPinReady(pinExists);
-      setVpnReady(vpnActive);
-      setAccessibilityReady(accessibilityActive);
+      if (isIos) {
+        const [pinExists, status] = await Promise.all([
+          hasPin(),
+          iosProtectionService.getProtectionStatus(),
+        ]);
+        setPinReady(pinExists);
+        setFamilyControlsReady(status.isAuthorized);
+      } else {
+        const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
+          hasPin(),
+          isLocalDnsVpnActive(),
+          isAccessibilityInterventionActive(),
+        ]);
+        setPinReady(pinExists);
+        setVpnReady(vpnActive);
+        setAccessibilityReady(accessibilityActive);
+      }
     } catch {
       setPinReady(false);
       setVpnReady(false);
       setAccessibilityReady(false);
+      setFamilyControlsReady(false);
     }
   }
 
-  async function handleLayerPress(layer: LayerKey) {
+  async function handleLayerPress(layer: string) {
     if (layer === "pin") {
       router.push("/pin-setup?after=shield-setup");
       return;
     }
 
+    if (isIos) {
+      // On iOS, "familyControls" layer → navigate to iOS protection screen
+      router.push("/ios-protection");
+      return;
+    }
+
+    // Android layers
     if (layer === "vpn") {
       await startLocalDnsVpn();
       setTimeout(() => void refreshHomeState(), 900);
@@ -98,6 +132,7 @@ export default function HomeScreen() {
   if (!checked) {
     return <AppLoadingExperience layout="contextual" message={uiText(language, "refuge.loading")} />;
   }
+
 
   return (
     <Screen>
@@ -117,7 +152,9 @@ export default function HomeScreen() {
                 <Text style={styles.heroKicker}>{refugeReady ? uiText(language, "refuge.kicker.active") : enabled ? uiText(language, "refuge.kicker.partial") : uiText(language, "refuge.kicker.paused")}</Text>
                 <Text style={styles.heroTitle}>{refugeReady ? uiText(language, "refuge.title.ready") : uiText(language, "refuge.title.start")}</Text>
                 <Text style={styles.heroBody}>
-                  {uiText(language, "refuge.body")}
+                  {isIos
+                    ? "Protección nativa con Screen Time y Family Controls de Apple. No usa VPN ni Accesibilidad."
+                    : uiText(language, "refuge.body")}
                 </Text>
               </View>
               <View style={[styles.heroMark, refugeReady && styles.heroMarkActive]}>
@@ -144,17 +181,17 @@ export default function HomeScreen() {
             </Pressable>
 
             {detailsOpen ? (
-              <View style={styles.layerGridWrap}>
-                <LayerButton label={layers.pin} ready={pinReady} value={pinReady ? uiText(language, "refuge.pin.ready") : uiText(language, "refuge.pin.create")} icon="lock-check-outline" onPress={() => void handleLayerPress("pin")} />
-                <LayerButton label={layers.vpn} ready={vpnReady} value={vpnReady ? uiText(language, "refuge.vpn.ready") : uiText(language, "refuge.vpn.activate")} icon="shield-outline" onPress={() => void handleLayerPress("vpn")} />
-                <LayerButton
-                  label={layers.accessibility}
-                  ready={accessibilityReady}
-                  value={accessibilityReady ? uiText(language, "refuge.accessibility.ready") : uiText(language, "refuge.accessibility.open")}
-                  icon="access-point"
-                  onPress={() => void handleLayerPress("accessibility")}
-                />
-              </View>
+                <View style={styles.layerGridWrap}>
+                  <LayerButton label={layers.pin} ready={pinReady} value={pinReady ? uiText(language, "refuge.pin.ready") : uiText(language, "refuge.pin.create")} icon="lock-check-outline" onPress={() => void handleLayerPress("pin")} />
+                  {isIos ? (
+                    <LayerButton label={layers.familyControls} ready={familyControlsReady} value={familyControlsReady ? "Autorizado" : "Configurar"} icon="apple" onPress={() => void handleLayerPress("familyControls")} />
+                  ) : (
+                    <>
+                      <LayerButton label={layers.vpn} ready={vpnReady} value={vpnReady ? uiText(language, "refuge.vpn.ready") : uiText(language, "refuge.vpn.activate")} icon="shield-outline" onPress={() => void handleLayerPress("vpn")} />
+                      <LayerButton label={layers.accessibility} ready={accessibilityReady} value={accessibilityReady ? uiText(language, "refuge.accessibility.ready") : uiText(language, "refuge.accessibility.open")} icon="access-point" onPress={() => void handleLayerPress("accessibility")} />
+                    </>
+                  )}
+                </View>
             ) : null}
           </LinearGradient>
         </View>

@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import { AppHeader } from "@/components/AppHeader";
 import { AppLoadingExperience } from "@/components/AppLoadingExperience";
@@ -34,6 +34,7 @@ type SettingsRowProps = {
 };
 
 export default function SettingsScreen() {
+  const isIos = Platform.OS === "ios";
   const router = useRouter();
   const { checked } = useShieldGate();
   const { colors, isDark, preference, setPreference } = useAppAppearance();
@@ -50,6 +51,10 @@ export default function SettingsScreen() {
   });
 
   const refresh = useCallback(async () => {
+    if (isIos) {
+      setSummary({ accessibility: false, pin: await hasPin(), shield: false, vpn: false });
+      return;
+    }
     const [pin, shield, vpn, accessibility] = await Promise.all([
       hasPin(),
       getShieldState(),
@@ -62,7 +67,7 @@ export default function SettingsScreen() {
       shield: Boolean(shield.enabled),
       vpn,
     });
-  }, []);
+  }, [isIos]);
 
   useEffect(() => {
     void refresh();
@@ -77,8 +82,9 @@ export default function SettingsScreen() {
     return <AppLoadingExperience layout="contextual" message={t(language, "settings.status.preparing")} />;
   }
 
-  const refugeReady =
-    summary.pin && summary.shield && summary.vpn && summary.accessibility;
+  const refugeReady = isIos
+    ? summary.pin
+    : summary.pin && summary.shield && summary.vpn && summary.accessibility;
 
   return (
     <Screen key={preference}>
@@ -105,10 +111,10 @@ export default function SettingsScreen() {
         title={t(language, "settings.section.protection")}
       >
         <SettingsRow
-          onPress={() => router.push("/app-protection")}
+          onPress={() => router.push(isIos ? "/ios-protection" : "/app-protection")}
           testID="settings-protection-apps"
-          subtitle={t(language, "settings.row.appProtectionHint")}
-          title={t(language, "settings.row.appProtection")}
+          subtitle={isIos ? "Selecciona apps, categorías y sitios con Screen Time de Apple." : t(language, "settings.row.appProtectionHint")}
+          title={isIos ? "Protección Screen Time" : t(language, "settings.row.appProtection")}
         />
         <SettingsRow
           onPress={() => router.push("/trusted-person")}
@@ -117,10 +123,10 @@ export default function SettingsScreen() {
           title={t(language, "settings.row.trustedPerson")}
         />
         <SettingsRow
-          onPress={() => router.push("/interruption-settings")}
+          onPress={() => router.push(isIos ? "/ios-rescue" : "/interruption-settings")}
           testID="settings-interruption"
-          subtitle={t(language, "settings.row.interruptionHint")}
-          title={t(language, "settings.row.interruption")}
+          subtitle={isIos ? "Pausa guiada de 60 segundos; no desactiva el escudo." : t(language, "settings.row.interruptionHint")}
+          title={isIos ? "Rescate iOS" : t(language, "settings.row.interruption")}
         />
       </SettingsSection>
 
@@ -225,7 +231,7 @@ export default function SettingsScreen() {
         />
       </SettingsSection>
 
-      <SettingsSection
+      {!isIos ? <SettingsSection
         hint={t(language, "settings.section.advancedHint")}
         title={t(language, "settings.section.advanced")}
       >
@@ -259,7 +265,7 @@ export default function SettingsScreen() {
             />
           </View>
         ) : null}
-      </SettingsSection>
+      </SettingsSection> : null}
     </Screen>
   );
 }
