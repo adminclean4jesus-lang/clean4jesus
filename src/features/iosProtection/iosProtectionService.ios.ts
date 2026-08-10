@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import { IIosProtectionContract } from './iosProtectionContract';
 import { IosCapabilities, IosProtectionConfig, IosProtectionStatusInfo, IosSelectionSummary } from './iosProtectionTypes';
 import { INITIAL_IOS_PROTECTION_STATE } from './iosProtectionState';
@@ -8,9 +8,10 @@ const NativeIosProtection = (() => {
   if (Platform.OS !== 'ios') return null;
   try {
     const expoModules = (0, eval)('require')('expo-modules-core') as { requireNativeModule: (name: string) => unknown };
-    return expoModules.requireNativeModule('Clean4JesusIosProtectionModule') as Record<string, (...args: any[]) => any>;
+    const expoModule = expoModules.requireNativeModule('Clean4JesusIosProtectionModule') as Record<string, (...args: any[]) => any>;
+    return expoModule ?? NativeModules.Clean4JesusIosProtectionModule ?? null;
   } catch {
-    return null;
+    return NativeModules.Clean4JesusIosProtectionModule ?? null;
   }
 })();
 

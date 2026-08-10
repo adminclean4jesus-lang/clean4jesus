@@ -24,7 +24,7 @@ const es = {
   prepare: "Preparar refugio",
   iosSettings: "Ajustes de protección iOS",
   permissionErrorTitle: "Permiso denegado",
-  permissionErrorBody: "Para activar la protección, necesitas autorizar Family Controls desde la configuración de Screen Time.",
+  permissionErrorBody: "Tiempo en pantalla puede estar activo y Family Controls seguir pendiente. Pulsa el botón otra vez y acepta el diálogo de Apple para que Clean4Jesus pueda administrar límites y bloqueos. Si no aparece, reinstala esta build y vuelve a intentarlo.",
 } as const;
 
 type Copy = { [K in keyof typeof es]: string };

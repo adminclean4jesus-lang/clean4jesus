@@ -64,13 +64,13 @@ export default function IosProtectionScreen() {
       if (!granted) {
         Alert.alert(
           'Family Controls no fue autorizado',
-          'En tu iPhone abre Ajustes → Tiempo en pantalla → Restricciones de contenido y privacidad. Activa Tiempo en pantalla y vuelve aquí. Después pulsa Solicitar permisos otra vez.',
+          'Tiempo en pantalla puede estar activo y aun así Family Controls seguir sin autorizar. Pulsa el botón otra vez y acepta el diálogo de Apple que dice que Clean4Jesus quiere administrar límites y bloqueos. Si el diálogo no aparece, cierra la app, desinstálala, instala esta build nuevamente y vuelve a intentarlo.',
           [{ text: 'Cerrar' }, { text: 'Abrir Ajustes', onPress: () => void Linking.openURL('App-prefs:SCREEN_TIME') }],
         );
       }
     } catch {
       await loadStatus();
-        Alert.alert('No se pudo solicitar Family Controls', 'Comprueba que Tiempo en pantalla esté activo y que este iPhone no esté administrado por un perfil que bloquee Family Controls.');
+          Alert.alert('No se pudo solicitar Family Controls', 'Apple no mostró el diálogo de autorización. Comprueba que no sea un iPhone infantil o administrado por una organización, reinstala esta build y vuelve a pulsar el botón.');
     }
   };
 
