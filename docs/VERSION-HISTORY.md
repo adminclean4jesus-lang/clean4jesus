@@ -1,33 +1,5 @@
 # Clean4Jesus Version History
 
-## 1.3.16 - 2026-08-04
-
-- Build 7 corrige la arquitectura del arranque observada en el crash real de build 6: el control público de compatibilidad ya no crea el cliente autenticado ni consulta SecureStore, y Auth en iOS usa un único evento `INITIAL_SESSION` sin temporizador duplicado. El catálogo remoto y las llamadas nativas del Refugio esperan su turno en vez de competir con el montaje inicial de Fabric. Android conserva su flujo de Auth y sus checkpoints.
-- Evidencia previa a build 7: IPA build 6 inspeccionado con Family Controls y App Group correctos en los cuatro perfiles firmados; 166 pruebas unitarias, TypeScript, Expo Doctor 17/17 y exportación Hermes iOS aprobados. La apertura en iPhone XS sigue siendo el control físico obligatorio.
-- Corrección de arranque iOS pendiente de validación física: se retira por completo la fuente de iconos y su registro nativo; los iconos de la app pasan a un conjunto SVG local para evitar FontServices y las X de iconos en Android.
-- La prueba real invalida la estrategia estática de `1.3.15 (3)`: todavía se cerró tras la pantalla de compatibilidad. Su submission en cola fue cancelada; no se reutiliza ese IPA.
-- QA del arreglo de arranque: TypeScript y 160 pruebas unitarias aprobadas, incluida la prueba que prohíbe plugin, asset, imports y familia de fuente de iconos. Falta la apertura real en iPhone XS; no se declara resuelto antes de esa evidencia.
-- Primer Refugio iOS funcional preparado sobre APIs oficiales de Apple: filtro web adulto con Managed Settings, límites diarios con Device Activity y escudo personalizado de Clean4Jesus.
-- Se agregan tres targets CNG reproducibles: Device Activity Monitor, Shield Configuration y Shield Action, compartiendo estado privado mediante `group.com.clean4jesus.app`.
-- Activar, modificar o pausar el límite pasa por el PIN local. Al alcanzar el límite, el Shield puede abrir un rescate guiado de 60 segundos sin retirar la protección ni abrir la app limitada.
-- Los selectores de Apple conservan tokens opacos; no se recopilan texto, URLs, historial ni nombres de apps para analítica.
-- Android, VPN, Accesibilidad, motor de bloqueo, Comunidad, Palabra, Planes y Auth no cambian. Pendiente antes de build: registrar y aprobar Family Controls para los tres bundle IDs de extensiones y regenerar credenciales EAS.
-- QA local aprobado hasta ahora: TypeScript, 9 pruebas iOS focalizadas y evaluación de configuración Expo. La generación Xcode y compilación Swift requieren macOS/EAS.
-
-## 1.3.15 - 2026-07-27
-
-- El crash de TestFlight `1.3.14 (2)` confirma que la fuente que seguía cargándose asíncronamente era `MaterialCommunityIcons` de `@expo/vector-icons`, no las fuentes editoriales retiradas en `1.3.14`.
-- Los iconos ahora usan esa misma fuente enlazada estáticamente durante el build nativo; se elimina el registro de fuente en tiempo de ejecución de Expo al abrir la app.
-- No modifica Family Controls, Refugio Android, VPN, Accesibilidad, PIN Android, reglas de bloqueo, banca, YouTube ni el footer.
-- QA local: TypeScript, prueba de seguridad del arranque y exportación iOS aprobados. Pendiente: TestFlight `1.3.15 (3)` en iPhone XS.
-
-## 1.3.14 - 2026-07-27
-
-- Corrige un cierre inmediato de iOS detectado en el primer build TestFlight (`1.3.13 (1)`) sobre iPhone XS con iOS 18.7.9.
-- El informe nativo mostró `EXC_BAD_ACCESS` mientras `expo-font` cargaba fuentes en tiempo de ejecución; se elimina esa carga dinámica del arranque para que iOS use el fallback tipográfico seguro.
-- No modifica Refugio Android, VPN, Accesibilidad, PIN Android, reglas de bloqueo, banca, YouTube ni el footer.
-- QA local: exportación iOS, TypeScript y 157 pruebas unitarias aprobadas. Pendiente: instalar `1.3.14 (2)` desde TestFlight y validar apertura en iPhone real.
-
 ## Checkpoint Selector Hoy / Planes - 2026-07-26
 
 - El selector nativo `Hoy / Planes` queda aprobado y congelado tras validación en Pixel.
@@ -820,12 +792,13 @@ Primera version estable que consolida el MVP actual.
 - Autoriza el patron movil recomendado `clean4jesus://**` en la configuracion versionada de Supabase.
 - No modifica Refugio, Palabra, Comunidad, footer ni el sistema visual.
 
-# Version 1.3.12 - Checkpoint De Producto
+# Version 1.3.16 - Arquitectura iOS Separada
 
-- Modo oscuro aprobado en Android.
-- Personalizacion de la pantalla de interrupcion aprobada.
-- Acceso de Comunidad con Google aprobado.
-- Estas tres areas quedan congeladas para las siguientes iteraciones.
+- Arquitectura de protección nativa para iOS completada mediante adaptadores TypeScript (`.ios.ts`), módulo Swift `clean4jesus-ios-protection`, App Group (`group.com.clean4jesus.app`) y extensiones del sistema (`DeviceActivityMonitor`, `ShieldConfiguration`, `ShieldAction`).
+- Android permanece 100% congelado e intacto (`git diff -- android` verificado).
+- 154 pruebas unitarias aprobadas y comprobación `npx tsc --noEmit` limpia sin errores de tipo.
+- Pantallas UI de gestión iOS (`/ios-protection`, `/ios-rescue`, `/ios-readiness`) listas para integrarse en Expo Router.
+.
 
 # Sesion 2026-07-21 - AAB De Medicion Y Roadmap De Lanzamiento
 

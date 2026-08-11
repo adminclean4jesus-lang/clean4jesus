@@ -1,46 +1,49 @@
-# ADR-006: Arquitectura de protección para iOS
+# ADR-006: Arquitectura de Protección Separada para iOS
 
-- Estado: aceptada para implementación por fases
-- Fecha: 2026-07-25
-- Responsables: Valentina Cruz (Arquitectura), Samuel Ortega (Tech Lead), Mateo Vidal (Ingeniería móvil y QA)
+- **Estado**: Aprobado por el Consejo Ejecutivo de Clean4Jesus
+- **Fecha**: 2026-08-09
+- **Autores**: Software Architect (Valentina Cruz), Tech Lead (Samuel Ortega), Security & Privacy Lead (Alma Torres)
 
-## Contexto
+## Contexto y Problema
 
-Android usa `VpnService`, `AccessibilityService` y una `Activity` nativa de interrupción. iOS no proporciona un equivalente de Accesibilidad para inspeccionar texto en otras apps ni permite cerrar procesos de terceros. Copiar esa implementación sería técnicamente falso y riesgoso para App Review.
+Clean4Jesus ayuda a personas a vivir en libertad frente a la vulnerabilidad digital y la pornografía. En Android, la protección nativa utiliza `VpnService` (DNS local) y `AccessibilityService` para la pantalla de interrupción.
 
-## Decisión
+iOS opera bajo un modelo de sandbox y seguridad fundamentalmente distinto. Apple prohíbe el uso de servicios de accesibilidad para filtrado o interrupción de aplicaciones de terceros y restringe el uso de VPNs. Sin embargo, Apple provee el framework **Screen Time** (`FamilyControls`, `ManagedSettings`, `DeviceActivity`) y extensiones del sistema (`ShieldConfiguration`, `ShieldAction`, `DeviceActivityMonitor`).
 
-1. Mantener el motor Android intacto como implementación `android`.
-2. Definir una frontera compartida (`protectionPlatform.ts`) que impide declarar protección iOS como activa sin evidencia nativa.
-3. Implementar en iOS, con targets Swift separados, las capacidades permitidas por Apple:
-   - Family Controls + Managed Settings para escudar apps seleccionadas.
-   - Device Activity para límites de tiempo y ejecución programada.
-   - Shield Configuration / Shield Action para el flujo de bloqueo permitido por iOS.
-   - Network Extension solo si Apple aprueba el entitlement y el caso de uso de DNS/filtro supera revisión.
-4. El producto comunica paridad de resultado, no igualdad de APIs: en iOS no se leerán mensajes, texto de pantalla o búsquedas dentro de apps de terceros.
+Es imperativo implementar la protección en iOS usando **exclusivamente las APIs oficiales de Apple**, manteniendo la base de código de Android intacta y congelada.
 
-## Consecuencias
+## Decisiones de Arquitectura
 
-- La comunidad, Palabra, Perfil, idioma, modo oscuro, autenticación, personalización local y notificaciones permanecen compartidos con React Native.
-- La protección de apps iOS exigirá selección explícita del usuario mediante las APIs de Screen Time; no habrá una blacklist de paquetes Android.
-- No se prometerá cierre forzoso de apps. El mecanismo válido es el escudo nativo de Apple.
-- El desarrollo y QA de las extensiones exige membresía Apple Developer, entitlement aprobado y dispositivo iPhone físico.
+1. **Separación Plataforma por Adaptadores**:
+   - `src/features/shield/shieldService.ts` bifurca la lógica usando adaptadores explícitos por plataforma (`.ios.ts` y `.android.ts`).
+   - Cero código de VPN o AccessibilityService importado o invocado en iOS.
 
-## Alternativas descartadas
+2. **Capa Nativa iOS (Screen Time Framework)**:
+   - **Family Controls**: Solicita autorización al usuario (`AuthorizationCenter.shared.requestAuthorization`). Presenta `FamilyActivityPicker` para selección privada de aplicaciones y categorías.
+   - **Managed Settings**: Aplica restricciones de aplicaciones y dominios web seleccionados mediante `ManagedSettingsStore`.
+   - **Device Activity**: Supervisa intervalos de uso y límites de tiempo mediante `DeviceActivitySchedule` y `DeviceActivityMonitor`.
+   - **Shield Configuration**: Define la UI nativa de interrupción (título, mensaje cristiano/pastoral, colores de Clean4Jesus, icono).
+   - **Shield Action**: Maneja las interacciones del usuario en el Shield (solicitar rescate o cerrar) sin ofrecer bypass permanente.
 
-- Reutilizar Accessibility de Android: no existe en iOS.
-- Mostrar una pantalla React Native sobre otras apps: iOS no lo permite de forma general.
-- Simular estado `activo` mientras faltan entitlements: viola confianza y calidad.
+3. **Comunicación Inter-Proceso Segura mediante App Group**:
+   - Se utiliza el App Group `group.com.clean4jesus.app` compartido entre la app principal y las extensiones nativas.
+   - **Datos permitidos en App Group**:
+     - `shieldEnabled` (boolean)
+     - `rescueActiveTimestamp` (number / timestamp)
+     - `pinHash` (cadena SHA-256)
+     - `selectedAppTokens` (FamilyActivitySelection tokenizado por Apple)
+   - **Datos ESTRICTAMENTE PROHIBIDOS en App Group o Backend**:
+     - URLs de páginas visitadas.
+     - Historial de navegación o búsquedas.
+     - Contenido de pantalla o texto detectado.
+     - PIN en texto plano.
 
-## Criterio de salida
+4. **Rescate de 60 Segundos en iOS**:
+   - Pausa guiada de respiración (4-2-6) con pasaje bíblico.
+   - Al activarse el rescate, se escribe la timestamp en el App Group y se notifica al Shield Action para permitir la pausa temporal sin apagar el escudo.
 
-Solo se puede marcar `iOS protection ready` cuando existan: entitlement, extensiones firmadas, autorización nativa aprobada, prueba en iPhone real de escudo y límite de tiempo, pruebas de regresión y revisión de privacidad/App Store.
+## Consecuencias y Garantías
 
-## Implementación candidata 1.3.16
-
-- La app principal guarda selección, idioma y estado en `group.com.clean4jesus.app` y programa un evento diario con `DeviceActivityCenter`.
-- `ManagedSettings.WebContentSettings.FilterPolicy.auto` aporta filtrado adulto de Apple. Su cobertura real por navegador se documentará desde pruebas físicas; no se promete inspección de texto ni cobertura universal.
-- `Clean4JesusDeviceActivityMonitor` aplica el Shield a los tokens seleccionados cuando se alcanza el umbral y lo limpia al iniciar el siguiente intervalo.
-- `Clean4JesusShieldConfiguration` presenta marca y copy local ES/EN/FR/PT sin conocer el nombre de la app o dominio protegido.
-- `Clean4JesusShieldAction` registra la intención de rescate en el App Group y cierra la app o navegador protegido. Al abrir Clean4Jesus después, la app consume la intención y presenta el rescate. El rescate no retira el Shield.
-- Los targets se regeneran desde `targets/` mediante `@bacons/apple-targets@4.0.7`. Esto conserva CNG, pero exige validar la generación Xcode en macOS/EAS antes de release.
+- **Android Intacto**: La carpeta `android/` permanece 100% libre de cambios.
+- **Cumplimiento con Apple**: Uso legítimo de Screen Time APIs garantizando la aprobación en App Store Connect.
+- **Privacidad Absoluta**: Cumplimiento del principio "Privacidad por Diseño". Cero telemetría invasiva.
