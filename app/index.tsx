@@ -13,7 +13,7 @@ import { openAndroidAccessibilitySettings } from "@/features/shield/androidProte
 import { isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
 import { enableShield, getShieldEnabled, prepareShield } from "@/features/shield/shieldService";
 import { ShieldOrb } from "@/features/shield/ShieldOrb";
-import { iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
+import { getIosAuthorizationErrorMessage, iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { getSecondaryText } from "@/features/i18n/secondaryText";
 import { getIosGateText } from "@/features/i18n/iosGateText";
@@ -95,9 +95,9 @@ function IosGateScreen() {
         Alert.alert(copy.permissionErrorTitle, copy.permissionErrorBody);
       }
       return configured;
-    } catch {
+    } catch (error) {
       await refreshIosState();
-      Alert.alert(copy.permissionErrorTitle, copy.permissionErrorBody);
+      Alert.alert(copy.permissionErrorTitle, getIosAuthorizationErrorMessage(error));
       return false;
     }
   }

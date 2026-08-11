@@ -3,7 +3,7 @@ import { Alert, Linking, StyleSheet, View, ScrollView } from 'react-native';
 import { Text, Button, Card, Switch, ActivityIndicator, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { iosProtectionService } from '../src/features/iosProtection/iosProtectionService.ios';
+import { getIosAuthorizationErrorMessage, iosProtectionService } from '../src/features/iosProtection/iosProtectionService.ios';
 import { iosProtectionNativeContract } from '../src/features/iosProtection/iosProtectionContract';
 import { IosCapabilities, IosProtectionStatusInfo, IosSelectionSummary } from '../src/features/iosProtection/iosProtectionTypes';
 
@@ -68,9 +68,9 @@ export default function IosProtectionScreen() {
           [{ text: 'Cerrar' }, { text: 'Abrir Ajustes', onPress: () => void Linking.openURL('App-prefs:SCREEN_TIME') }],
         );
       }
-    } catch {
+    } catch (error) {
       await loadStatus();
-          Alert.alert('No se pudo solicitar Family Controls', 'Apple no mostró el diálogo de autorización. Comprueba que no sea un iPhone infantil o administrado por una organización, reinstala esta build y vuelve a pulsar el botón.');
+      Alert.alert('No se pudo solicitar Family Controls', getIosAuthorizationErrorMessage(error));
     }
   };
 

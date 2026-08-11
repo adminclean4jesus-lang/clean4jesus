@@ -15,6 +15,21 @@ const NativeIosProtection = (() => {
   }
 })();
 
+export function getIosAuthorizationErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+
+  return 'Apple no devolvió un detalle adicional para la autorización de Family Controls.';
+}
+
 class IosProtectionService implements IIosProtectionContract {
   private currentStatus: IosProtectionStatusInfo = { ...INITIAL_IOS_PROTECTION_STATE };
 
@@ -89,7 +104,7 @@ class IosProtectionService implements IIosProtectionContract {
         this.currentStatus.status = granted ? 'permission_granted' : 'permission_denied';
         return granted;
       } catch (err) {
-        throw new IosProtectionError('Falló solicitud de Family Controls', IOS_PROTECTION_ERROR_CODES.AUTHORIZATION_DENIED, err);
+        throw new IosProtectionError(getIosAuthorizationErrorMessage(err), IOS_PROTECTION_ERROR_CODES.AUTHORIZATION_DENIED, err);
       }
     }
 
