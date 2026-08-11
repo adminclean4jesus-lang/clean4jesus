@@ -1,7 +1,6 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 
-import { getRuntimePlatform } from "@/features/platform/runtimePlatform";
 import { getShieldEnabled } from "@/features/shield/shieldService";
 
 export function useShieldGate() {
@@ -14,16 +13,6 @@ export function useShieldGate() {
       let active = true;
 
       void (async () => {
-        // iOS cannot reuse Android's VPN/Accessibility gate. The native iOS
-        // protection flow owns its own readiness state while shared features stay available.
-        if (getRuntimePlatform() === "ios") {
-          if (active) {
-            setEnabled(false);
-            setChecked(true);
-          }
-          return;
-        }
-
         try {
           const nextEnabled = await getShieldEnabled();
           if (!active) {

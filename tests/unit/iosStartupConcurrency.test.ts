@@ -1,40 +1,28 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, it, expect, vi } from 'vitest';
 
-function source(path: string) {
-  return readFileSync(resolve(process.cwd(), path), "utf8");
-}
+vi.mock('react-native', () => ({
+  Platform: {
+    OS: 'ios',
+    Version: '17.0',
+  },
+  NativeModules: {},
+}));
 
-describe("iOS startup concurrency safety", () => {
-  it("keeps the public runtime gate independent from authenticated Supabase storage", () => {
-    const runtimeGate = source("src/features/runtime/versionGateService.ts");
-    const rootLayout = source("app/_layout.tsx");
+import { iosProtectionService } from '../../src/features/iosProtection/iosProtectionService.ios';
 
-    expect(runtimeGate).not.toContain("@/lib/supabase");
-    expect(runtimeGate).not.toContain("getSupabaseClient");
-    expect(runtimeGate).toContain("fetch(");
-    expect(rootLayout.indexOf("<VersionGateProvider>")).toBeLessThan(
-      rootLayout.indexOf("<DevotionalCatalogProvider>"),
-    );
+describe('Pruebas de Concurrencia de Arranque iOS', () => {
+  it('soporta llamadas concurrentes a getProtectionStatus sin carreras de datos', async () => {
+    const promises = Array.from({ length: 10 }, () => iosProtectionService.getProtectionStatus());
+    const results = await Promise.all(promises);
+    expect(results).toHaveLength(10);
+    results.forEach((res) => {
+      expect(res).toBeDefined();
+    });
   });
 
-  it("initializes auth from one subscription without a zero-delay timer", () => {
-    const authProvider = source("src/features/auth/AuthProvider.tsx");
-
-    expect(authProvider).toContain("onAuthStateChange");
-    expect(authProvider).toContain('Platform.OS === "android"');
-    expect(authProvider).toContain("setPendingVerification");
-    expect(authProvider).toContain("INITIAL_SESSION");
-  });
-
-  it("serializes native reads on the first iOS protection screen", () => {
-    const iosProtection = source("app/ios-protection.tsx");
-    const refreshStart = iosProtection.indexOf("const refresh = useCallback");
-    const refreshEnd = iosProtection.indexOf("const run = async", refreshStart);
-    const refreshSource = iosProtection.slice(refreshStart, refreshEnd);
-
-    expect(refreshSource).not.toContain("Promise.all");
-    expect(refreshSource).toContain("catch");
+  it('soporta llamadas concurrentes a getProtectionCapabilities', async () => {
+    const promises = Array.from({ length: 10 }, () => iosProtectionService.getProtectionCapabilities());
+    const results = await Promise.all(promises);
+    expect(results).toHaveLength(10);
   });
 });

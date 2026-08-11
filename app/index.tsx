@@ -82,6 +82,13 @@ function IosGateScreen() {
         return false;
       }
 
+      // Authorization alone does not block anything. Apple requires an explicit
+      // FamilyActivitySelection before ManagedSettings can apply a shield.
+      const selection = await iosProtectionService.getSelectionSummary();
+      if (selection.applications + selection.categories + selection.webDomains === 0) {
+        await iosProtectionService.presentFamilyActivityPicker();
+      }
+
       const configured = await iosProtectionService.configureProtection({ blockCategories: ["adult"], blockWebDomains: [] });
       await refreshIosState();
       if (!configured) {

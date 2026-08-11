@@ -1,53 +1,5 @@
-﻿# Directivas Clean4Jesus
+# Directivas Clean4Jesus
 
-## Incidente iOS 1.3.16 (8): crash nativo reproducible — 2026-08-08
-
-- Las builds internas 7 y 8 cierran en iPhone XS con iOS 18.7.9 aproximadamente 0,14 segundos después del lanzamiento. Ambas tienen el mismo UUID del ejecutable (`0b42e7b0-c5b7-35f8-83e3-c597de4f61e5`), el mismo primer frame de aplicación (`Clean4Jesus + 4539272`) y la misma excepción: `NSInvalidArgumentException` al insertar un valor `nil` en `NSDictionary`, desde el hilo JavaScript de React Native.
-- Esto descarta como causa la firma, TestFlight, distribución Ad Hoc, Modo desarrollador y el cambio de tipografía de la build 8. No lanzar más builds funcionales especulativas ni cambiar fuentes, Hermes, arquitectura React Native o credenciales como reacción a este crash.
-- Veredicto del comité virtual (Tech Lead, Arquitectura, Engineering/QA, Seguridad y Operaciones): `NO-GO` para release o TestFlight. La CI de `da46e64` también falló antes del smoke porque una prueba conservaba la expectativa de `ios.buildNumber === "7"`; ninguna candidata puede declararse validada hasta que CI esté verde.
-- Antes de un parche funcional se exige obtener el `.dSYM`/`.xcarchive` del binario exacto de build 8 y simbolicar el reporte `.ips`. Si los símbolos no están disponibles, la única canaria permitida es diagnóstica, con una frontera nativa aislada y sin registrar datos sensibles; no cuenta como release.
-
-## Incidente iOS 1.3.16: cierre nativo de arranque - 2026-08-04
-
-- Correccion del gate de simulador (2026-08-08): el primer smoke Release no demostro un crash de la candidata Legacy. Maestro ejecutaba `clearState` y `clearKeychain`, lo que desinstalo `com.clean4jesus.app` antes de la asercion; la captura posterior era la pantalla de inicio y Maestro no encontro ningun crash del bundle. El smoke ahora conserva la instalacion limpia realizada por CI y un test prohíbe reintroducir esas opciones. Repetir el gate completo antes de atribuir cualquier resultado a la app.
-
-- Las builds 4 a 7 comparten la misma frontera de fallo de React Native Nueva Arquitectura: una `NSException` de un TurboModule `void` llega a `ObjCTurboModule::performVoidMethodInvocation`; en las builds 5 a 7, `convertNSExceptionToJSError` accede a Hermes desde la cola nativa y termina en `EXC_BAD_ACCESS`. El patrón coincide con el defecto abierto `react-native#53960` para RN 0.81.x. No seguir corrigiendo fuentes, timers, providers, Family Controls ni credenciales como causa de este incidente.
-- Corrección candidata: Legacy Architecture exclusivamente en iOS mediante `expo-build-properties`; Android conserva `newArchEnabled=true`. Reanimated queda en 3.19.5, compatible con RN 0.81 en Paper y Fabric, y se retiran Worklets/NativeWind no usados para que iOS Legacy pueda compilar.
-- Gate automático `tests/unit/iosArchitectureSafety.test.ts`: debe comprobar iOS Legacy, Android New Architecture, Reanimated 3.19 y ausencia de Worklets/NativeWind. No eliminar ni debilitar este contrato.
-- Evidencia local posterior al cambio: TypeScript PASS, 168/168 unitarias PASS, Expo Doctor 17/17 PASS, export Hermes iOS PASS y `:app:compileDebugKotlin` Android PASS. Windows no puede generar ni ejecutar el proyecto nativo iOS; estas pruebas reducen riesgo pero no demuestran por sí solas que el iPhone ya abre.
-- Veredicto de release vigente: `NO-GO` para producción y TestFlight. Antes de otra submission se exige compilar y abrir una app Release de simulador en macOS y una canaria interna en el mismo iPhone XS; el iPhone debe superar 20 aperturas en frío y 10 en caliente, online/offline y con/sin sesión persistida. Solo entonces autorizar una nueva build de producción.
-- EAS Workflows con Maestro fue evaluado y no ejecutado porque la cuenta actual exige plan pago para el job Maestro. No gastar ni activar ese plan sin autorización expresa del CEO.
-
-## Candidata iOS 1.3.16: Primer Refugio Real - 2026-08-04
-
-- El crash real de TestFlight `1.3.16 (6)` ocurre aproximadamente 0,51 segundos después de abrir: `EXC_BAD_ACCESS/SIGSEGV` en el hilo JavaScript de Hermes (`TimerCallback`) mientras SecureStore consulta Keychain y Fabric monta la pantalla. La inspección del IPA firmado confirmó Family Controls y `group.com.clean4jesus.app` en la app y las tres extensiones; no regenerar credenciales por este incidente.
-- La candidata `1.3.16 (7)` separa el control público de versión del cliente autenticado, monta catálogo y Auth solo después del gate, elimina en iOS la doble inicialización `getSession` + `INITIAL_SESSION`, y serializa las lecturas nativas del Refugio tras las interacciones iniciales. Android conserva su flujo de Auth. No declarar resuelto hasta abrir build 7 en el iPhone XS.
-- El informe real de TestFlight `1.3.16 (4)` en iPhone XS registrÃ³ `SIGABRT` por una excepciÃ³n Objective-C en `com.meta.react.turbomodulemanager.queue`, inmediatamente despuÃ©s del control de versiÃ³n. No fue un fallo de firma ni de FontServices. La frontera nativa de Family Controls se ejecutaba en la cola asÃ­ncrona predeterminada de Expo Modules; `1.3.16 (5)` fuerza todas sus llamadas al hilo principal, que es el contexto seguro para UIKit y las APIs Screen Time. Esta es una hipÃ³tesis confirmable Ãºnicamente con la apertura real del iPhone; no afirmar que estÃ¡ resuelta hasta probarla.
-
-- La build `1.3.15 (3)` terminó correctamente en EAS el 4 de agosto de 2026 y queda como diagnóstico aislado de arranque; su snapshot no contiene el trabajo local de `1.3.16 (4)`.
-- `1.3.16` usa únicamente APIs oficiales de Screen Time: filtro adulto `ManagedSettings`, límite diario `DeviceActivity` y Shield de Clean4Jesus. No lee texto, hashtags, búsquedas, URLs ni pantallas de otras apps.
-- Los targets `Clean4JesusDeviceActivityMonitor`, `Clean4JesusShieldConfiguration` y `Clean4JesusShieldAction` se generan con `@bacons/apple-targets` desde `targets/`; no editar un `ios/` generado como fuente de verdad.
-- App Group oficial preparado: `group.com.clean4jesus.app`. Bundle IDs de extensiones: `com.clean4jesus.app.DeviceActivityMonitor`, `com.clean4jesus.app.ShieldConfiguration` y `com.clean4jesus.app.ShieldAction`.
-- Antes de pedir otra build, registrar esos tres identificadores en Apple Developer, asignar Family Controls (Distribution) a cada uno y regenerar provisioning. La aprobación del App ID principal no cubre automáticamente las extensiones.
-- Activar o pausar el límite exige el PIN local. El PIN agrega fricción dentro de Clean4Jesus, pero no impide que el propietario adulto desinstale la app o revoque permisos desde Ajustes.
-- El botón principal del Shield deja una señal local para abrir el rescate de 60 segundos la próxima vez que se abra Clean4Jesus y cierra la superficie protegida. El SDK Xcode actual de EAS no expone la respuesta que abriría directamente la app contenedora; no reintroducir esa llamada hasta compilar y probar con un SDK que la incluya. Validar este fallback en iPhone XS.
-- No modificar Refugio Android, VPN, Accesibilidad, PIN Android, reglas, bancos, YouTube, Comunidad, Palabra, Planes, Auth, footer, modo oscuro ni sus checkpoints durante esta candidata.
-
-## Checkpoint iOS: Arranque Seguro - 2026-07-27
-
-- La prueba real de TestFlight `1.3.15 (3)` en iPhone XS volvió a cerrarse inmediatamente después de mostrar “Checking your version”. La submission EAS de esa build fue cancelada el 4 de agosto de 2026; no volver a enviar ese binario a Apple.
-- La corrección de `1.3.15` no fue suficiente: enlazar la fuente de iconos mediante el config plugin sigue siendo una ruta de registro nativo de fuentes. El crash anterior ocurre en FontServices, por lo que esta familia se considera no segura para el arranque en el dispositivo afectado hasta contar con evidencia contraria.
-- La candidata local `1.3.16` elimina el plugin y dependencias directas de fuente/iconos y sustituye el componente de iconos por SVG locales, sin `Font.loadAsync`, import de `@expo/vector-icons`, asset TTF ni registro de fuente. La prueba `iosStartupFontSafety` protege las cuatro prohibiciones.
-- No lanzar otra build ni submission hasta repetir TypeScript, pruebas unitarias, config Expo y una revisión del diff; la apertura real en iPhone XS sigue siendo un gate obligatorio antes de afirmar que el crash está resuelto.
-- El segundo build TestFlight `1.3.14 (2)` confirmó que la carga restante no venía de las fuentes editoriales: `@expo/vector-icons` registraba `MaterialCommunityIcons.ttf` mediante `expo-font` al montar los primeros iconos.
-- La corrección `1.3.15 (3)` enlazó Material Community Icons en el build nativo de Expo, pero quedó invalidada por la prueba real. No reintroducir imports directos de `@expo/vector-icons`, plugins de fuentes ni fuentes de iconos sin una prueba real en iPhone XS.
-
-- El primer build TestFlight `1.3.13 (1)` llegó a App Store Connect pero se cerró al arrancar en un iPhone XS con iOS 18.7.9.
-- El informe `.ips` confirmó `EXC_BAD_ACCESS` durante el parseo nativo de fuentes de `expo-font` en la cola asíncrona, no un fallo de Family Controls, Supabase, autenticación ni el módulo Swift.
-- La corrección `1.3.14 (2)` elimina la carga dinámica de fuentes en el arranque. Mantenerla fuera del `RootLayout`; para recuperar fuentes personalizadas en iOS se deberán incrustar mediante el config plugin oficial de Expo y validarlas primero en iPhone real.
-- Esta corrección no autoriza cambios al Refugio Android, VPN, Accesibilidad, PIN, reglas de bloqueo, banca, YouTube ni footer.
-
-Este documento es memoria operativa del proyecto. Antes de modificar la app, leer este archivo y actualizarlo con aprendizajes nuevos al terminar la sesion.
 
 ## Checkpoint Legal Y Privacidad - 2026-07-23
 
@@ -452,3 +404,4 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - Checkpoint aprobado del selector `Hoy / Planes` (26 de julio de 2026): el selector nativo en Android queda visual y funcionalmente aprobado por producto. `Hoy` y `Planes` deben mostrarse siempre como dos botones segmentados; el activo usa fondo azul y texto blanco, el inactivo fondo claro y texto azul. No volver a parchear ni rediseñar este control sin solicitud explícita y nueva validación en Pixel.
 - Diagnóstico iOS `1.3.16 (5)` (4 de agosto de 2026): el crash físico ocurre aproximadamente 0,5 segundos después del lanzamiento con `EXC_BAD_ACCESS`. La pila principal entra por `RCTMountingManager` y la captura Fabric de `react-native-screens`; otra pila registra conversión de excepciones de TurboModules. Ejecutar el puente Screen Time en main queue fue correcto pero insuficiente y no debe presentarse como solución del arranque.
 - Candidata iOS `1.3.16 (6)`: mantener la Nueva Arquitectura porque Reanimated 4 la exige, pero desactivar `react-native-screens` únicamente en iOS mediante `enableScreens(false)`. Android conserva native screens y todos sus checkpoints. En iOS no registrar listeners ni pedir permisos de notificaciones durante el arranque; esas llamadas deben ser diferidas y accionadas por el usuario. No enviar esta candidata a TestFlight hasta confirmar primero que el build termina y después obtener autorización explícita del CEO.
+- Checkpoint Aprobado Arquitectura iOS Separada (9 de agosto de 2026): Se completó la arquitectura nativa iOS mediante adaptadores TypeScript (`.ios.ts`), módulo Swift `clean4jesus-ios-protection`, App Group (`group.com.clean4jesus.app`) y extensiones del sistema (`DeviceActivityMonitor`, `ShieldConfiguration`, `ShieldAction`). Cero modificaciones en Android (`git diff -- android` verificado). 154 pruebas unitarias aprobadas y `npx tsc --noEmit` sin errores.

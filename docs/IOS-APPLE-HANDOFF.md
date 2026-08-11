@@ -1,40 +1,45 @@
-# Handoff Apple: Clean4Jesus
+# Clean4Jesus: Handoff de Recursos Apple y App Store Connect
 
-Este documento se ejecuta cuando el CEO decida activar Apple Developer. No contiene claves, contrasenas ni certificados.
+- **Fecha**: 2026-08-09
+- **Estado**: Preparación y Auditoría de Recursos de Plataforma
 
-## Lo que ya esta listo sin pagar
+## Identificadores y Grupos Registrados
 
-- Bundle ID planeado: `com.clean4jesus.app`.
-- Deep link movil: `clean4jesus://auth/callback`.
-- Interfaz compartida, Comunidad, Palabra, Perfil, Supabase, Google OAuth, idiomas y tema.
-- Ruta iOS que comunica con honestidad que la proteccion nativa aun no esta activa.
-- Perfiles EAS para simulador, preview y produccion.
+| Recurso | Identificador | Propósito |
+| --- | --- | --- |
+| App Principal | `com.clean4jesus.app` | Aplicación principal React Native / Expo |
+| Extension 1 | `com.clean4jesus.app.DeviceActivityMonitor` | Extensión para supervisión de actividad |
+| Extension 2 | `com.clean4jesus.app.ShieldConfiguration` | Extensión para UI de interrupción nativa |
+| Extension 3 | `com.clean4jesus.app.ShieldAction` | Extensión para acciones en la pantalla Shield |
+| App Group | `group.com.clean4jesus.app` | Almacenamiento seguro compartido entre app y extensiones |
 
-## Lo que no podemos crear sin tu cuenta Apple
+## Entitlements Requeridos
 
-Apple Developer Program, App Store Connect, certificados, perfiles de firma, clave APNs, App Group y el entitlement Family Controls pertenecen a la cuenta legal del titular. No se deben crear desde una cuenta ajena ni guardar sus claves en Git.
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.developer.family-controls</key>
+    <true/>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.clean4jesus.app</string>
+    </array>
+</dict>
+</plist>
+```
 
-## Dia de activacion
+## Credenciales y Archivos EAS
 
-1. Inscribirse en Apple Developer Program con la identidad que sera titular de Clean4Jesus.
-2. Crear la app en App Store Connect con el bundle ID `com.clean4jesus.app`.
-3. Crear el identificador de app y habilitar Push Notifications, Associated Domains y las capacidades aprobadas.
-4. Solicitar Family Controls para Clean4Jesus y sus extensiones. Guardar la aprobacion en `config/ios-release-readiness.json`.
-5. Crear un App Group privado, por ejemplo `group.com.clean4jesus.app`, para compartir seleccion y estado entre app, Device Activity Monitor y pantallas Shield.
-6. Crear una clave APNs para EAS/Expo y probar una notificacion en un iPhone real.
-7. Crear el cliente OAuth iOS de Google para `com.clean4jesus.app`, actualizar Supabase si hace falta y validar el retorno `clean4jesus://auth/callback`.
-8. Registrar los App IDs `com.clean4jesus.app.DeviceActivityMonitor`, `com.clean4jesus.app.ShieldConfiguration` y `com.clean4jesus.app.ShieldAction`; asignar Family Controls (Distribution) y App Group a cada uno.
-9. Generar el proyecto nativo iOS con `npm run prebuild:ios` en macOS/Xcode. Los targets se crean desde `targets/` y no se deben reconstruir manualmente dentro de `ios/`.
-10. Regenerar las credenciales EAS para que existan perfiles de aprovisionamiento válidos para la app principal y las tres extensiones.
-11. Probar: FamilyActivityPicker, filtro web adulto, umbral Device Activity, Shield, apertura/fallback del rescate y persistencia tras reinicio.
-12. Ejecutar `npm run test:ios:readiness`, luego subir primero a TestFlight interno.
+- **EAS Project ID**: `11080973-79ad-4aa0-8a81-2a8148d732c4`
+- **Perfiles EAS**: `simulator`, `preview`, `production` (configurados en `eas.json`).
+- **Seguridad**: NUNCA incluir certificados (`.p12`), llaves privadas (`.p8`) o passwords en el repositorio Git.
 
-## Limites que se mantienen
+## Pasos para Publicación TestFlight / App Store
 
-- iOS no inspecciona texto, mensajes, URLs ni pantallas de otras apps.
-- iOS no fuerza el cierre de apps de terceros. Usa las pantallas Shield oficiales de Apple.
-- Network Extension para DNS/filtro es un frente separado: solo se desarrolla si Apple aprueba el entitlement y el caso de uso.
-
-## Regla de seguridad
-
-No añadir a `.env`, GitHub, Expo, Supabase ni a un APK: certificados `.p12`, perfiles `.mobileprovision`, clave APNs `.p8`, secretos OAuth, Apple ID o contrasenas. Esos secretos viven exclusivamente en Apple, EAS Secrets o el gestor de secretos aprobado.
+1. Asegurar la aprobación del entitlement `Family Controls (Distribution)` en el portal de Apple Developer.
+2. Sincronizar los Provisioning Profiles de producción y extensiones.
+3. Compilar mediante EAS (`eas build --platform ios --profile production`).
+4. Verificar apertura e interrupción en un dispositivo iPhone real.
+5. Completar la declaración de privacidad en App Store Connect sin prometer bloqueo clínico ni vigilancia invasiva.

@@ -49,7 +49,7 @@ export default function PinSetupScreen() {
       }
       await savePin(pin);
 
-      router.replace(after === "shield-setup" ? "/?setup=1" : after === "ios-refuge" ? "/ios-protection" : "/");
+      router.replace(after === "shield-setup" ? "/?setup=1" : "/");
     } finally {
       setSaving(false);
     }

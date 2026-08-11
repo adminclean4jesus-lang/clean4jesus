@@ -11,20 +11,6 @@
         "buildType": "apk"
       },
       "ios": {
-        "simulator": false
-      }
-    },
-    "ios-simulator": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "ios": {
-        "simulator": true
-      }
-    },
-    "ios-e2e-release": {
-      "withoutCredentials": true,
-      "ios": {
-        "buildConfiguration": "Release",
         "simulator": true
       }
     },
@@ -38,18 +24,12 @@
       }
     },
     "production": {
+      "environment": "production",
       "android": {
         "buildType": "app-bundle"
       },
       "ios": {
         "simulator": false
-      }
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "ascAppId": "6794878235"
       }
     }
   }

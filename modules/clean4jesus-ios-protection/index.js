@@ -1,5 +1,15 @@
-import { NativeModulesProxy, EventEmitter } from 'expo-modules-core';
-import Clean4JesusIosProtectionModule from './src/Clean4JesusIosProtectionModule';
+import { requireNativeModule } from 'expo-modules-core';
+
+// The implementation lives in Swift and is exposed by Expo Modules.
+// Do not import a generated JS source file: this package intentionally has no
+// `src/Clean4JesusIosProtectionModule` file.
+const Clean4JesusIosProtectionModule = (() => {
+  try {
+    return requireNativeModule('Clean4JesusIosProtectionModule');
+  } catch {
+    return null;
+  }
+})();
 
 export function getCapabilities() {
   return Clean4JesusIosProtectionModule?.getCapabilities?.() ?? Promise.resolve({

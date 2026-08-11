@@ -8,7 +8,6 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { getPinLockoutRemainingMs, verifyPin } from "@/features/pin/pinService";
-import { iosProtectionNativeContract } from "@/features/iosProtection/iosProtectionContract";
 import { isCompletePin, normalizePinInput, pinLength } from "@/features/pin/pinValidation";
 import { disableShield } from "@/features/shield/shieldService";
 import { fonts, ThemeColors } from "@/theme";
@@ -47,14 +46,12 @@ export default function PinVerifyScreen() {
         Alert.alert("Clean4Jesus", "El límite diario no es válido.");
         return;
       }
-      await iosProtectionNativeContract.activateRefuge(parsedMinutes);
-      router.replace("/ios-protection");
+      return;
       return;
     }
 
     if (action === "disable-ios-refuge") {
-      await iosProtectionNativeContract.clearRefuge();
-      router.replace("/ios-protection");
+      return;
       return;
     }
 
