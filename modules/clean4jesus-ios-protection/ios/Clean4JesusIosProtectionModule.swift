@@ -82,16 +82,14 @@ public class Clean4JesusIosProtectionModule: Module {
             let nsError = error as NSError
             promise.reject(
               "ERR_FAMILY_CONTROLS_AUTHORIZATION",
-              "\(nsError.domain) (\(nsError.code)): \(nsError.localizedDescription)",
-              nsError
+              "\(nsError.domain) (\(nsError.code)): \(nsError.localizedDescription)"
             )
           }
         }
       } else {
         promise.reject(
           "ERR_IOS_VERSION",
-          "Family Controls requiere iOS 16 o posterior.",
-          NSError(domain: "Clean4Jesus", code: 1)
+          "Family Controls requiere iOS 16 o posterior."
         )
       }
     }.runOnQueue(.main)
