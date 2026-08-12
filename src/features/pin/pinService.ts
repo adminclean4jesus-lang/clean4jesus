@@ -32,6 +32,9 @@ const failedAttemptsKey = "clean4jesus.pin.failedAttempts";
 const lockedUntilKey = "clean4jesus.pin.lockedUntil";
 
 export async function hasPin(): Promise<boolean> {
+  if (Platform.OS === "ios" && !(await hasPinConfiguredThisInstall())) {
+    return false;
+  }
   return Boolean(await getStoredPinHash());
 }
 
@@ -45,6 +48,7 @@ export async function savePin(pin: string): Promise<void> {
   }
   await setSecureItem(storageKeys.pin, pinHash);
   await AsyncStorage.removeItem(storageKeys.pin);
+  await AsyncStorage.setItem(storageKeys.pinConfiguredThisInstall, "true");
 }
 
 export async function verifyPin(pin: string): Promise<boolean> {
@@ -112,6 +116,10 @@ export async function syncPinToNative(pin?: string | null): Promise<boolean> {
 }
 
 async function getStoredPinHash(): Promise<string | null> {
+  if (Platform.OS === "ios" && !(await hasPinConfiguredThisInstall())) {
+    return null;
+  }
+
   const secureHash = await getSecureItem(storageKeys.pin);
   if (secureHash) {
     return secureHash;
@@ -126,6 +134,13 @@ async function getStoredPinHash(): Promise<string | null> {
   await setSecureItem(storageKeys.pin, migratedHash);
   await AsyncStorage.removeItem(storageKeys.pin);
   return migratedHash;
+}
+
+async function hasPinConfiguredThisInstall(): Promise<boolean> {
+  return (
+    (await AsyncStorage.getItem(storageKeys.pinConfiguredThisInstall)) ===
+    "true"
+  );
 }
 
 async function hashPin(pin: string): Promise<string> {

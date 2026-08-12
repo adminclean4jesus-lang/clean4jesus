@@ -1,7 +1,10 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
+import { Platform } from "react-native";
 
+import { iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
 import { getShieldEnabled } from "@/features/shield/shieldService";
+import { isProtectionGateEnabled } from "@/features/shield/shieldGatePolicy";
 
 export function useShieldGate() {
   const router = useRouter();
@@ -14,7 +17,17 @@ export function useShieldGate() {
 
       void (async () => {
         try {
-          const nextEnabled = await getShieldEnabled();
+          const [localShieldEnabled, iosStatus] = await Promise.all([
+            Platform.OS === "ios" ? Promise.resolve(false) : getShieldEnabled(),
+            Platform.OS === "ios"
+              ? iosProtectionService.getProtectionStatus()
+              : Promise.resolve(null),
+          ]);
+          const nextEnabled = isProtectionGateEnabled({
+            platform: Platform.OS,
+            iosProtectionEnabled: Boolean(iosStatus?.isEnabled),
+            localShieldEnabled,
+          });
           if (!active) {
             return;
           }

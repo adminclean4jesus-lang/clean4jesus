@@ -2,6 +2,7 @@
 
 export const storageKeys = {
   pin: "clean4jesus.pin",
+  pinConfiguredThisInstall: "clean4jesus.pin.configuredThisInstall",
   shieldEnabled: "clean4jesus.shield.enabled",
   shieldState: "clean4jesus.shield.state",
   shieldSetupComplete: "clean4jesus.shield.setupComplete",
@@ -11,6 +12,7 @@ export const storageKeys = {
   devotionalPlanProgress: "clean4jesus.devotionalPlanProgress",
   devotionalReminderSettings: "clean4jesus.devotionalReminderSettings",
   languagePreference: "clean4jesus.languagePreference",
+  languagePreferenceExplicit: "clean4jesus.languagePreference.explicit",
   appearancePreference: "clean4jesus.appearancePreference",
   interruptionCustomization: "clean4jesus.interruptionCustomization",
   profileAvatarUri: "clean4jesus.profileAvatarUri",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getLocalizedDevotionals, localize, localizePlan } from "@/features/i18n/localizedContent";
-import { detectSystemLanguage, normalizeLanguage, supportedLanguages } from "@/features/i18n/i18n";
+import { detectSystemLanguage, normalizeLanguage, resolveStartupLanguage, supportedLanguages } from "@/features/i18n/i18n";
 import { uiText } from "@/features/i18n/uiText";
 import { devotionalPlans } from "@/data/devotionalPlans";
 
@@ -26,6 +26,11 @@ describe("cobertura base de idiomas", () => {
     expect(normalizeLanguage("pt-BR")).toBe("pt");
     expect(normalizeLanguage("fr_CA")).toBe("fr");
     expect(supportedLanguages).toContain(detectSystemLanguage());
+  });
+
+  it("usa el idioma del celular hasta que el usuario elige otro expresamente", () => {
+    expect(resolveStartupLanguage({ manuallySelected: false, storedLanguage: "en", systemLanguage: "es" })).toBe("es");
+    expect(resolveStartupLanguage({ manuallySelected: true, storedLanguage: "en", systemLanguage: "es" })).toBe("en");
   });
 
   it("usa singular y plural correctos para los días", () => {

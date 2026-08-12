@@ -3,7 +3,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useEffect, u
 import { getJson, setJson, storageKeys } from "@/services/storage";
 import { syncNativeLanguage } from "@/features/shield/localDnsVpnService";
 
-import { detectSystemLanguage, normalizeLanguage, SupportedLanguage, translate } from "./i18n";
+import { detectSystemLanguage, resolveStartupLanguage, SupportedLanguage, translate } from "./i18n";
 
 type I18nContextValue = {
   language: SupportedLanguage;
@@ -25,10 +25,17 @@ export function I18nProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let mounted = true;
 
-    void getJson<string | null>(storageKeys.languagePreference, null)
-      .then((storedLanguage) => {
+    void Promise.all([
+      getJson<string | null>(storageKeys.languagePreference, null),
+      getJson<boolean>(storageKeys.languagePreferenceExplicit, false),
+    ])
+      .then(([storedLanguage, manuallySelected]) => {
         if (mounted) {
-          const normalized = storedLanguage ? normalizeLanguage(storedLanguage) : initialLanguage();
+          const normalized = resolveStartupLanguage({
+            manuallySelected,
+            storedLanguage,
+            systemLanguage: initialLanguage(),
+          });
           setLanguageState(normalized);
           void syncNativeLanguage(normalized);
         }
@@ -47,6 +54,7 @@ export function I18nProvider({ children }: PropsWithChildren) {
   const setLanguage = useCallback(async (nextLanguage: SupportedLanguage) => {
     setLanguageState(nextLanguage);
     await setJson(storageKeys.languagePreference, nextLanguage);
+    await setJson(storageKeys.languagePreferenceExplicit, true);
     await syncNativeLanguage(nextLanguage);
   }, []);
 

@@ -12,6 +12,7 @@ import { DevotionalCatalogProvider } from "@/features/devotionalPlans/Devotional
 import { configureFalsePositiveReporting } from "@/features/falsePositive/falsePositiveReportingService";
 import { I18nProvider, useI18n } from "@/features/i18n/I18nProvider";
 import { coreFlowText } from "@/features/i18n/coreFlowText";
+import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
 import { VersionGateProvider } from "@/features/runtime/VersionGateProvider";
 import { createPaperTheme, fonts } from "@/theme";
 import { useSegments } from "expo-router";
@@ -130,7 +131,7 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
           <Stack.Screen name="trusted-person" options={{ headerShown: false }} />
           <Stack.Screen name="interruption-settings" options={{ headerShown: false }} />
           <Stack.Screen name="settings" options={{ headerShown: false }} />
-          <Stack.Screen name="ios-protection" options={{ title: "Protección iOS" }} />
+          <Stack.Screen name="ios-protection" options={{ title: getIosProtectionText(language).title }} />
           <Stack.Screen name="plans/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="plans/[id]/day/[day]" options={{ headerShown: false }} />
           <Stack.Screen name="pin-setup" options={{ title: coreFlowText(language, "pin.setup.title") }} />

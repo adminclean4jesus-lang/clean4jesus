@@ -376,6 +376,20 @@ export function detectSystemLanguage(): SupportedLanguage {
   }
 }
 
+export function resolveStartupLanguage({
+  manuallySelected,
+  storedLanguage,
+  systemLanguage,
+}: {
+  manuallySelected: boolean;
+  storedLanguage: string | null;
+  systemLanguage: SupportedLanguage;
+}): SupportedLanguage {
+  return manuallySelected && storedLanguage
+    ? normalizeLanguage(storedLanguage)
+    : systemLanguage;
+}
+
 export function translate(language: SupportedLanguage, key: TranslationKey) {
   return translations[language][key] ?? translations.es[key];
 }

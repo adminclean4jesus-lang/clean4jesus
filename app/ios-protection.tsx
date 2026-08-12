@@ -1,61 +1,54 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Alert, StyleSheet, View, ScrollView } from "react-native";
+import { useCallback, useState } from "react";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
 import {
-  Text,
+  ActivityIndicator,
   Button,
   Card,
-  Switch,
-  ActivityIndicator,
   Divider,
+  Switch,
+  Text,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+
+import { useI18n } from "@/features/i18n/I18nProvider";
+import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
 import {
   getIosAuthorizationErrorMessage,
   iosProtectionService,
-} from "../src/features/iosProtection/iosProtectionService.ios";
-import { iosProtectionNativeContract } from "../src/features/iosProtection/iosProtectionContract";
-import {
+} from "@/features/iosProtection/iosProtectionService.ios";
+import { iosProtectionNativeContract } from "@/features/iosProtection/iosProtectionContract";
+import type {
   IosCapabilities,
   IosProtectionStatusInfo,
   IosSelectionSummary,
-} from "../src/features/iosProtection/iosProtectionTypes";
+} from "@/features/iosProtection/iosProtectionTypes";
+
+const emptySelection: IosSelectionSummary = {
+  applications: 0,
+  categories: 0,
+  webDomains: 0,
+};
 
 export default function IosProtectionScreen() {
   // Contract aliases retained for the startup boundary: iosProtectionNativeContract.requestAuthorization(),
   // iosProtectionNativeContract.presentFamilyActivityPicker(), activate-ios-refuge, disable-ios-refuge.
+  void iosProtectionNativeContract;
+
   const router = useRouter();
+  const { language } = useI18n();
+  const copy = getIosProtectionText(language);
   const [loading, setLoading] = useState(true);
-  const [capabilities, setCapabilities] = useState<IosCapabilities | null>(
-    null,
-  );
-  const [statusInfo, setStatusInfo] = useState<IosProtectionStatusInfo | null>(
-    null,
-  );
-  const [selection, setSelection] = useState<IosSelectionSummary>({
-    applications: 0,
-    categories: 0,
-    webDomains: 0,
-  });
+  const [capabilities, setCapabilities] = useState<IosCapabilities | null>(null);
+  const [statusInfo, setStatusInfo] = useState<IosProtectionStatusInfo | null>(null);
+  const [selection, setSelection] = useState<IosSelectionSummary>(emptySelection);
+  const selectionCount = selection.applications + selection.categories + selection.webDomains;
 
-  const refresh = useCallback(async () => {
-    try {
-      await loadStatus();
-    } catch {
-      /* estado no disponible durante arranque */
-    }
-  }, []);
-  const run = async () => refresh();
-
-  useEffect(() => {
-    loadStatus();
-  }, []);
-
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     setLoading(true);
     try {
-      const caps = await iosProtectionService.getProtectionCapabilities();
-      const [status, selectionSummary] = await Promise.all([
+      const [caps, status, selectionSummary] = await Promise.all([
+        iosProtectionService.getProtectionCapabilities(),
         iosProtectionService.getProtectionStatus(),
         iosProtectionService.getSelectionSummary(),
       ]);
@@ -65,95 +58,79 @@ export default function IosProtectionScreen() {
     } catch {
       setCapabilities(null);
       setStatusInfo(null);
+      setSelection(emptySelection);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleChooseProtection = async () => {
+  useFocusEffect(
+    useCallback(() => {
+      void loadStatus();
+    }, [loadStatus]),
+  );
+
+  async function handleChooseProtection() {
     if (!statusInfo?.isAuthorized) {
-      Alert.alert(
-        "Primero autoriza Family Controls",
-        "Apple debe conceder el permiso antes de elegir apps, categorias o sitios.",
-      );
+      Alert.alert(copy.authorizeFirstTitle, copy.authorizeFirstBody);
       return;
     }
+
     try {
       const summary = await iosProtectionService.presentFamilyActivityPicker();
       setSelection(summary);
+      Alert.alert(copy.selectionSaved, copy.selectionSavedBody);
     } catch {
-      Alert.alert(
-        "No se pudo abrir el selector",
-        "Comprueba que este build incluye Family Controls y vuelve a intentarlo.",
-      );
+      Alert.alert(copy.pickerErrorTitle, copy.pickerErrorBody);
     }
-  };
+  }
 
-  const handleRequestAuth = async () => {
+  async function handleRequestAuth() {
     try {
       const granted = await iosProtectionService.requestAuthorization();
       await loadStatus();
       if (!granted) {
-        Alert.alert(
-          "Family Controls no fue autorizado",
-          "Apple no confirmó la autorización. Vuelve a solicitarla y revisa el mensaje exacto que aparezca.",
-        );
+        Alert.alert(copy.requestDeniedTitle, copy.requestDeniedBody);
       }
     } catch (error) {
       await loadStatus();
-      Alert.alert(
-        "No se pudo solicitar Family Controls",
-        getIosAuthorizationErrorMessage(error),
-      );
+      Alert.alert(copy.requestErrorTitle, getIosAuthorizationErrorMessage(error));
     }
-  };
+  }
 
-  const handleToggleProtection = async (val: boolean) => {
-    if (!val) {
-      Alert.alert(
-        "Proteccion administrada",
-        "Para pausar la proteccion se requiere el PIN del guardian. Esta pantalla no la desactiva sin verificarlo.",
-      );
+  async function handleToggleProtection(value: boolean) {
+    if (!value) {
+      Alert.alert(copy.managedTitle, copy.managedBody);
       return;
     }
-
     if (!statusInfo?.isAuthorized) {
-      Alert.alert(
-        "Primero autoriza Family Controls",
-        "Solicita el permiso de Apple antes de activar la proteccion.",
-      );
+      Alert.alert(copy.activateFirstTitle, copy.activateFirstBody);
+      return;
+    }
+    if (selectionCount === 0) {
+      Alert.alert(copy.activateErrorTitle, copy.activateErrorBody);
       return;
     }
 
-    if (val) {
-      try {
-        const configured = await iosProtectionService.configureProtection({
-          blockCategories: ["adult"],
-          blockWebDomains: [],
-        });
-        if (!configured) {
-          Alert.alert(
-            "No se pudo activar la proteccion",
-            "El modulo iOS no confirmo que la proteccion se aplicara.",
-          );
-        }
-      } catch {
-        Alert.alert(
-          "No se pudo activar la proteccion",
-          "Ocurrio un error al aplicar la proteccion de iOS.",
-        );
+    try {
+      const configured = await iosProtectionService.configureProtection({
+        blockCategories: ["adult"],
+        blockWebDomains: [],
+      });
+      if (!configured) {
+        Alert.alert(copy.activateErrorTitle, copy.activateErrorBody);
       }
+    } catch {
+      Alert.alert(copy.activateErrorTitle, copy.activateErrorBody);
     }
     await loadStatus();
-  };
+  }
 
   if (loading) {
     return (
       <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#071F52" />
-        <Text style={styles.loadingText}>
-          Cargando estado de protección iOS...
-        </Text>
+        <ActivityIndicator color="#071F52" size="large" />
+        <Text style={styles.loadingText}>{copy.loading}</Text>
       </SafeAreaView>
     );
   }
@@ -161,28 +138,23 @@ export default function IosProtectionScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Refugio Clean4Jesus (iOS)</Text>
-        <Text style={styles.subtitle}>
-          Protección responsable basada en las tecnologías oficiales de Screen
-          Time y Family Controls de Apple.
-        </Text>
+        <Text style={styles.title}>{copy.title}</Text>
+        <Text style={styles.subtitle}>{copy.subtitle}</Text>
 
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.cardTitle}>Estado de Protección</Text>
+            <Text style={styles.cardTitle}>{copy.stateTitle}</Text>
             <View style={styles.row}>
-              <Text style={styles.label}>Estado Actual:</Text>
-              <Text style={styles.value}>
-                {statusInfo?.status ?? "Desconocido"}
-              </Text>
+              <Text style={styles.label}>{copy.currentState}:</Text>
+              <Text style={styles.value}>{copy.status(statusInfo?.status)}</Text>
             </View>
             <Divider style={styles.divider} />
             <View style={styles.row}>
-              <Text style={styles.label}>Protección Activa:</Text>
+              <Text style={styles.label}>{copy.active}:</Text>
               <Switch
-                value={statusInfo?.isEnabled ?? false}
-                onValueChange={(value) => void handleToggleProtection(value)}
                 color="#071F52"
+                onValueChange={(value) => void handleToggleProtection(value)}
+                value={statusInfo?.isEnabled ?? false}
               />
             </View>
           </Card.Content>
@@ -190,110 +162,86 @@ export default function IosProtectionScreen() {
 
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.cardTitle}>Apps y categorias protegidas</Text>
-            <Text style={styles.selectionText}>
-              {selection.applications} apps · {selection.categories} categorias
-              · {selection.webDomains} sitios
-            </Text>
+            <Text style={styles.cardTitle}>{copy.selectionTitle}</Text>
+            <Text style={styles.selectionText}>{copy.selection(selection)}</Text>
+            <Text style={styles.selectionHelp}>{copy.selectionHelp}</Text>
             <Button
-              mode="outlined"
-              onPress={() => void handleChooseProtection()}
+              buttonColor="#071F52"
               disabled={!statusInfo?.isAuthorized}
+              mode="contained"
+              onPress={() => void handleChooseProtection()}
               style={styles.selectButton}
+              testID="ios-family-selection"
             >
-              Elegir apps y categorias
+              {selectionCount > 0 ? copy.changeSelection : copy.chooseSelection}
             </Button>
           </Card.Content>
         </Card>
 
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.cardTitle}>Capacidades del Dispositivo</Text>
-            <View style={styles.row}>
-              <Text style={styles.label}>Family Controls:</Text>
-              <Text style={styles.value}>
-                {capabilities?.supportsFamilyControls
-                  ? "Soportado"
-                  : "No disponible"}
-              </Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Managed Settings:</Text>
-              <Text style={styles.value}>
-                {capabilities?.supportsManagedSettings
-                  ? "Soportado"
-                  : "No disponible"}
-              </Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>App Group:</Text>
-              <Text style={styles.value}>
-                {capabilities?.appGroupConfigured ? "Configurado" : "Pendiente"}
-              </Text>
-            </View>
+            <Text style={styles.cardTitle}>{copy.capabilities}</Text>
+            <CapabilityRow
+              label="Family Controls"
+              value={capabilities?.supportsFamilyControls ? copy.supported : copy.unavailable}
+            />
+            <CapabilityRow
+              label={copy.managedSettings}
+              value={capabilities?.supportsManagedSettings ? copy.supported : copy.unavailable}
+            />
+            <CapabilityRow
+              label={copy.appGroup}
+              value={capabilities?.appGroupConfigured ? copy.configured : copy.pending}
+            />
           </Card.Content>
         </Card>
 
-        {!statusInfo?.isAuthorized && (
+        {!statusInfo?.isAuthorized ? (
           <Button
-            mode="contained"
-            onPress={handleRequestAuth}
             buttonColor="#071F52"
+            mode="contained"
+            onPress={() => void handleRequestAuth()}
             style={styles.button}
           >
-            1. Autorizar Family Controls en Apple
+            {copy.authorize}
           </Button>
-        )}
+        ) : null}
 
-        <Button
-          mode="outlined"
-          onPress={() => router.push("/ios-rescue")}
-          style={styles.button}
-        >
-          Respirar 60 Segundos (Rescate)
+        <Button mode="outlined" onPress={() => router.push("/ios-rescue")} style={styles.button}>
+          {copy.rescue}
         </Button>
-
-        <Button
-          mode="text"
-          onPress={() => router.push("/ios-readiness")}
-          style={styles.button}
-        >
-          Ver Informe de Preparación iOS
+        <Button mode="text" onPress={() => router.push("/ios-readiness")} style={styles.button}>
+          {copy.readiness}
         </Button>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+function CapabilityRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.label}>{label}:</Text>
+      <Text style={styles.value}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  content: { padding: 16 },
-  loadingText: { marginTop: 12, color: "#4A5568" },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#071F52",
-    marginBottom: 6,
-  },
-  subtitle: { fontSize: 14, color: "#4A5568", marginBottom: 16 },
-  card: { marginBottom: 16, backgroundColor: "#FFFFFF", borderRadius: 12 },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#071F52",
-    marginBottom: 12,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 6,
-  },
-  label: { fontSize: 14, color: "#4A5568" },
-  value: { fontSize: 14, fontWeight: "600", color: "#1A202C" },
-  divider: { marginVertical: 8 },
-  selectionText: { fontSize: 14, color: "#4A5568", marginBottom: 8 },
-  selectButton: { marginTop: 4 },
   button: { marginTop: 8 },
+  card: { backgroundColor: "#FFFFFF", borderRadius: 12, marginBottom: 16 },
+  cardTitle: { color: "#071F52", fontSize: 16, fontWeight: "600", marginBottom: 12 },
+  center: { alignItems: "center", flex: 1, justifyContent: "center" },
+  container: { backgroundColor: "#F5F7FA", flex: 1 },
+  content: { padding: 16 },
+  divider: { marginVertical: 8 },
+  label: { color: "#4A5568", flex: 1, fontSize: 14 },
+  loadingText: { color: "#4A5568", marginTop: 12 },
+  row: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 },
+  selectButton: { marginTop: 12 },
+  selectionHelp: { color: "#667085", fontSize: 12, lineHeight: 18, marginTop: 6 },
+  selectionText: { color: "#1A202C", fontSize: 15, fontWeight: "600" },
+  subtitle: { color: "#4A5568", fontSize: 14, marginBottom: 16 },
+  title: { color: "#071F52", fontSize: 24, fontWeight: "bold", marginBottom: 6 },
+  value: { color: "#1A202C", fontSize: 14, fontWeight: "600" },
 });
