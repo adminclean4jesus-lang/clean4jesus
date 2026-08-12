@@ -79,11 +79,18 @@ public class Clean4JesusIosProtectionModule: Module {
             try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
             promise.resolve(true)
           } catch {
-            promise.resolve(false)
+            let nsError = error as NSError
+            promise.reject(
+              "ERR_FAMILY_CONTROLS_AUTHORIZATION",
+              "\(nsError.domain) (\(nsError.code)): \(nsError.localizedDescription)"
+            )
           }
         }
       } else {
-        promise.resolve(false)
+        promise.reject(
+          "ERR_IOS_VERSION",
+          "Family Controls requiere iOS 16 o posterior."
+        )
       }
     }.runOnQueue(.main)
 
