@@ -10,6 +10,7 @@ tags:
     visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
     timeout: 20000
 - openLink: clean4jesus://ios-protection
+- tapOn: "Open"
 - extendedWaitUntil:
     visible: "Family Controls:"
     timeout: 20000
