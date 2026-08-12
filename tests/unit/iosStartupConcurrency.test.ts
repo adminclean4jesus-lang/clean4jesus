@@ -1,18 +1,42 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from "vitest";
 
-vi.mock('react-native', () => ({
+vi.mock("react-native", () => ({
   Platform: {
-    OS: 'ios',
-    Version: '17.0',
+    OS: "ios",
+    Version: "17.0",
   },
   NativeModules: {},
 }));
 
-import { iosProtectionService } from '../../src/features/iosProtection/iosProtectionService.ios';
+vi.mock("expo-modules-core", () => ({
+  requireOptionalNativeModule: () => ({
+    getStatus: async () => ({
+      status: "permission_pending",
+      isEnabled: false,
+      isAuthorized: false,
+      appGroupSynced: true,
+      rescueActive: false,
+      rescueTimeRemainingSeconds: 0,
+      lastSyncTimestamp: 0,
+    }),
+    getCapabilities: async () => ({
+      supportsFamilyControls: true,
+      supportsManagedSettings: true,
+      supportsDeviceActivity: true,
+      supportsShieldConfiguration: true,
+      appGroupConfigured: true,
+      systemVersion: "18.5",
+    }),
+  }),
+}));
 
-describe('Pruebas de Concurrencia de Arranque iOS', () => {
-  it('soporta llamadas concurrentes a getProtectionStatus sin carreras de datos', async () => {
-    const promises = Array.from({ length: 10 }, () => iosProtectionService.getProtectionStatus());
+import { iosProtectionService } from "../../src/features/iosProtection/iosProtectionService.ios";
+
+describe("Pruebas de Concurrencia de Arranque iOS", () => {
+  it("soporta llamadas concurrentes a getProtectionStatus sin carreras de datos", async () => {
+    const promises = Array.from({ length: 10 }, () =>
+      iosProtectionService.getProtectionStatus(),
+    );
     const results = await Promise.all(promises);
     expect(results).toHaveLength(10);
     results.forEach((res) => {
@@ -20,8 +44,10 @@ describe('Pruebas de Concurrencia de Arranque iOS', () => {
     });
   });
 
-  it('soporta llamadas concurrentes a getProtectionCapabilities', async () => {
-    const promises = Array.from({ length: 10 }, () => iosProtectionService.getProtectionCapabilities());
+  it("soporta llamadas concurrentes a getProtectionCapabilities", async () => {
+    const promises = Array.from({ length: 10 }, () =>
+      iosProtectionService.getProtectionCapabilities(),
+    );
     const results = await Promise.all(promises);
     expect(results).toHaveLength(10);
   });

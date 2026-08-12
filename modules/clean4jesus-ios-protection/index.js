@@ -3,67 +3,46 @@ import { requireNativeModule } from 'expo-modules-core';
 // The implementation lives in Swift and is exposed by Expo Modules.
 // Do not import a generated JS source file: this package intentionally has no
 // `src/Clean4JesusIosProtectionModule` file.
-const Clean4JesusIosProtectionModule = (() => {
-  try {
-    return requireNativeModule('Clean4JesusIosProtectionModule');
-  } catch {
-    return null;
-  }
-})();
+const Clean4JesusIosProtectionModule = requireNativeModule('Clean4JesusIosProtectionModule');
 
 export function getCapabilities() {
-  return Clean4JesusIosProtectionModule?.getCapabilities?.() ?? Promise.resolve({
-    supportsFamilyControls: false,
-    supportsManagedSettings: false,
-    supportsDeviceActivity: false,
-    supportsShieldConfiguration: false,
-    appGroupConfigured: false,
-    systemVersion: '0',
-  });
+  return Clean4JesusIosProtectionModule.getCapabilities();
 }
 
 export function requestAuthorization() {
-  return Clean4JesusIosProtectionModule?.requestAuthorization?.() ?? Promise.resolve(false);
+  return Clean4JesusIosProtectionModule.requestAuthorization();
 }
 
 export function getStatus() {
-  return Clean4JesusIosProtectionModule?.getStatus?.() ?? Promise.resolve({
-    status: 'not_configured',
-    isEnabled: false,
-    isAuthorized: false,
-    appGroupSynced: false,
-    rescueActive: false,
-    rescueTimeRemainingSeconds: 0,
-    lastSyncTimestamp: 0,
-  });
+  return Clean4JesusIosProtectionModule.getStatus();
 }
 
 export function configureProtection(config) {
-  return Clean4JesusIosProtectionModule?.configureProtection?.(config) ?? Promise.resolve(false);
+  return Clean4JesusIosProtectionModule.configureProtection(config);
 }
 
 export function pauseProtection(pinHash) {
-  return Clean4JesusIosProtectionModule?.pauseProtection?.(pinHash) ?? Promise.resolve(false);
+  return Clean4JesusIosProtectionModule.pauseProtection(pinHash);
 }
 
 export function resumeProtection() {
-  return Clean4JesusIosProtectionModule?.resumeProtection?.() ?? Promise.resolve(false);
+  return Clean4JesusIosProtectionModule.resumeProtection();
 }
 
 export function setDailyLimit(minutes) {
-  return Clean4JesusIosProtectionModule?.setDailyLimit?.(minutes) ?? Promise.resolve(false);
+  return Clean4JesusIosProtectionModule.setDailyLimit(minutes);
 }
 
 export function clearProtection(pinHash) {
-  return Clean4JesusIosProtectionModule?.clearProtection?.(pinHash) ?? Promise.resolve(false);
+  return Clean4JesusIosProtectionModule.clearProtection(pinHash);
 }
 
 export function startRescue() {
-  return Clean4JesusIosProtectionModule?.startRescue?.() ?? Promise.resolve(false);
+  return Clean4JesusIosProtectionModule.startRescue();
 }
 
 export function getRescueState() {
-  return Clean4JesusIosProtectionModule?.getRescueState?.() ?? Promise.resolve({ rescueActive: false, timeRemaining: 0 });
+  return Clean4JesusIosProtectionModule.getRescueState();
 }
 
 export default Clean4JesusIosProtectionModule;

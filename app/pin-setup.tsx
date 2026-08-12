@@ -8,7 +8,13 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { hasPin, savePin, verifyPin } from "@/features/pin/pinService";
-import { isCompletePin, normalizePinInput, pinLength, pinsMatch } from "@/features/pin/pinValidation";
+import { markIosPinSessionVerified } from "@/features/pin/pinSession";
+import {
+  isCompletePin,
+  normalizePinInput,
+  pinLength,
+  pinsMatch,
+} from "@/features/pin/pinValidation";
 import { fonts, ThemeColors } from "@/theme";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { getPinText } from "@/features/i18n/pinText";
@@ -25,9 +31,14 @@ export default function PinSetupScreen() {
   const [saving, setSaving] = useState(false);
   const [pinExists, setPinExists] = useState(false);
   const [currentPin, setCurrentPin] = useState("");
-  const canSave = pinsMatch(pin, confirmPin) && (!pinExists || isCompletePin(currentPin)) && !saving;
+  const canSave =
+    pinsMatch(pin, confirmPin) &&
+    (!pinExists || isCompletePin(currentPin)) &&
+    !saving;
 
-  useEffect(() => { void hasPin().then(setPinExists); }, []);
+  useEffect(() => {
+    void hasPin().then(setPinExists);
+  }, []);
 
   async function handleSave() {
     if (!isCompletePin(pin) || !isCompletePin(confirmPin)) {
@@ -49,6 +60,8 @@ export default function PinSetupScreen() {
       }
       await savePin(pin);
 
+      if (after === "shield-setup") markIosPinSessionVerified();
+
       router.replace(after === "shield-setup" ? "/?setup=1" : "/");
     } finally {
       setSaving(false);
@@ -59,7 +72,9 @@ export default function PinSetupScreen() {
     <Screen>
       <View style={styles.header}>
         <Text style={styles.kicker}>{copy.security}</Text>
-        <Text style={styles.title}>{pinExists ? copy.changeTitle : copy.createTitle}</Text>
+        <Text style={styles.title}>
+          {pinExists ? copy.changeTitle : copy.createTitle}
+        </Text>
         <Text style={styles.subtitle}>{copy.setupBody}</Text>
       </View>
 
@@ -68,7 +83,11 @@ export default function PinSetupScreen() {
           <View style={styles.cardAccent} />
           <View style={styles.helperRow}>
             <View style={styles.helperIcon}>
-              <MaterialCommunityIcons color={colors.primaryDark} name="shield-key-outline" size={16} />
+              <MaterialCommunityIcons
+                color={colors.primaryDark}
+                name="shield-key-outline"
+                size={16}
+              />
             </View>
             <View style={styles.helperCopy}>
               <Text style={styles.label}>{copy.newPin}</Text>
@@ -84,7 +103,9 @@ export default function PinSetupScreen() {
                 inputMode="numeric"
                 keyboardType="number-pad"
                 maxLength={pinLength}
-                onChangeText={(value) => setCurrentPin(normalizePinInput(value))}
+                onChangeText={(value) =>
+                  setCurrentPin(normalizePinInput(value))
+                }
                 placeholder="1234"
                 placeholderTextColor={colors.mutedDark}
                 secureTextEntry
@@ -132,7 +153,11 @@ export default function PinSetupScreen() {
         </Card.Content>
       </Card>
 
-      <PrimaryButton disabled={!canSave} label={saving ? copy.saving : copy.save} onPress={handleSave} />
+      <PrimaryButton
+        disabled={!canSave}
+        label={saving ? copy.saving : copy.save}
+        onPress={handleSave}
+      />
     </Screen>
   );
 }
@@ -142,7 +167,10 @@ function PinDots({ value }: { value: string }) {
   return (
     <View style={styles.dotsRow}>
       {Array.from({ length: pinLength }).map((_, index) => (
-        <View key={index} style={[styles.dot, index < value.length ? styles.dotFilled : null]} />
+        <View
+          key={index}
+          style={[styles.dot, index < value.length ? styles.dotFilled : null]}
+        />
       ))}
     </View>
   );
@@ -155,102 +183,102 @@ function usePinSetupStyles() {
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  header: {
-    gap: 8,
-  },
-  kicker: {
-    color: colors.accent,
-    fontFamily: fonts.label,
-    fontSize: 11,
-    textTransform: "uppercase",
-  },
-  title: {
-    color: colors.text,
-    fontFamily: fonts.display,
-    fontSize: 22,
-    lineHeight: 27,
-  },
-  subtitle: {
-    color: colors.muted,
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 24,
-    borderColor: colors.border,
-    borderWidth: 1,
-    elevation: 2,
-  },
-  form: {
-    gap: 10,
-  },
-  cardAccent: {
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-    height: 4,
-    width: 44,
-  },
-  helperRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10,
-  },
-  helperIcon: {
-    alignItems: "center",
-    backgroundColor: colors.surfaceAlt,
-    borderColor: colors.border,
-    borderRadius: 14,
-    borderWidth: 1,
-    height: 34,
-    justifyContent: "center",
-    width: 34,
-  },
-  helperCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  label: {
-    color: colors.muted,
-    fontFamily: fonts.label,
-    fontSize: 10,
-    textTransform: "uppercase",
-  },
-  helperText: {
-    color: colors.muted,
-    fontFamily: "Inter_400Regular",
-    fontSize: 11.5,
-    lineHeight: 16,
-  },
-  input: {
-    backgroundColor: colors.surfaceAlt,
-    borderColor: colors.border,
-    borderRadius: 16,
-    borderWidth: 1,
-    color: colors.text,
-    fontFamily: fonts.display,
-    fontSize: 18,
-    height: 50,
-    includeFontPadding: false,
-    letterSpacing: 8,
-    textAlign: "center",
-  },
-  dotsRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-    paddingBottom: 6,
-  },
-  dot: {
-    backgroundColor: "#CFD7D6",
-    borderRadius: 5,
-    height: 8,
-    width: 8,
-  },
-  dotFilled: {
-    backgroundColor: colors.primary,
-  },
+    header: {
+      gap: 8,
+    },
+    kicker: {
+      color: colors.accent,
+      fontFamily: fonts.label,
+      fontSize: 11,
+      textTransform: "uppercase",
+    },
+    title: {
+      color: colors.text,
+      fontFamily: fonts.display,
+      fontSize: 22,
+      lineHeight: 27,
+    },
+    subtitle: {
+      color: colors.muted,
+      fontFamily: "Inter_400Regular",
+      fontSize: 12,
+      lineHeight: 18,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 24,
+      borderColor: colors.border,
+      borderWidth: 1,
+      elevation: 2,
+    },
+    form: {
+      gap: 10,
+    },
+    cardAccent: {
+      backgroundColor: colors.primary,
+      borderRadius: 999,
+      height: 4,
+      width: 44,
+    },
+    helperRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 10,
+    },
+    helperIcon: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      height: 34,
+      justifyContent: "center",
+      width: 34,
+    },
+    helperCopy: {
+      flex: 1,
+      gap: 2,
+    },
+    label: {
+      color: colors.muted,
+      fontFamily: fonts.label,
+      fontSize: 10,
+      textTransform: "uppercase",
+    },
+    helperText: {
+      color: colors.muted,
+      fontFamily: "Inter_400Regular",
+      fontSize: 11.5,
+      lineHeight: 16,
+    },
+    input: {
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      color: colors.text,
+      fontFamily: fonts.display,
+      fontSize: 18,
+      height: 50,
+      includeFontPadding: false,
+      letterSpacing: 8,
+      textAlign: "center",
+    },
+    dotsRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
+      justifyContent: "center",
+      paddingBottom: 6,
+    },
+    dot: {
+      backgroundColor: "#CFD7D6",
+      borderRadius: 5,
+      height: 8,
+      width: 8,
+    },
+    dotFilled: {
+      backgroundColor: colors.primary,
+    },
   });
 }

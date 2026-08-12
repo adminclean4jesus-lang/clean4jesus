@@ -130,6 +130,7 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
           <Stack.Screen name="trusted-person" options={{ headerShown: false }} />
           <Stack.Screen name="interruption-settings" options={{ headerShown: false }} />
           <Stack.Screen name="settings" options={{ headerShown: false }} />
+          <Stack.Screen name="ios-protection" options={{ title: "Protección iOS" }} />
           <Stack.Screen name="plans/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="plans/[id]/day/[day]" options={{ headerShown: false }} />
           <Stack.Screen name="pin-setup" options={{ title: coreFlowText(language, "pin.setup.title") }} />

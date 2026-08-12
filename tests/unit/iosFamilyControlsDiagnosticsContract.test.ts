@@ -5,7 +5,10 @@ import { describe, expect, it } from "vitest";
 describe("Diagnóstico de autorización de Family Controls", () => {
   it("propaga el error nativo de Apple en vez de convertirlo silenciosamente en false", () => {
     const moduleSource = readFileSync(
-      join(process.cwd(), "modules/clean4jesus-ios-protection/ios/Clean4JesusIosProtectionModule.swift"),
+      join(
+        process.cwd(),
+        "modules/clean4jesus-ios-protection/ios/Clean4JesusIosProtectionModule.swift",
+      ),
       "utf8",
     );
     const authorizationSection = moduleSource.slice(
@@ -14,12 +17,43 @@ describe("Diagnóstico de autorización de Family Controls", () => {
     );
 
     expect(authorizationSection).toContain("promise.reject(");
-    expect(authorizationSection).toContain('"ERR_FAMILY_CONTROLS_AUTHORIZATION"');
+    expect(authorizationSection).toContain(
+      '"ERR_FAMILY_CONTROLS_AUTHORIZATION"',
+    );
     expect(authorizationSection).not.toContain("promise.resolve(false)");
   });
 
   it("muestra al usuario el mensaje original de Apple", () => {
-    const gateSource = readFileSync(join(process.cwd(), "app/index.tsx"), "utf8");
+    const gateSource = readFileSync(
+      join(process.cwd(), "app/index.tsx"),
+      "utf8",
+    );
     expect(gateSource).toContain("getIosAuthorizationErrorMessage(error)");
+  });
+
+  it("carga el mÃ³dulo Expo de forma estÃ¡tica en Hermes", () => {
+    const serviceSource = readFileSync(
+      join(
+        process.cwd(),
+        "src/features/iosProtection/iosProtectionService.ios.ts",
+      ),
+      "utf8",
+    );
+    const pinSource = readFileSync(
+      join(process.cwd(), "src/features/pin/pinService.ts"),
+      "utf8",
+    );
+
+    expect(serviceSource).toContain(
+      "requireOptionalNativeModule<NativeIosProtectionModule>",
+    );
+    expect(serviceSource).not.toContain("eval)('require')");
+    expect(serviceSource).not.toContain(
+      "NativeModules.Clean4JesusIosProtectionModule",
+    );
+    expect(pinSource).toContain(
+      "requireOptionalNativeModule<NativeIosGuardianPin>(",
+    );
+    expect(pinSource).toContain('"Clean4JesusIosProtectionModule"');
   });
 });

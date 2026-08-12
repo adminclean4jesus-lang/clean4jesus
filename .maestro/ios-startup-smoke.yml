@@ -7,14 +7,20 @@ tags:
 ---
 - launchApp
 - extendedWaitUntil:
-    visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
+    visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
     timeout: 20000
+- openLink: clean4jesus://ios-protection
+- extendedWaitUntil:
+    visible: "Family Controls:"
+    timeout: 20000
+- assertVisible: "Soportado"
+- assertVisible: "Configurado"
 - repeat:
     times: 20
     commands:
       - stopApp
       - launchApp
       - extendedWaitUntil:
-          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
+          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
           timeout: 20000
-      - assertVisible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
+      - assertVisible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
