@@ -1,9 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { NativeModules, Platform } from "react-native";
 
 import { storageKeys } from "@/services/storage";
-import { deleteSecureItem, getSecureItem, setSecureItem } from "@/services/secureStorage";
+import {
+  deleteSecureItem,
+  getSecureItem,
+  setSecureItem,
+} from "@/services/secureStorage";
 
 type NativeGuardianPin = {
   getGuardianPinLockoutRemainingMs?: () => Promise<number>;
@@ -15,8 +20,14 @@ type NativeIosGuardianPin = {
   syncPinHash?: (pinHash: string) => Promise<boolean>;
 };
 
-const nativeModule = NativeModules.Clean4JesusVpn as NativeGuardianPin | undefined;
-const iosNativeModule = NativeModules.Clean4JesusIosProtectionModule as NativeIosGuardianPin | undefined;
+const nativeModule = NativeModules.Clean4JesusVpn as
+  NativeGuardianPin | undefined;
+const iosNativeModule =
+  Platform.OS === "ios"
+    ? requireOptionalNativeModule<NativeIosGuardianPin>(
+        "Clean4JesusIosProtectionModule",
+      )
+    : null;
 const failedAttemptsKey = "clean4jesus.pin.failedAttempts";
 const lockedUntilKey = "clean4jesus.pin.lockedUntil";
 
@@ -26,7 +37,10 @@ export async function hasPin(): Promise<boolean> {
 
 export async function savePin(pin: string): Promise<void> {
   const pinHash = await hashPin(pin);
-  if ((Platform.OS === "android" || Platform.OS === "ios") && !await syncPinToNative(pinHash)) {
+  if (
+    (Platform.OS === "android" || Platform.OS === "ios") &&
+    !(await syncPinToNative(pinHash))
+  ) {
     throw new Error("native_pin_sync_failed");
   }
   await setSecureItem(storageKeys.pin, pinHash);
@@ -49,12 +63,18 @@ export async function verifyPin(pin: string): Promise<boolean> {
 
   const valid = savedPinHash === (await hashPin(pin));
   if (valid) {
-    await Promise.all([deleteSecureItem(failedAttemptsKey), deleteSecureItem(lockedUntilKey)]);
+    await Promise.all([
+      deleteSecureItem(failedAttemptsKey),
+      deleteSecureItem(lockedUntilKey),
+    ]);
     return true;
   }
   const attempts = (Number(await getSecureItem(failedAttemptsKey)) || 0) + 1;
   if (attempts >= 5) {
-    await Promise.all([setSecureItem(failedAttemptsKey, "0"), setSecureItem(lockedUntilKey, String(Date.now() + 30_000))]);
+    await Promise.all([
+      setSecureItem(failedAttemptsKey, "0"),
+      setSecureItem(lockedUntilKey, String(Date.now() + 30_000)),
+    ]);
   } else {
     await setSecureItem(failedAttemptsKey, String(attempts));
   }
@@ -62,10 +82,19 @@ export async function verifyPin(pin: string): Promise<boolean> {
 }
 
 export async function getPinLockoutRemainingMs() {
-  if (Platform.OS === "android" && nativeModule?.getGuardianPinLockoutRemainingMs) {
-    return Math.max(0, Number(await nativeModule.getGuardianPinLockoutRemainingMs()) || 0);
+  if (
+    Platform.OS === "android" &&
+    nativeModule?.getGuardianPinLockoutRemainingMs
+  ) {
+    return Math.max(
+      0,
+      Number(await nativeModule.getGuardianPinLockoutRemainingMs()) || 0,
+    );
   }
-  return Math.max(0, (Number(await getSecureItem(lockedUntilKey)) || 0) - Date.now());
+  return Math.max(
+    0,
+    (Number(await getSecureItem(lockedUntilKey)) || 0) - Date.now(),
+  );
 }
 
 export async function getStoredPin(): Promise<string | null> {

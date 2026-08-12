@@ -9,7 +9,7 @@ on:
 jobs:
   release-startup:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       EXPO_NO_TELEMETRY: "1"
       NODE_ENV: production
@@ -99,12 +99,19 @@ jobs:
       - name: Install CocoaPods
         run: npx pod-install ios
 
+      - name: Verify the Family Controls native bridge registration
+        run: |
+          grep -q "Clean4JesusIosProtection" ios/Podfile.lock
+          PROVIDER=$(find ios -name ExpoModulesProvider.swift -print -quit)
+          test -n "$PROVIDER"
+          grep -q "Clean4JesusIosProtectionModule" "$PROVIDER"
+
       - name: Prove that iOS uses Legacy Architecture
         run: |
           node -e "const p=require('./ios/Podfile.properties.json'); if(p.newArchEnabled !== 'false'){throw new Error('iOS New Architecture is still enabled: '+p.newArchEnabled)}; console.log('iOS newArchEnabled=false')"
 
       - name: Compile the Release simulator app
-        timeout-minutes: 25
+        timeout-minutes: 40
         run: |
           xcodebuild \
             -workspace ios/Clean4Jesus.xcworkspace \

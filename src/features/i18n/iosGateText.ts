@@ -24,7 +24,7 @@ const es = {
   prepare: "Preparar refugio",
   iosSettings: "Ajustes de protección iOS",
   permissionErrorTitle: "Permiso denegado",
-  permissionErrorBody: "Tiempo en pantalla puede estar activo y Family Controls seguir pendiente. Pulsa el botón otra vez y acepta el diálogo de Apple para que Clean4Jesus pueda administrar límites y bloqueos. Si no aparece, reinstala esta build y vuelve a intentarlo.",
+  permissionErrorBody: "Apple no confirmó la autorización de Family Controls. Vuelve a solicitarla y revisa el mensaje exacto que aparezca.",
 } as const;
 
 type Copy = { [K in keyof typeof es]: string };
@@ -53,7 +53,7 @@ const en: Copy = {
   prepare: "Prepare refuge",
   iosSettings: "iOS protection settings",
   permissionErrorTitle: "Permission denied",
-  permissionErrorBody: "To activate protection, you need to authorize Family Controls from the Screen Time settings.",
+  permissionErrorBody: "Apple did not confirm Family Controls authorization. Request it again and review the exact message shown.",
 };
 
 const fr: Copy = {
@@ -80,7 +80,7 @@ const fr: Copy = {
   prepare: "Préparer le refuge",
   iosSettings: "Réglages de protection iOS",
   permissionErrorTitle: "Permission refusée",
-  permissionErrorBody: "Pour activer la protection, vous devez autoriser Family Controls depuis les réglages Screen Time.",
+  permissionErrorBody: "Apple n'a pas confirmé l'autorisation Family Controls. Demandez-la à nouveau et consultez le message exact affiché.",
 };
 
 const pt: Copy = {
@@ -107,7 +107,7 @@ const pt: Copy = {
   prepare: "Preparar refúgio",
   iosSettings: "Configurações de proteção iOS",
   permissionErrorTitle: "Permissão negada",
-  permissionErrorBody: "Para ativar a proteção, você precisa autorizar Family Controls a partir das configurações de Screen Time.",
+  permissionErrorBody: "A Apple não confirmou a autorização do Family Controls. Solicite novamente e verifique a mensagem exata exibida.",
 };
 
 const tables: Record<SupportedLanguage, Copy> = { es, en, fr, pt };

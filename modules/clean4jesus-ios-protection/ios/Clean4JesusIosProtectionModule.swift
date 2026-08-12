@@ -77,6 +77,14 @@ public class Clean4JesusIosProtectionModule: Module {
         Task {
           do {
             try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+            guard AuthorizationCenter.shared.authorizationStatus == .approved else {
+              let status = String(describing: AuthorizationCenter.shared.authorizationStatus)
+              promise.reject(
+                "ERR_FAMILY_CONTROLS_AUTHORIZATION",
+                "Apple finalizó la solicitud con estado \(status), pero no concedió Family Controls."
+              )
+              return
+            }
             promise.resolve(true)
           } catch {
             let nsError = error as NSError
