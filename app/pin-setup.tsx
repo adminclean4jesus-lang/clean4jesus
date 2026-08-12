@@ -128,6 +128,7 @@ export default function PinSetupScreen() {
             secureTextEntry
             selectionColor={colors.primary}
             style={styles.input}
+            testID="pin-setup-new"
             textContentType="oneTimeCode"
             value={pin}
           />
@@ -146,6 +147,7 @@ export default function PinSetupScreen() {
             secureTextEntry
             selectionColor={colors.primary}
             style={styles.input}
+            testID="pin-setup-confirm"
             textContentType="oneTimeCode"
             value={confirmPin}
           />
@@ -157,6 +159,7 @@ export default function PinSetupScreen() {
         disabled={!canSave}
         label={saving ? copy.saving : copy.save}
         onPress={handleSave}
+        testID="pin-setup-save"
       />
     </Screen>
   );
