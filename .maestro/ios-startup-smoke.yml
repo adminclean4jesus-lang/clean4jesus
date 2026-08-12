@@ -9,8 +9,22 @@ tags:
 - extendedWaitUntil:
     visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
     timeout: 20000
+- runFlow:
+    when:
+      visible: "New PIN"
+    commands:
+      - tapOn: "New PIN"
+      - inputText: "2580"
+      - tapOn: "Confirm new PIN"
+      - inputText: "2580"
+      - tapOn: "Save PIN"
+      - extendedWaitUntil:
+          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
+          timeout: 20000
 - openLink: clean4jesus://ios-protection
-- tapOn: "Open"
+- tapOn:
+    text: "Open"
+    optional: true
 - extendedWaitUntil:
     visible: "Family Controls:"
     timeout: 20000
