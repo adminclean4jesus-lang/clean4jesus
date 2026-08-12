@@ -20,6 +20,17 @@ describe("Phase 1 protection contracts", () => {
     expect(verifySource).toContain('router.replace("/")');
   });
 
+  it("does not reuse an iOS Keychain PIN after a fresh installation", () => {
+    const pinSource = read("src/features/pin/pinService.ts");
+    const storageSource = read("src/services/storage.ts");
+
+    expect(storageSource).toContain("pinConfiguredThisInstall");
+    expect(pinSource).toContain("hasPinConfiguredThisInstall");
+    expect(pinSource).toContain(
+      "AsyncStorage.setItem(storageKeys.pinConfiguredThisInstall",
+    );
+  });
+
   it("requires the current guardian PIN before replacing an existing PIN", () => {
     const source = read("app/pin-setup.tsx");
     const copy = read("src/features/i18n/pinText.ts");
