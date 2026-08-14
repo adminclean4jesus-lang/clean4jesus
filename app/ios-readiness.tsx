@@ -1,57 +1,55 @@
-import React from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
-import { Text, Card, Button } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import React from "react";
+import { StyleSheet, ScrollView } from "react-native";
+import { Text, Card, Button } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+
+import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
+import { useI18n } from "@/features/i18n/I18nProvider";
+import { getIosReadinessText } from "@/features/i18n/iosReadinessText";
+import { fonts, ThemeColors } from "@/theme";
 
 export default function IosReadinessScreen() {
   const router = useRouter();
+  const { colors } = useAppAppearance();
+  const { language } = useI18n();
+  const copy = getIosReadinessText(language);
+  const styles = createStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Informe de Preparación iOS</Text>
-        <Text style={styles.subtitle}>
-          Estado de paridad y preparación técnica para la versión de iOS.
-        </Text>
-
+        <Text style={styles.title}>{copy.title}</Text>
+        <Text style={styles.subtitle}>{copy.subtitle}</Text>
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.cardTitle}>Capas Listas (Compartidas)</Text>
-            <Text style={styles.item}>✓ Autenticación (Supabase + Google OAuth PKCE)</Text>
-            <Text style={styles.item}>✓ Palabra (Devocionales y Planes con Cache Offline)</Text>
-            <Text style={styles.item}>✓ Comunidad (Testimonios, Oraciones y Moderación)</Text>
-            <Text style={styles.item}>✓ Internacionalización (ES, EN, FR, PT-BR)</Text>
-            <Text style={styles.item}>✓ Temas (Modo Claro / Modo Oscuro)</Text>
+            <Text style={styles.cardTitle}>{copy.shared}</Text>
+            {copy.items.map((item) => <Text key={item} style={styles.item}>✓ {item}</Text>)}
           </Card.Content>
         </Card>
-
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.cardTitle}>Capa Nativa iOS (Screen Time)</Text>
-            <Text style={styles.item}>✓ Contratos TypeScript y Adaptadores</Text>
-            <Text style={styles.item}>✓ Módulo Swift Nativo (Clean4JesusIosProtection)</Text>
-            <Text style={styles.item}>✓ Configuración de Targets Natividades (Extensiones)</Text>
-            <Text style={styles.item}>✓ App Group (`group.com.clean4jesus.app`)</Text>
-            <Text style={styles.item}>✓ Interrupción Visual Nativa y Rescate de 60s</Text>
+            <Text style={styles.cardTitle}>{copy.native}</Text>
+            {copy.nativeItems.map((item) => <Text key={item} style={styles.item}>✓ {item}</Text>)}
           </Card.Content>
         </Card>
-
-        <Button mode="contained" onPress={() => router.back()} buttonColor="#071F52" style={styles.button}>
-          Volver
+        <Button mode="contained" onPress={() => router.back()} buttonColor={colors.primary} style={styles.button}>
+          {copy.back}
         </Button>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
-  content: { padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#071F52', marginBottom: 6 },
-  subtitle: { fontSize: 14, color: '#4A5568', marginBottom: 16 },
-  card: { marginBottom: 16, backgroundColor: '#FFFFFF', borderRadius: 12 },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: '#071F52', marginBottom: 12 },
-  item: { fontSize: 14, color: '#2D3748', marginBottom: 6 },
-  button: { marginTop: 8 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16 },
+    title: { fontFamily: fonts.display, fontSize: 24, fontWeight: "bold", color: colors.primaryDark, marginBottom: 6 },
+    subtitle: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginBottom: 16 },
+    card: { marginBottom: 16, backgroundColor: colors.surface, borderRadius: 12 },
+    cardTitle: { fontFamily: fonts.heading, fontSize: 16, fontWeight: "600", color: colors.primaryDark, marginBottom: 12 },
+    item: { fontFamily: fonts.body, fontSize: 14, color: colors.text, marginBottom: 6 },
+    button: { marginTop: 8 },
+  });
+}
