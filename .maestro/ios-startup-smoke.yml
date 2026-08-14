@@ -13,7 +13,8 @@ tags:
     text: "Open"
     optional: true
 - extendedWaitUntil:
-    id: "ios-protection-screen"
+    visible:
+      id: "ios-protection-screen"
     timeout: 20000
 - extendedWaitUntil:
     visible: "Family Controls:"

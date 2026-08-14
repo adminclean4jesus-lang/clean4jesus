@@ -51,7 +51,7 @@ describe("Phase 1 protection contracts", () => {
     expect(source).toContain('testID="pin-setup-save"');
     expect(iosProtection).toContain('testID="ios-protection-screen"');
     expect(maestro).toContain("openLink: clean4jesus://ios-protection");
-    expect(maestro).toContain('id: "ios-protection-screen"');
+    expect(maestro).toContain('visible:\n      id: "ios-protection-screen"');
     expect(maestro).not.toContain('id: "pin-setup-save"');
   });
 

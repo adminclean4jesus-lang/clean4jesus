@@ -6,14 +6,14 @@ Clean4Jesus es una aplicación móvil de acompañamiento para vivir con mayor li
 
 | Componente | Estado actual |
 | --- | --- |
-| Versión de la app | `1.3.21` |
+| Versión de la app | `1.3.22` |
 | Android | `versionCode 50`; beta técnica con protección nativa mediante VPN local, Accesibilidad e interrupción |
-| iOS | `build 12`; candidata técnica con Family Controls, Managed Settings, Device Activity y extensiones Shield |
+| iOS | `build 13`; candidata técnica con Family Controls, Managed Settings, Device Activity y extensiones Shield |
 | Backend | Supabase para autenticación, comunidad, contenido y moderación |
 | Idiomas | Español, inglés, francés y portugués brasileño; el idioma inicial sigue al dispositivo |
 | Distribución iOS | IPA firmada generada manualmente en GitHub Actions después del merge |
 
-La versión `1.3.21 (build 12)` corrige la puerta de calidad del simulador: abre el diagnóstico iOS directamente al iniciar y comprueba el puente nativo sin confundir el onboarding del PIN con una prueba exitosa. Conserva la corrección de la acción del Shield para el SDK iOS actual, el alta y confirmación del PIN, autorización nativa de Family Controls, selección privada de aplicaciones/categorías/sitios, navegación protegida e interfaz localizada. Todavía debe completar el recorrido de aceptación en un iPhone físico antes de considerarse lista para distribución pública.
+La versión `1.3.22 (build 13)` corrige la sintaxis de la puerta de calidad del simulador: abre el diagnóstico iOS directamente al iniciar y comprueba el puente nativo sin confundir el onboarding del PIN con una prueba exitosa. Conserva la corrección de la acción del Shield para el SDK iOS actual, el alta y confirmación del PIN, autorización nativa de Family Controls, selección privada de aplicaciones/categorías/sitios, navegación protegida e interfaz localizada. Todavía debe completar el recorrido de aceptación en un iPhone físico antes de considerarse lista para distribución pública.
 
 ## Funcionalidades
 
@@ -156,7 +156,7 @@ La IPA se genera únicamente después de fusionar el pull request aprobado:
 5. Pulsa **Run workflow** sobre `main`.
 6. Descarga el artifact `clean4jesus-ios-ipa-vX.Y.Z-build-N`.
 
-El artifact contiene solamente `Clean4Jesus.ipa`. Para la versión actual, el nombre esperado es `clean4jesus-ios-ipa-v1.3.21-build-12`. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
+El artifact contiene solamente `Clean4Jesus.ipa`. Para la versión actual, el nombre esperado es `clean4jesus-ios-ipa-v1.3.22-build-13`. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
 
 ## Validación
 
