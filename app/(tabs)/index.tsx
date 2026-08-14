@@ -18,6 +18,7 @@ import { iosProtectionService } from "@/features/iosProtection/iosProtectionServ
 import { useShieldGate } from "@/features/shield/useShieldGate";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { uiText } from "@/features/i18n/uiText";
+import { getIosGateText } from "@/features/i18n/iosGateText";
 import { fonts, ThemeColors } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -43,6 +44,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useAppAppearance();
   const { language } = useI18n();
+  const iosCopy = getIosGateText(language);
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { checked, enabled } = useShieldGate();
   const [pinReady, setPinReady] = useState(false);
@@ -153,7 +155,7 @@ export default function HomeScreen() {
                 <Text style={styles.heroTitle}>{refugeReady ? uiText(language, "refuge.title.ready") : uiText(language, "refuge.title.start")}</Text>
                 <Text style={styles.heroBody}>
                   {isIos
-                    ? "Protección nativa con Screen Time y Family Controls de Apple. No usa VPN ni Accesibilidad."
+                    ? iosCopy.body
                     : uiText(language, "refuge.body")}
                 </Text>
               </View>
@@ -184,7 +186,7 @@ export default function HomeScreen() {
                 <View style={styles.layerGridWrap}>
                   <LayerButton label={layers.pin} ready={pinReady} value={pinReady ? uiText(language, "refuge.pin.ready") : uiText(language, "refuge.pin.create")} icon="lock-check-outline" onPress={() => void handleLayerPress("pin")} />
                   {isIos ? (
-                    <LayerButton label={layers.familyControls} ready={familyControlsReady} value={familyControlsReady ? "Autorizado" : "Configurar"} icon="apple" onPress={() => void handleLayerPress("familyControls")} />
+                    <LayerButton label={layers.familyControls} ready={familyControlsReady} value={familyControlsReady ? iosCopy.authorized : iosCopy.notAuthorized} icon="apple" onPress={() => void handleLayerPress("familyControls")} />
                   ) : (
                     <>
                       <LayerButton label={layers.vpn} ready={vpnReady} value={vpnReady ? uiText(language, "refuge.vpn.ready") : uiText(language, "refuge.vpn.activate")} icon="shield-outline" onPress={() => void handleLayerPress("vpn")} />

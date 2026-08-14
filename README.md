@@ -1,94 +1,119 @@
 # Clean4Jesus
 
-Clean4Jesus es una aplicacion mobile de apoyo para la libertad frente a la pornografia, la masturbacion compulsiva y la vulnerabilidad digital. Combina proteccion local, palabra, comunidad y herramientas de acompañamiento.
+Clean4Jesus es una aplicación móvil de acompañamiento para vivir con mayor libertad frente a la pornografía, la masturbación compulsiva y otros entornos digitales vulnerables. Reúne protección local, Palabra, Comunidad y herramientas de apoyo sin vender la protección como vigilancia absoluta.
 
-## Estado Actual
+## Estado del proyecto
 
-Version de producto: `1.3.13`.
+| Componente | Estado actual |
+| --- | --- |
+| Versión de la app | `1.3.18` |
+| Android | `versionCode 50`; beta técnica con protección nativa mediante VPN local, Accesibilidad e interrupción |
+| iOS | `build 9`; beta técnica con Family Controls, Managed Settings, Device Activity y extensiones Shield |
+| Backend | Supabase para autenticación, comunidad, contenido y moderación |
+| Idiomas | Español, inglés, francés y portugués brasileño; el idioma inicial sigue al dispositivo |
+| Distribución iOS | IPA firmada generada manualmente en GitHub Actions después del merge |
 
-La base actual funciona como un proyecto interno de desarrollo y beta tecnica:
+La versión `1.3.18 (build 9)` incorpora en iOS el alta y confirmación del PIN en una instalación nueva, autorización nativa de Family Controls, selección de aplicaciones/categorías/sitios, navegación protegida y una interfaz localizada. Esta versión todavía debe completar su recorrido de aceptación en un iPhone físico antes de considerarse lista para distribución pública.
 
-- Expo SDK 54 + React Native 0.81.
-- Android nativo integrado para Refugio, VPN local, Accesibilidad e interrupcion.
-- Comunidad enlazada a Supabase real.
-- Autenticacion por correo y contrasena, confirmacion de correo, recuperacion, PKCE y Google OAuth.
-- Perfiles, publicaciones, testimonios, pedidos de oracion, respuestas, reportes y moderacion.
-- CAPTCHA de Cloudflare Turnstile en los flujos de autenticacion.
-- Catalogo de planes y devocional diario publicados en Supabase, con cache local y respaldo offline.
-- Internacionalizacion inicial para español, ingles, frances y portugues brasileño.
-- Modo claro y oscuro, personalizacion local de la pantalla de interrupcion y rescate guiado de 60 segundos.
-- Backup oficial en el repositorio privado de GitHub: `adminclean4jesus-lang/clean4jesus`.
+## Funcionalidades
 
-El checkpoint funcional del Refugio permanece congelado. Los cambios en bloqueo, VPN, Accesibilidad, PIN, cierre de aplicaciones o pantalla nativa requieren solicitud explicita y nueva validacion en Android real.
+- **Refugio**: configura el PIN y guía la activación de la protección nativa adecuada para cada plataforma.
+- **Palabra**: devocional diario, catálogo de planes, detalle por día, progreso local y recordatorios.
+- **Comunidad**: autenticación, perfiles, publicaciones, testimonios, pedidos de oración, respuestas y reportes.
+- **Mi perfil y Ajustes**: identidad, idioma, tema, aplicaciones protegidas, persona de confianza, personalización y opciones avanzadas.
+- **Rescate**: recorrido guiado de 60 segundos para interrumpir una situación de riesgo.
+- **Moderación interna**: revisión humana de reportes con roles, MFA y auditoría.
 
-## Modulos
+## Protección en Android
 
-- **Refugio**: proteccion local con VPN/DNS, Accesibilidad, PIN, pantalla de interrupcion, cierre de la app bloqueada y rescate guiado opcional.
-- **Palabra**: devocional diario, catalogo de planes, detalle por dia, progreso local, recordatorios y contenido remoto escalable.
-- **Comunidad**: autenticacion, perfil, publicaciones, testimonios, pedidos de oracion, respuestas, reportes y moderacion.
-- **Mi perfil y Ajustes**: identidad local, idioma, modo claro/oscuro, proteccion de apps, persona de confianza, personalizacion y opciones avanzadas.
-- **Consola interna**: revision humana de reportes, moderacion con roles, MFA y auditoria inmutable.
+Android usa componentes Kotlin incluidos en la aplicación nativa:
 
-## Arquitectura De Datos
+- Un `VpnService` local dirige la resolución DNS hacia un filtro familiar para bloquear dominios conocidos, incluso desde navegación privada.
+- Un `AccessibilityService` detecta aplicaciones protegidas y señales visibles de riesgo cuando Android las expone.
+- Una pantalla nativa de interrupción saca la aplicación vulnerable del frente y ofrece regreso al Refugio, validación con PIN o desbloqueo temporal.
+- Las reglas permiten proteger aplicaciones completas, aplicar límites diarios y conservar desbloqueos temporales.
+- El usuario puede personalizar el mensaje, la referencia y la imagen de la interrupción.
+- La aplicación sincroniza el idioma seleccionado con las superficies nativas.
+- Los falsos positivos pueden reportarse sin enviar PIN, historial, mensajes, capturas, texto completo ni URL completa.
 
-Supabase ya esta conectado al proyecto como backend remoto:
+Para activar toda la protección, el usuario debe autorizar la VPN local y Accesibilidad desde los ajustes de Android. Expo Go no puede ejecutar estos servicios: se necesita una APK o development build de Clean4Jesus.
 
-- **Auth**: correo/contrasena y Google OAuth, con SecureStore/PKCE en el cliente.
-- **Postgres**: RLS activa y permisos directos restringidos.
-- **Contenido editorial**: el cliente usa RPCs publicas y seguras; no consulta tablas editoriales directamente.
-- **Planes**: el catalogo se descarga con `get_devotional_plan_catalog`; el contenido completo se solicita al abrir un plan mediante `get_devotional_plan_detail`.
-- **Devocional diario**: se solicita por fecha e idioma mediante `get_daily_devotional`.
-- **Falsos positivos**: los reportes llegan a una cola privada; nunca se envian texto, URL, historial, mensajes, capturas ni PIN.
-- **Moderacion**: las decisiones humanas requieren roles autorizados y MFA; no cambian reglas de bloqueo automaticamente.
-- **Progreso espiritual**: inscripciones, dias completados y rachas siguen siendo locales durante esta fase.
+### Límites de Android
 
-Las migraciones aplicadas son inmutables. Todo cambio de esquema o contenido remoto debe crear una migracion nueva y aumentar la version correspondiente.
+- La VPN filtra dominios; no interpreta imágenes ni inserta contenido dentro de páginas HTTPS.
+- Accesibilidad solo puede analizar la información que Android y cada aplicación exponen.
+- Clean4Jesus no puede terminar procesos de terceros como una aplicación con root; la acción estable es sacar la aplicación del frente y mostrar la interrupción.
+- El usuario conserva la posibilidad de revocar VPN o Accesibilidad desde Ajustes.
 
-## Stack
+La implementación y el recorrido manual están documentados en [Bloqueo nativo Android](./docs/ANDROID-BLOQUEO-NATIVO.md).
 
-- Expo SDK 54
-- React Native 0.81
-- React 19
-- TypeScript
-- Expo Router
-- React Native Paper
-- Reanimated y Worklets
-- AsyncStorage
-- SecureStore
-- Expo Notifications
-- Supabase Auth, Postgres, RLS, RPCs y Edge Functions
-- Kotlin para integraciones Android nativas
-- Base de arquitectura iOS: Expo Router compartido, perfiles EAS de iOS y frontera de protección preparada para Family Controls, Managed Settings y Device Activity
-- Playwright y Vitest para QA
+## Protección en iOS
 
-## Estructura
+iOS usa las tecnologías oficiales de Screen Time de Apple y no utiliza VPN ni Accesibilidad:
+
+- `FamilyControls` solicita la autorización individual mediante el diálogo del sistema.
+- `FamilyActivityPicker` permite elegir aplicaciones, categorías y dominios sin revelar sus nombres a Clean4Jesus.
+- `ManagedSettings` aplica los Shields a la selección guardada.
+- `DeviceActivity` y la extensión de monitor permiten mantener la protección programada.
+- Las extensiones `ShieldConfiguration` y `ShieldAction` presentan y gestionan la interrupción nativa.
+- El App Group `group.com.clean4jesus.app` comparte de forma controlada el estado, la selección y el hash del PIN con las extensiones.
+- El estado nativo de Family Controls gobierna el acceso a Palabra, Comunidad, Perfil y Ajustes.
+- La primera instalación pide crear y confirmar el PIN; las siguientes aperturas solicitan verificarlo.
+
+El selector de Apple devuelve únicamente cantidades de aplicaciones, categorías y sitios. Esta limitación de privacidad es deliberada: la app puede confirmar que existe una selección, pero no mostrar los nombres elegidos.
+
+### Recorrido esperado en iPhone
+
+1. Abre una instalación nueva y crea el PIN escribiéndolo dos veces.
+2. En Refugio, pulsa **Autorizar Family Controls**.
+3. Acepta el diálogo oficial de Apple.
+4. Elige aplicaciones, categorías o sitios en el selector del sistema y confirma.
+5. Verifica el resumen de la selección y activa el Refugio.
+6. Comprueba que un elemento elegido muestre el Shield y que el estado persista después de cerrar y abrir la app.
+
+Family Controls requiere iOS 16 o posterior, los entitlements y perfiles correctos, y una prueba final en hardware real. El simulador valida compilación, puente nativo, navegación y estabilidad, pero no demuestra por sí solo el consentimiento ni el bloqueo final de Apple.
+
+Consulta [Handoff de Apple](./docs/IOS-APPLE-HANDOFF.md), [contrato de permisos iOS](./docs/IOS-NATIVE-PERMISSIONS-CONTRACT.md) y [matriz QA de dispositivos iOS](./docs/IOS-DEVICE-QA-MATRIX.md).
+
+## Arquitectura y datos
+
+- **Cliente**: Expo SDK 54, React Native 0.81, React 19, TypeScript y Expo Router.
+- **Interfaz**: React Native Paper, Reanimated, Worklets, modo claro/oscuro e internacionalización.
+- **Persistencia local**: AsyncStorage y SecureStore; el PIN no se almacena en texto plano en iOS.
+- **Android nativo**: Kotlin, VPN local, Accesibilidad y Activity de interrupción.
+- **iOS nativo**: Swift, Expo Modules, Family Controls, Managed Settings, Device Activity y tres extensiones Screen Time.
+- **Backend**: Supabase Auth, Postgres, RLS, RPCs y Edge Functions.
+- **QA**: Vitest, Playwright, Maestro, TypeScript, Expo Doctor y builds Release de iOS.
+
+Supabase gestiona autenticación por correo y contraseña, confirmación, recuperación, PKCE, Google OAuth, comunidad y contenido editorial. Las tablas sensibles usan RLS; el cliente consume el catálogo y el devocional mediante RPCs públicas controladas. El progreso espiritual permanece local durante esta fase.
 
 ```text
 clean4jesus/
-  app/                    # rutas Expo Router
-  src/                    # features, componentes, servicios y tipos
-  android/                # servicio VPN, Accesibilidad e interrupcion nativa
+  app/                    # rutas y pantallas de Expo Router
+  src/                    # funcionalidades, servicios, componentes y tipos
+  android/                # servicios y superficies nativas Android
+  modules/                # módulo Expo/Swift de protección iOS
+  targets/                # extensiones Device Activity y Shield de iOS
   supabase/               # migraciones, funciones y contratos de datos
-  moderation-console/     # consola interna de trust and safety
-  web/                    # superficies web legales, soporte y landing publica
-  scripts/                # validaciones, semillas y operaciones
-  tests/                  # unitarias, e2e y contratos
-  docs/                   # directivas, roadmap, legal y arquitectura
+  moderation-console/     # consola interna de moderación
+  web/                    # landing, soporte y superficies legales
+  scripts/                # validaciones y operaciones controladas
+  tests/                  # pruebas unitarias, E2E y contratos
+  .maestro/               # recorridos de interfaz iOS
+  .github/workflows/      # QA y generación manual de IPA
+  docs/                   # arquitectura, operación, QA y legal
   assets/                 # identidad y recursos aprobados
-  artifacts/apk/          # solo las dos APKs rotativas permitidas
 ```
 
-## Requisitos
+## Desarrollo local
 
-- Node.js 20+
-- npm 10+
-- JDK 17
-- Android SDK
-- Android Studio para compilacion local
-- Dispositivo Android real para validar Refugio nativo
-- Cuenta y proyecto Supabase para Auth, base de datos, funciones y contenido
+### Requisitos
 
-## Configuracion Local
+- Node.js 20 o superior y npm 10 o superior.
+- JDK 17, Android SDK y Android Studio para Android.
+- macOS y Xcode para una compilación local de iOS.
+- Dispositivo físico para validar la protección nativa de cada plataforma.
+- Variables públicas de Supabase y autenticación configuradas a partir de `.env.example`.
 
 ```bash
 cd clean4jesus
@@ -96,13 +121,9 @@ npm install
 copy .env.example .env.local
 ```
 
-Completa `.env.local` con las variables indicadas en `.env.example`. Este archivo nunca debe subirse a GitHub. El repositorio conserva solo la plantilla `.env.example`.
+No subas `.env.local`, certificados, perfiles, contraseñas, tokens, APK, AAB, IPA, cachés ni artefactos temporales al repositorio.
 
-La configuracion detallada de Supabase esta en [docs/SUPABASE-COMUNIDAD.md](./docs/SUPABASE-COMUNIDAD.md). La preparacion de autenticacion y CAPTCHA esta en [docs/AUTH-PRODUCTION-SETUP.md](./docs/AUTH-PRODUCTION-SETUP.md).
-
-## Comandos
-
-### Desarrollo
+### Ejecutar el cliente
 
 ```bash
 npm run start
@@ -111,7 +132,7 @@ npm run dev-client
 npm run dev-client:tunnel
 ```
 
-El QR correcto para el telefono es el que imprime `npm run dev-client` o `npm run dev-client:tunnel`. Una APK debug/dev-client necesita Metro; una APK release no necesita QR.
+El QR de `dev-client` requiere una development build instalada. Una APK o IPA Release no depende de Metro ni de un QR.
 
 ### Builds Android
 
@@ -120,89 +141,76 @@ npm run build:android:dev
 npm run build:android:preview
 ```
 
-No generar un build por cada ajuste pequeno. Antes de una APK se exige QA, red team, preview movil y recorrido funcional. Mantener como maximo dos APKs locales: `current` y `previous`.
+- `development`: APK con development client para probar módulos nativos.
+- `preview`: APK instalable y autónoma para QA.
+- `production`: AAB configurado en `eas.json` para una futura publicación.
 
-### Landing publica
+### Build iOS desde GitHub
 
-```bash
-npm run landing:build
-npm run landing:deploy
-```
+La IPA se genera únicamente después de fusionar el pull request aprobado:
 
-La landing oficial se construye como sitio estatico para `clean4jesus.com`. El comando de despliegue solo se ejecuta con aprobacion explicita del CEO. Consulta [el plan de landing](./docs/LANDING-SITE-PLAN.md) para las fuentes, el criterio de evidencia y la regla de QR.
+1. Sube los cambios a una rama.
+2. Crea el pull request hacia `main` con título y descripción en español.
+3. Espera las verificaciones y realiza el merge.
+4. En GitHub Actions abre **iOS local build on GitHub macOS**.
+5. Pulsa **Run workflow** sobre `main`.
+6. Descarga el artifact `clean4jesus-ios-ipa-vX.Y.Z-build-N`.
 
-### Preparación iOS
+El artifact contiene solamente `Clean4Jesus.ipa`. Para la versión actual, el nombre esperado es `clean4jesus-ios-ipa-v1.3.18-build-9`. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
 
-```bash
-npm run prebuild:ios
-npm run build:ios:simulator
-npm run build:ios:preview
-npm run build:ios:production
-```
+## Validación
 
-La interfaz compartida ya puede compilarse para iOS. La protección nativa de iPhone no se declara activa hasta contar con Apple Developer Program, entitlements aprobados de Family Controls/Network Extension, extensiones nativas y validación física en iPhone. Consulta [docs/IOS-MIGRATION-PLAN.md](./docs/IOS-MIGRATION-PLAN.md).
-
-### QA Y Seguridad
+Antes de proponer un merge, ejecuta:
 
 ```bash
 npx tsc --noEmit
 npm run test:unit
+npx expo-doctor
 npm run test:e2e
 npm run test:auth:readiness
 npm run test:auth:surfaces
 npm run test:supabase:security
 npm run test:supabase:negative
-npx expo export --platform web --clear
 ```
 
-## Git Y Backup
+El workflow **iOS Release startup smoke** valida TypeScript, pruebas unitarias, Expo Doctor, compilación Release y estabilidad de inicio con Maestro. Una ejecución verde no reemplaza la aceptación manual de Family Controls y Shield en un iPhone firmado.
 
-El repositorio privado oficial es:
+## Flujo de Git y releases
 
-```text
-https://github.com/adminclean4jesus-lang/clean4jesus
-```
+- Trabaja en una rama específica; no empujes cambios de producto directamente a `main`.
+- Publica la rama y entrega un título y una descripción de pull request en español.
+- El usuario crea el pull request, espera las verificaciones y decide el merge.
+- El workflow de IPA se ejecuta manualmente después del merge.
+- `package.json` y `app.json` deben declarar la misma versión.
+- Android incrementa `versionCode`; iOS incrementa `buildNumber`.
+- No crees PR, no hagas merge, no publiques releases y no ejecutes workflows sin autorización explícita.
 
-Cada cambio relevante debe terminar con un commit fechado y un `push` a `origin/main`.
+Repositorio privado oficial: `adminclean4jesus-lang/clean4jesus`.
 
-```bash
-git add .
-git commit -m "tipo: resumen del cambio - AAAA-MM-DD"
-git push
-```
+## Documentación principal
 
-No subir `.env`, claves, credenciales, APKs, AABs, caches ni artefactos temporales. `.gitignore` y `.env.example` forman parte del control de seguridad del repositorio.
-
-## Documentos Clave
-
+- [Índice de documentación](./docs/INDEX.md)
 - [Directivas persistentes](./docs/DIRECTIVAS-CLEAN4JESUS.md)
 - [Roadmap beta y Play Store](./docs/ROADMAP-BETA-PLAYSTORE.md)
 - [Historial de versiones](./docs/VERSION-HISTORY.md)
+- [Pruebas en celular](./docs/TESTING-CELULAR.md)
 - [Arquitectura de Supabase Comunidad](./docs/SUPABASE-COMUNIDAD.md)
-- [Preparacion de Auth](./docs/AUTH-PRODUCTION-SETUP.md)
-- [Pipeline de contenido editorial](./docs/DEVOTIONAL-CONTENT-PIPELINE.md)
+- [Preparación de autenticación](./docs/AUTH-PRODUCTION-SETUP.md)
 - [Arquitectura de contenido de Palabra](./docs/PALABRA-CONTENT-ARCHITECTURE.md)
-- [Bloqueo Android nativo](./docs/ANDROID-BLOQUEO-NATIVO.md)
+- [Pipeline de contenido editorial](./docs/DEVOTIONAL-CONTENT-PIPELINE.md)
+- [Bloqueo nativo Android](./docs/ANDROID-BLOQUEO-NATIVO.md)
 - [Arquitectura de protección iOS](./docs/ADR-006-IOS-PROTECTION-ARCHITECTURE.md)
-- [Plan de migración iOS](./docs/IOS-MIGRATION-PLAN.md)
-- [QA en celular](./docs/TESTING-CELULAR.md)
-- [Auditoria del proyecto](./docs/AUDITORIA-PROYECTO-2026-07-13.md)
-- [Operaciones de version gate](./docs/VERSION-GATE-OPERATIONS.md)
+- [Handoff de Apple](./docs/IOS-APPLE-HANDOFF.md)
+- [Contrato de permisos iOS](./docs/IOS-NATIVE-PERMISSIONS-CONTRACT.md)
+- [Operación del control de versiones](./docs/VERSION-GATE-OPERATIONS.md)
 
-## Pendientes Antes De Beta Publica
+## Antes de una beta pública
 
-- Auditoria y adaptacion completa para iOS.
-- Firma release y Play App Signing.
-- Data Safety, disclosures de VPN/Accesibilidad, legal y privacidad finales.
-- QA en varios fabricantes y tamaños Android.
-- Validacion editorial humana de traducciones y contenido biblico.
-- Buzones publicos de soporte y privacidad operativos.
-- Pruebas de carga, moderacion, recuperacion y respuesta a incidentes.
+- Completar la matriz de QA en varios dispositivos Android e iPhone.
+- Validar en iPhone físico autorización, selección, Shield, persistencia y revocación.
+- Completar firma de producción, Play App Signing, TestFlight y App Store Connect.
+- Finalizar Data Safety, declaraciones de VPN/Accesibilidad y textos legales de las tiendas.
+- Realizar revisión editorial humana de traducciones y contenido bíblico.
+- Mantener operativos los canales públicos de soporte, privacidad y respuesta a incidentes.
 
-## Politicas Del Proyecto
-
-- Leer primero `docs/DIRECTIVAS-CLEAN4JESUS.md`.
-- Leer el roadmap antes de cambios grandes.
-- No tocar checkpoints aprobados sin solicitud explicita.
-- Validar modo claro y oscuro en Android movil.
-- No presentar una beta publica como lista hasta cerrar QA, seguridad, legal, privacidad y release.
+Clean4Jesus es una herramienta de apoyo y acompañamiento. No sustituye atención médica, psicológica, pastoral ni de emergencia, y no promete bloquear absolutamente todo el contenido de riesgo.

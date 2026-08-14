@@ -26,6 +26,7 @@ type NativeIosProtectionModule = {
   clearProtection(pinHash: string): Promise<boolean>;
   startRescue(): Promise<boolean>;
   getRescueState(): Promise<{ rescueActive: boolean; timeRemaining: number }>;
+  setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
 };
 
 const NativeIosProtection =
@@ -185,6 +186,11 @@ class IosProtectionService implements IIosProtectionContract {
     if (Platform.OS !== "ios") return { rescueActive: false, timeRemaining: 0 };
 
     return await requireIosProtectionModule().getRescueState();
+  }
+
+  async setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean> {
+    if (Platform.OS !== "ios") return false;
+    return await requireIosProtectionModule().setShieldCopy(title, message, primaryLabel, secondaryLabel);
   }
 
   async refreshNativeState(): Promise<IosProtectionStatusInfo> {

@@ -12,6 +12,7 @@ export function setDailyLimit(minutes: number): Promise<boolean>;
 export function clearProtection(pinHash: string): Promise<boolean>;
 export function startRescue(): Promise<boolean>;
 export function getRescueState(): Promise<{ rescueActive: boolean; timeRemaining: number }>;
+export function setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
 
 declare const _default: any;
 export default _default;

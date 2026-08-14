@@ -1,9 +1,12 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Platform } from "react-native";
 
 import { getJson, setJson, storageKeys } from "@/services/storage";
 import { syncNativeLanguage } from "@/features/shield/localDnsVpnService";
+import { iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
 
 import { detectSystemLanguage, resolveStartupLanguage, SupportedLanguage, translate } from "./i18n";
+import { getIosProtectionText } from "./iosProtectionText";
 
 type I18nContextValue = {
   language: SupportedLanguage;
@@ -16,6 +19,21 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 
 function initialLanguage() {
   return process.env.EXPO_PUBLIC_E2E === "true" ? "es" : detectSystemLanguage();
+}
+
+async function syncIosShieldCopy(language: SupportedLanguage) {
+  if (Platform.OS !== "ios") return;
+  const copy = getIosProtectionText(language);
+  try {
+    await iosProtectionService.setShieldCopy(
+      copy.shieldTitle,
+      copy.shieldMessage,
+      copy.shieldPrimaryAction,
+      copy.shieldSecondaryAction,
+    );
+  } catch {
+    // The native module is unavailable in web, tests, or a non-iOS build.
+  }
 }
 
 export function I18nProvider({ children }: PropsWithChildren) {
@@ -38,6 +56,7 @@ export function I18nProvider({ children }: PropsWithChildren) {
           });
           setLanguageState(normalized);
           void syncNativeLanguage(normalized);
+          void syncIosShieldCopy(normalized);
         }
       })
       .finally(() => {
@@ -56,6 +75,7 @@ export function I18nProvider({ children }: PropsWithChildren) {
     await setJson(storageKeys.languagePreference, nextLanguage);
     await setJson(storageKeys.languagePreferenceExplicit, true);
     await syncNativeLanguage(nextLanguage);
+    await syncIosShieldCopy(nextLanguage);
   }, []);
 
   const value = useMemo<I18nContextValue>(

@@ -28,6 +28,7 @@ export interface IosProtectionStatusInfo {
   appGroupSynced: boolean;
   rescueActive: boolean;
   rescueTimeRemainingSeconds: number;
+  dailyLimitMinutes?: number;
   lastSyncTimestamp: number;
 }
 
@@ -37,6 +38,8 @@ export interface IosProtectionConfig {
   dailyLimitMinutes?: number;
   customShieldTitle?: string;
   customShieldMessage?: string;
+  customShieldPrimaryLabel?: string;
+  customShieldSecondaryLabel?: string;
 }
 
 export interface IosSelectionSummary {

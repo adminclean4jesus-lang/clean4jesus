@@ -23,6 +23,8 @@ import { getShieldState } from "@/features/shield/shieldService";
 import { useShieldGate } from "@/features/shield/useShieldGate";
 import { fonts, ThemeColors } from "@/theme";
 import { getLegalAccessText } from "@/features/legal/legalAccessText";
+import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
+import { getIosRescueText } from "@/features/i18n/iosRescueText";
 
 type SettingsRowProps = {
   accessory?: React.ReactNode;
@@ -39,6 +41,8 @@ export default function SettingsScreen() {
   const { checked } = useShieldGate();
   const { colors, isDark, preference, setPreference } = useAppAppearance();
   const { language, setLanguage, t } = useI18n();
+  const iosProtectionCopy = getIosProtectionText(language);
+  const iosRescueCopy = getIosRescueText(language);
   const styles = useMemo(() => createStyles(colors), [colors]);
   const legalCopy = getLegalAccessText(language);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -113,8 +117,8 @@ export default function SettingsScreen() {
         <SettingsRow
           onPress={() => router.push(isIos ? "/ios-protection" : "/app-protection")}
           testID="settings-protection-apps"
-          subtitle={isIos ? "Selecciona apps, categorías y sitios con Screen Time de Apple." : t(language, "settings.row.appProtectionHint")}
-          title={isIos ? "Protección Screen Time" : t(language, "settings.row.appProtection")}
+          subtitle={isIos ? iosProtectionCopy.selectionHelp : t(language, "settings.row.appProtectionHint")}
+          title={isIos ? iosProtectionCopy.title : t(language, "settings.row.appProtection")}
         />
         <SettingsRow
           onPress={() => router.push("/trusted-person")}
@@ -125,8 +129,8 @@ export default function SettingsScreen() {
         <SettingsRow
           onPress={() => router.push(isIos ? "/ios-rescue" : "/interruption-settings")}
           testID="settings-interruption"
-          subtitle={isIos ? "Pausa guiada de 60 segundos; no desactiva el escudo." : t(language, "settings.row.interruptionHint")}
-          title={isIos ? "Rescate iOS" : t(language, "settings.row.interruption")}
+          subtitle={isIos ? iosRescueCopy.subtitle : t(language, "settings.row.interruptionHint")}
+          title={isIos ? iosRescueCopy.title : t(language, "settings.row.interruption")}
         />
       </SettingsSection>
 

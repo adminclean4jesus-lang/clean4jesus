@@ -1,7 +1,7 @@
 import ManagedSettings
 import Foundation
 
-@available(iOS 15.0, *)
+@available(iOS 16.0, *)
 class ShieldActionExtension: ShieldActionDelegate {
     let appGroupID = "group.com.clean4jesus.app"
     
@@ -21,11 +21,7 @@ class ShieldActionExtension: ShieldActionDelegate {
 
         switch action {
         case .primaryButtonPressed:
-            // Activar pausa de rescate de 60 segundos
-            defaults.set(true, forKey: "rescueActive")
-            defaults.set(true, forKey: "clean4jesus.rescueRequested")
-            defaults.set(Date().timeIntervalSince1970, forKey: "rescueActiveTimestamp")
-            completionHandler(.defer)
+            completionHandler(.openParentalControlsApp)
         case .secondaryButtonPressed:
             // Cerrar interrupción
             completionHandler(.close)
