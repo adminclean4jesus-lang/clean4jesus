@@ -123,6 +123,8 @@ export default function IosProtectionScreen() {
         dailyLimitMinutes,
         customShieldTitle: copy.shieldTitle,
         customShieldMessage: copy.shieldMessage,
+        customShieldPrimaryLabel: copy.shieldPrimaryAction,
+        customShieldSecondaryLabel: copy.shieldSecondaryAction,
       });
       if (!configured) {
         Alert.alert(copy.activateErrorTitle, copy.activateErrorBody);

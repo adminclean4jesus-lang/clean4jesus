@@ -34,5 +34,6 @@ export interface IIosProtectionContract {
   clearProtection(pinHash: string): Promise<boolean>;
   startRescue(): Promise<boolean>;
   getRescueState(): Promise<{ rescueActive: boolean; timeRemaining: number }>;
+  setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
   refreshNativeState(): Promise<IosProtectionStatusInfo>;
 }

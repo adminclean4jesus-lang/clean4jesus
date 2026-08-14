@@ -79,6 +79,8 @@ const tables = {
     limitErrorBody: "Vuelve a activar la protección e inténtalo de nuevo.",
     shieldTitle: "Pausa de Clean4Jesus",
     shieldMessage: "Esta aplicación está pausada para ayudarte a cuidar tu decisión. Abre Clean4Jesus para revisar tu refugio.",
+    shieldPrimaryAction: "Abrir Clean4Jesus",
+    shieldSecondaryAction: "Cerrar",
     chooseSelection: "Elegir apps y categorías",
     changeSelection: "Cambiar apps y categorías",
     selectionSaved: "Selección guardada",
@@ -119,9 +121,29 @@ const tables = {
   },
 } as const;
 
+const shieldCopy = {
+  es: {
+    shieldPrimaryAction: "Abrir Clean4Jesus",
+    shieldSecondaryAction: "Cerrar",
+  },
+  en: {
+    shieldPrimaryAction: "Open Clean4Jesus",
+    shieldSecondaryAction: "Close",
+  },
+  fr: {
+    shieldPrimaryAction: "Ouvrir Clean4Jesus",
+    shieldSecondaryAction: "Fermer",
+  },
+  pt: {
+    shieldPrimaryAction: "Abrir Clean4Jesus",
+    shieldSecondaryAction: "Fechar",
+  },
+} as const;
+
 export function getIosProtectionText(language: SupportedLanguage) {
   return {
     ...tables[language],
+    ...shieldCopy[language],
     selection: (value: IosSelectionSummary) => selection(language, value),
     status: (value?: string) => status(language, value),
   };

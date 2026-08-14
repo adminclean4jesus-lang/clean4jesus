@@ -54,4 +54,25 @@ describe("iOS daily limit and Shield contracts", () => {
     expect(actionSource).toContain("openParentalControlsApp");
     expect(actionSource).not.toContain("rescueActiveTimestamp");
   });
+
+  it("keeps the iOS home copy and Shield copy on the selected locale", () => {
+    const homeSource = read("app/(tabs)/index.tsx");
+    const providerSource = read("src/features/i18n/I18nProvider.tsx");
+    const copySource = read("src/features/i18n/iosProtectionText.ts");
+
+    expect(homeSource).toContain("iosCopy.body");
+    expect(homeSource).toContain("iosCopy.authorized");
+    expect(providerSource).toContain("syncIosShieldCopy");
+    expect(providerSource).toContain("setShieldCopy");
+    expect(copySource).toContain("shieldPrimaryAction");
+    expect(copySource).toContain("shieldSecondaryAction");
+  });
+
+  it("does not hardcode the iOS rescue screen in Spanish", () => {
+    const source = read("app/ios-rescue.tsx");
+
+    expect(source).toContain("getIosRescueText");
+    expect(source).toContain("copy[phase]");
+    expect(source).not.toContain("Respirar 60 Segundos");
+  });
 });

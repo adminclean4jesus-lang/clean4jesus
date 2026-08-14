@@ -45,4 +45,8 @@ export function getRescueState() {
   return Clean4JesusIosProtectionModule.getRescueState();
 }
 
+export function setShieldCopy(title, message, primaryLabel, secondaryLabel) {
+  return Clean4JesusIosProtectionModule.setShieldCopy(title, message, primaryLabel, secondaryLabel);
+}
+
 export default Clean4JesusIosProtectionModule;

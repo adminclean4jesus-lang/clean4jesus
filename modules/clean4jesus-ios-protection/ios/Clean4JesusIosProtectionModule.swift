@@ -192,6 +192,8 @@ public class Clean4JesusIosProtectionModule: Module {
       defaults.set(requestedLimit > 0, forKey: "dailyLimitEnabled")
       defaults.set(config["customShieldTitle"] as? String, forKey: "customShieldTitle")
       defaults.set(config["customShieldMessage"] as? String, forKey: "customShieldMessage")
+      defaults.set(config["customShieldPrimaryLabel"] as? String, forKey: "customShieldPrimaryLabel")
+      defaults.set(config["customShieldSecondaryLabel"] as? String, forKey: "customShieldSecondaryLabel")
       do {
         if requestedLimit > 0 {
           try self.startDailyLimitMonitoring(selection: selection, minutes: requestedLimit)
@@ -310,6 +312,15 @@ public class Clean4JesusIosProtectionModule: Module {
         "rescueActive": timeRemaining > 0,
         "timeRemaining": timeRemaining
       ]
+    }.runOnQueue(.main)
+
+    AsyncFunction("setShieldCopy") { (title: String, message: String, primaryLabel: String, secondaryLabel: String) -> Bool in
+      guard let defaults = self.userDefaults else { return false }
+      defaults.set(title, forKey: "customShieldTitle")
+      defaults.set(message, forKey: "customShieldMessage")
+      defaults.set(primaryLabel, forKey: "customShieldPrimaryLabel")
+      defaults.set(secondaryLabel, forKey: "customShieldSecondaryLabel")
+      return true
     }.runOnQueue(.main)
   }
 
