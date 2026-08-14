@@ -39,6 +39,8 @@ private struct FamilyPickerScreen: View {
 public class Clean4JesusIosProtectionModule: Module {
   private let appGroupID = "group.com.clean4jesus.app"
   private let selectionKey = "clean4jesus.familyActivitySelection"
+  private let dailyActivityName = DeviceActivityName("clean4jesus.daily-limit")
+  private let dailyEventName = DeviceActivityEvent.Name("clean4jesus.daily-limit-event")
   private let settingsStore = ManagedSettingsStore(named: .init("clean4jesus"))
   private let activityCenter = DeviceActivityCenter()
   
@@ -135,6 +137,7 @@ public class Clean4JesusIosProtectionModule: Module {
         "appGroupSynced": defaults != nil,
         "rescueActive": timeRemaining > 0,
         "rescueTimeRemainingSeconds": timeRemaining,
+        "dailyLimitMinutes": defaults?.integer(forKey: "dailyLimitMinutes") ?? 0,
         "lastSyncTimestamp": Date().timeIntervalSince1970
       ]
     }.runOnQueue(.main)
@@ -184,11 +187,22 @@ public class Clean4JesusIosProtectionModule: Module {
               !selection.categoryTokens.isEmpty ||
               !selection.webDomainTokens.isEmpty else { return false }
 
-      self.settingsStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
-      self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
-      self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
-      self.settingsStore.webContent.blockedByFilter = .auto()
-      // DeviceActivity limits are started by the monitor extension: activityCenter.startMonitoring
+      let requestedLimit = (config["dailyLimitMinutes"] as? Int) ?? (config["dailyLimitMinutes"] as? NSNumber)?.intValue ?? 0
+      defaults.set(requestedLimit, forKey: "dailyLimitMinutes")
+      defaults.set(requestedLimit > 0, forKey: "dailyLimitEnabled")
+      defaults.set(config["customShieldTitle"] as? String, forKey: "customShieldTitle")
+      defaults.set(config["customShieldMessage"] as? String, forKey: "customShieldMessage")
+      do {
+        if requestedLimit > 0 {
+          try self.startDailyLimitMonitoring(selection: selection, minutes: requestedLimit)
+          self.settingsStore.clearAllSettings()
+        } else {
+          self.activityCenter.stopMonitoring([self.dailyActivityName])
+          self.applyShield(selection)
+        }
+      } catch {
+        return false
+      }
       defaults.set(true, forKey: "shieldEnabled")
       defaults.set(Date().timeIntervalSince1970, forKey: "lastConfigTimestamp")
       return true
@@ -204,6 +218,8 @@ public class Clean4JesusIosProtectionModule: Module {
       guard !pinHash.isEmpty, let defaults = self.userDefaults else { return false }
       guard let storedHash = defaults.string(forKey: "pinHash"), storedHash == pinHash else { return false }
       defaults.set(false, forKey: "shieldEnabled")
+      defaults.set(false, forKey: "dailyLimitEnabled")
+      self.activityCenter.stopMonitoring([self.dailyActivityName])
       self.settingsStore.clearAllSettings()
       defaults.set(Date().timeIntervalSince1970, forKey: "pausedTimestamp")
       return true
@@ -217,11 +233,56 @@ public class Clean4JesusIosProtectionModule: Module {
       guard !selection.applicationTokens.isEmpty ||
               !selection.categoryTokens.isEmpty ||
               !selection.webDomainTokens.isEmpty else { return false }
-      self.settingsStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
-      self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
-      self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
-      self.settingsStore.webContent.blockedByFilter = .auto()
+      let dailyLimit = defaults.integer(forKey: "dailyLimitMinutes")
+      do {
+        if dailyLimit > 0 {
+          try self.startDailyLimitMonitoring(selection: selection, minutes: dailyLimit)
+          self.settingsStore.clearAllSettings()
+        } else {
+          self.applyShield(selection)
+        }
+      } catch {
+        return false
+      }
       defaults.set(true, forKey: "shieldEnabled")
+      return true
+    }.runOnQueue(.main)
+
+    AsyncFunction("setDailyLimit") { (minutes: Int) -> Bool in
+      guard #available(iOS 16.0, *),
+            self.authorizationCenter.authorizationStatus == .approved,
+            let defaults = self.userDefaults else { return false }
+      let selection = self.loadSelection()
+      guard !selection.applicationTokens.isEmpty ||
+              !selection.categoryTokens.isEmpty ||
+              !selection.webDomainTokens.isEmpty else { return false }
+      do {
+        defaults.set(max(0, minutes), forKey: "dailyLimitMinutes")
+        defaults.set(minutes > 0, forKey: "dailyLimitEnabled")
+        if minutes > 0 {
+          try self.startDailyLimitMonitoring(selection: selection, minutes: minutes)
+          self.settingsStore.clearAllSettings()
+        } else {
+          self.activityCenter.stopMonitoring([self.dailyActivityName])
+          self.applyShield(selection)
+        }
+        defaults.set(true, forKey: "shieldEnabled")
+        return true
+      } catch {
+        return false
+      }
+    }.runOnQueue(.main)
+
+    AsyncFunction("clearProtection") { (pinHash: String) -> Bool in
+      guard let defaults = self.userDefaults else { return false }
+      if let storedHash = defaults.string(forKey: "pinHash"), !pinHash.isEmpty, storedHash != pinHash {
+        return false
+      }
+      self.activityCenter.stopMonitoring([self.dailyActivityName])
+      self.settingsStore.clearAllSettings()
+      defaults.set(false, forKey: "shieldEnabled")
+      defaults.set(false, forKey: "dailyLimitEnabled")
+      defaults.removeObject(forKey: "dailyLimitMinutes")
       return true
     }.runOnQueue(.main)
 
@@ -267,6 +328,33 @@ public class Clean4JesusIosProtectionModule: Module {
       throw NSError(domain: "Clean4Jesus", code: 1, userInfo: [NSLocalizedDescriptionKey: "El App Group no está disponible."])
     }
     defaults.set(try PropertyListEncoder().encode(selection), forKey: selectionKey)
+  }
+
+  private func applyShield(_ selection: FamilyActivitySelection) {
+    self.settingsStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
+    self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
+    self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
+    self.settingsStore.webContent.blockedByFilter = .auto()
+  }
+
+  private func startDailyLimitMonitoring(selection: FamilyActivitySelection, minutes: Int) throws {
+    self.activityCenter.stopMonitoring([self.dailyActivityName])
+    let schedule = DeviceActivitySchedule(
+      intervalStart: DateComponents(hour: 0, minute: 0),
+      intervalEnd: DateComponents(hour: 23, minute: 59),
+      repeats: true
+    )
+    let event = DeviceActivityEvent(
+      applications: selection.applicationTokens,
+      categories: selection.categoryTokens,
+      webDomains: selection.webDomainTokens,
+      threshold: DateComponents(minute: max(1, minutes))
+    )
+    try self.activityCenter.startMonitoring(
+      self.dailyActivityName,
+      during: schedule,
+      events: [self.dailyEventName: event]
+    )
   }
 
   private func selectionSummary(_ selection: FamilyActivitySelection) -> [String: Int] {

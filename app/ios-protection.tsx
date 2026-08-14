@@ -30,6 +30,8 @@ const emptySelection: IosSelectionSummary = {
   webDomains: 0,
 };
 
+const dailyLimitOptions = [0, 15, 30, 60, 120] as const;
+
 export default function IosProtectionScreen() {
   // Contract aliases retained for the startup boundary: iosProtectionNativeContract.requestAuthorization(),
   // iosProtectionNativeContract.presentFamilyActivityPicker(), activate-ios-refuge, disable-ios-refuge.
@@ -42,6 +44,7 @@ export default function IosProtectionScreen() {
   const [capabilities, setCapabilities] = useState<IosCapabilities | null>(null);
   const [statusInfo, setStatusInfo] = useState<IosProtectionStatusInfo | null>(null);
   const [selection, setSelection] = useState<IosSelectionSummary>(emptySelection);
+  const [dailyLimitMinutes, setDailyLimitMinutes] = useState(30);
   const selectionCount = selection.applications + selection.categories + selection.webDomains;
 
   const loadStatus = useCallback(async () => {
@@ -54,6 +57,7 @@ export default function IosProtectionScreen() {
       ]);
       setCapabilities(caps);
       setStatusInfo(status);
+      setDailyLimitMinutes(status.dailyLimitMinutes ?? 30);
       setSelection(selectionSummary);
     } catch {
       setCapabilities(null);
@@ -116,12 +120,26 @@ export default function IosProtectionScreen() {
       const configured = await iosProtectionService.configureProtection({
         blockCategories: ["adult"],
         blockWebDomains: [],
+        dailyLimitMinutes,
+        customShieldTitle: copy.shieldTitle,
+        customShieldMessage: copy.shieldMessage,
       });
       if (!configured) {
         Alert.alert(copy.activateErrorTitle, copy.activateErrorBody);
       }
     } catch {
       Alert.alert(copy.activateErrorTitle, copy.activateErrorBody);
+    }
+    await loadStatus();
+  }
+
+  async function handleDailyLimitChange(minutes: number) {
+    setDailyLimitMinutes(minutes);
+    if (!statusInfo?.isEnabled) return;
+    const updated = await iosProtectionService.setDailyLimit(minutes);
+    if (!updated) {
+      Alert.alert(copy.limitErrorTitle, copy.limitErrorBody);
+      return;
     }
     await loadStatus();
   }
@@ -156,6 +174,26 @@ export default function IosProtectionScreen() {
                 onValueChange={(value) => void handleToggleProtection(value)}
                 value={statusInfo?.isEnabled ?? false}
               />
+            </View>
+          </Card.Content>
+        </Card>
+
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={styles.cardTitle}>{copy.limitTitle}</Text>
+            <Text style={styles.selectionHelp}>{copy.limitHelp}</Text>
+            <View style={styles.limitGrid}>
+              {dailyLimitOptions.map((minutes) => (
+                <Button
+                  key={minutes}
+                  mode={dailyLimitMinutes === minutes ? "contained" : "outlined"}
+                  onPress={() => void handleDailyLimitChange(minutes)}
+                  style={styles.limitButton}
+                  buttonColor={dailyLimitMinutes === minutes ? "#071F52" : undefined}
+                >
+                  {copy.limitOption(minutes)}
+                </Button>
+              ))}
             </View>
           </Card.Content>
         </Card>
@@ -236,6 +274,8 @@ const styles = StyleSheet.create({
   content: { padding: 16 },
   divider: { marginVertical: 8 },
   label: { color: "#4A5568", flex: 1, fontSize: 14 },
+  limitButton: { marginBottom: 8, marginRight: 8 },
+  limitGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 12 },
   loadingText: { color: "#4A5568", marginTop: 12 },
   row: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 },
   selectButton: { marginTop: 12 },

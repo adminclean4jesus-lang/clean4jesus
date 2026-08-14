@@ -28,6 +28,7 @@ export interface IosProtectionStatusInfo {
   appGroupSynced: boolean;
   rescueActive: boolean;
   rescueTimeRemainingSeconds: number;
+  dailyLimitMinutes?: number;
   lastSyncTimestamp: number;
 }
 
