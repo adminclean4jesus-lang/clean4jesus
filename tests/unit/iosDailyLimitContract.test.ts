@@ -41,7 +41,7 @@ describe("iOS daily limit and Shield contracts", () => {
     expect(moduleSource).toContain("stopMonitoring");
   });
 
-  it("uses a direct Clean4Jesus action on the Shield instead of a fixed breathing timer", () => {
+  it("uses only Shield actions supported by the iOS release SDK", () => {
     const configurationSource = read(
       "targets/ShieldConfiguration/ShieldConfigurationExtension.swift",
     );
@@ -49,9 +49,12 @@ describe("iOS daily limit and Shield contracts", () => {
       "targets/ShieldAction/ShieldActionExtension.swift",
     );
 
-    expect(configurationSource).toContain("Abrir Clean4Jesus");
+    expect(configurationSource).toContain("Volver al inicio");
     expect(configurationSource).not.toContain("Respirar 60 segundos");
-    expect(actionSource).toContain("openParentalControlsApp");
+    expect(actionSource).not.toContain("openParentalControlsApp");
+    expect(actionSource).toMatch(
+      /case \.primaryButtonPressed:[\s\S]*?completionHandler\(\.close\)/,
+    );
     expect(actionSource).not.toContain("rescueActiveTimestamp");
   });
 

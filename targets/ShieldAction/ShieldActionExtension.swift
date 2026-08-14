@@ -21,7 +21,9 @@ class ShieldActionExtension: ShieldActionDelegate {
 
         switch action {
         case .primaryButtonPressed:
-            completionHandler(.openParentalControlsApp)
+            // iOS 16-18 no permite abrir la app principal desde una extensión Shield.
+            // Cerrar la app protegida devuelve al usuario a la pantalla de inicio.
+            completionHandler(.close)
         case .secondaryButtonPressed:
             // Cerrar interrupción
             completionHandler(.close)
