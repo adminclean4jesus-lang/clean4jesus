@@ -5,29 +5,16 @@ tags:
   - release
   - startup
 ---
-- launchApp
-- extendedWaitUntil:
-    visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
-    timeout: 20000
-- runFlow:
-    when:
-      visible: "New PIN"
-    commands:
-      - tapOn:
-          id: "pin-setup-new"
-      - inputText: "2580"
-      - tapOn:
-          id: "pin-setup-confirm"
-      - inputText: "2580"
-      - tapOn:
-          id: "pin-setup-save"
-      - extendedWaitUntil:
-          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
-          timeout: 20000
+# Open the native diagnostics route while the app is cold. Opening it after the
+# PIN gate races with the onboarding redirect on simulator and can leave the
+# test on pin-setup instead of exercising the Expo/Swift bridge.
 - openLink: clean4jesus://ios-protection
 - tapOn:
     text: "Open"
     optional: true
+- extendedWaitUntil:
+    id: "ios-protection-screen"
+    timeout: 20000
 - extendedWaitUntil:
     visible: "Family Controls:"
     timeout: 20000
@@ -39,6 +26,6 @@ tags:
       - stopApp
       - launchApp
       - extendedWaitUntil:
-          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
+          visible: "New PIN"
           timeout: 20000
-      - assertVisible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
+      - assertVisible: "New PIN"

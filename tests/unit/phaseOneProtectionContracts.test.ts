@@ -41,16 +41,18 @@ describe("Phase 1 protection contracts", () => {
     expect(copy).toContain('newPin: "Nuevo PIN"');
   });
 
-  it("exposes stable PIN setup controls for the iOS release gate", () => {
+  it("opens the native iOS readiness gate before onboarding can redirect it", () => {
     const source = read("app/pin-setup.tsx");
+    const iosProtection = read("app/ios-protection.tsx");
     const maestro = read(".maestro/ios-startup-smoke.yml");
 
     expect(source).toContain('testID="pin-setup-new"');
     expect(source).toContain('testID="pin-setup-confirm"');
     expect(source).toContain('testID="pin-setup-save"');
-    expect(maestro).toContain('id: "pin-setup-new"');
-    expect(maestro).toContain('id: "pin-setup-confirm"');
-    expect(maestro).toContain('id: "pin-setup-save"');
+    expect(iosProtection).toContain('testID="ios-protection-screen"');
+    expect(maestro).toContain("openLink: clean4jesus://ios-protection");
+    expect(maestro).toContain('id: "ios-protection-screen"');
+    expect(maestro).not.toContain('id: "pin-setup-save"');
   });
 
   it("commits local PIN and interruption settings only after Android accepts them", () => {
