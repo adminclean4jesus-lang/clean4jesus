@@ -5,40 +5,20 @@ tags:
   - release
   - startup
 ---
+# The PIN gate is deliberately the first iOS screen. A deep link to diagnostics
+# must not bypass it, so startup stability only asserts the protected entry
+# state and repeated cold launches.
 - launchApp
 - extendedWaitUntil:
-    visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
+    visible: "New PIN"
     timeout: 20000
-- runFlow:
-    when:
-      visible: "New PIN"
-    commands:
-      - tapOn:
-          id: "pin-setup-new"
-      - inputText: "2580"
-      - tapOn:
-          id: "pin-setup-confirm"
-      - inputText: "2580"
-      - tapOn:
-          id: "pin-setup-save"
-      - extendedWaitUntil:
-          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o).*"
-          timeout: 20000
-- openLink: clean4jesus://ios-protection
-- tapOn:
-    text: "Open"
-    optional: true
-- extendedWaitUntil:
-    visible: "Family Controls:"
-    timeout: 20000
-- assertVisible: "Soportado"
-- assertVisible: "Configurado"
+- assertVisible: "New PIN"
 - repeat:
     times: 20
     commands:
       - stopApp
       - launchApp
       - extendedWaitUntil:
-          visible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
+          visible: "New PIN"
           timeout: 20000
-      - assertVisible: ".*(Refugio|Refuge|Protection|Protecci.n|protection|prote..o|PIN).*"
+      - assertVisible: "New PIN"

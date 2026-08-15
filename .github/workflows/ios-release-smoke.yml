@@ -1,9 +1,12 @@
 name: iOS Release startup smoke
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
-      - codex/ios-startup-gate
+      - main
   workflow_dispatch:
 
 jobs:

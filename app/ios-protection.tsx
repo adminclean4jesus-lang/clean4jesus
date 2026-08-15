@@ -156,7 +156,7 @@ export default function IosProtectionScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="ios-protection-screen">
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{copy.title}</Text>
         <Text style={styles.subtitle}>{copy.subtitle}</Text>
