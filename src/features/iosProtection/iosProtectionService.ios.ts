@@ -158,7 +158,9 @@ class IosProtectionService implements IIosProtectionContract {
   }
 
   async getPerAppLimitSummary(): Promise<IosPerAppLimitSummary> {
-    if (Platform.OS !== "ios") return { applications: 0, configuredApplications: 0 };
+    if (Platform.OS !== "ios") {
+      return { applications: 0, configuredApplications: 0, hasUserConfiguredLimits: false };
+    }
     return await requireIosProtectionModule().getPerAppLimitSummary();
   }
 

@@ -8,16 +8,17 @@ function read(path: string) {
 }
 
 describe("Phase 1 protection contracts", () => {
-  it("requires the PIN when iOS opens before showing Family Controls", () => {
+  it("keeps the guardian PIN out of iOS startup and requires it only for later limit edits", () => {
     const gateSource = read("app/index.tsx");
     const verifySource = read("app/pin-verify.tsx");
+    const protectionSource = read("app/ios-protection.tsx");
 
-    expect(gateSource).toContain("isIosPinSessionVerified()");
-    expect(gateSource).toContain(
-      'router.replace("/pin-verify?action=enter-ios-refuge")',
-    );
-    expect(verifySource).toContain("markIosPinSessionVerified()");
-    expect(verifySource).toContain('router.replace("/")');
+    expect(gateSource).not.toContain("isIosPinSessionVerified()");
+    expect(gateSource).not.toContain('router.replace("/pin-verify?action=enter-ios-refuge")');
+    expect(protectionSource).toContain("hasUserConfiguredLimits");
+    expect(protectionSource).toContain('requireGuardianPin("edit-ios-limits")');
+    expect(verifySource).toContain('action === "edit-ios-limits"');
+    expect(verifySource).toContain('router.replace("/ios-protection?editLimits=1")');
   });
 
   it("does not reuse an iOS Keychain PIN after a fresh installation", () => {
@@ -41,15 +42,17 @@ describe("Phase 1 protection contracts", () => {
     expect(copy).toContain('newPin: "Nuevo PIN"');
   });
 
-  it("keeps the PIN gate ahead of native diagnostics during iOS startup", () => {
+  it("keeps first-time PIN creation available after the initial iOS configuration", () => {
     const source = read("app/pin-setup.tsx");
+    const protectionSource = read("app/ios-protection.tsx");
     const maestro = read(".maestro/ios-startup-smoke.yml");
 
     expect(source).toContain('testID="pin-setup-new"');
     expect(source).toContain('testID="pin-setup-confirm"');
     expect(source).toContain('testID="pin-setup-save"');
-    expect(maestro).toContain('visible: ".*(Nuevo PIN|New PIN).*"');
-    expect(maestro).toContain('- assertVisible: ".*(Nuevo PIN|New PIN).*"');
+    expect(protectionSource).toContain('router.push("/pin-setup?after=ios-limit-configured")');
+    expect(source).toContain('after === "ios-limit-configured" ? "/ios-protection" : "/"');
+    expect(maestro).toContain('visible: ".*(Refugio|Refuge|iOS).*"');
     expect(maestro).not.toContain("openLink:");
   });
 

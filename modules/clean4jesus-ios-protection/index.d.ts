@@ -8,8 +8,8 @@ export function presentFamilyActivityPicker(language: string): Promise<{ applica
 export function configureProtection(config: IosProtectionConfig): Promise<boolean>;
 export function pauseProtection(pinHash: string): Promise<boolean>;
 export function resumeProtection(): Promise<boolean>;
-export function getPerAppLimitSummary(): Promise<{ applications: number; configuredApplications: number }>;
-export function presentPerAppLimitEditor(language: string): Promise<{ applications: number; configuredApplications: number }>;
+export function getPerAppLimitSummary(): Promise<{ applications: number; configuredApplications: number; hasUserConfiguredLimits: boolean }>;
+export function presentPerAppLimitEditor(language: string): Promise<{ applications: number; configuredApplications: number; hasUserConfiguredLimits: boolean }>;
 export function clearProtection(pinHash: string): Promise<boolean>;
 export function setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
 

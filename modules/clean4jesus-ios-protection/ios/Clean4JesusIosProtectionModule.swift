@@ -155,6 +155,7 @@ public class Clean4JesusIosProtectionModule: Module {
   private let appGroupID = "group.com.clean4jesus.app"
   private let selectionKey = "clean4jesus.familyActivitySelection"
   private let perAppLimitsKey = "clean4jesus.perAppLimits.v2"
+  private let perAppLimitsConfiguredKey = "clean4jesus.perAppLimits.userConfigured"
   private let dailyActivityName = DeviceActivityName("clean4jesus.daily-limit")
   private let settingsStore = ManagedSettingsStore(named: .init("clean4jesus"))
   private let activityCenter = DeviceActivityCenter()
@@ -248,12 +249,13 @@ public class Clean4JesusIosProtectionModule: Module {
       return self.selectionSummary(selection)
     }.runOnQueue(.main)
 
-    AsyncFunction("getPerAppLimitSummary") { () -> [String: Int] in
+    AsyncFunction("getPerAppLimitSummary") { () -> [String: Any] in
       let selection = self.loadSelection()
       let rules = self.loadPerAppLimits().filter { selection.applicationTokens.contains($0.token) }
       return [
         "applications": selection.applicationTokens.count,
-        "configuredApplications": rules.filter { $0.enabled }.count
+        "configuredApplications": rules.filter { $0.enabled }.count,
+        "hasUserConfiguredLimits": self.hasUserConfiguredPerAppLimits()
       ]
     }.runOnQueue(.main)
 
@@ -286,13 +288,15 @@ public class Clean4JesusIosProtectionModule: Module {
           onSave: { rules in
             do {
               try self.savePerAppLimits(rules)
+              self.userDefaults?.set(true, forKey: self.perAppLimitsConfiguredKey)
               if self.userDefaults?.bool(forKey: "shieldEnabled") == true {
                 try self.startPerAppLimitMonitoring(rules: rules)
                 self.settingsStore.shield.applications = nil
               }
               promise.resolve([
                 "applications": selection.applicationTokens.count,
-                "configuredApplications": rules.filter { $0.enabled }.count
+                "configuredApplications": rules.filter { $0.enabled }.count,
+                "hasUserConfiguredLimits": true
               ])
             } catch {
               promise.reject("ERR_LIMIT_SAVE", error.localizedDescription)
@@ -325,7 +329,6 @@ public class Clean4JesusIosProtectionModule: Module {
           onSave: { selection in
             do {
               try self.saveSelection(selection)
-              try self.savePerAppLimits(self.synchronizedPerAppLimits(for: selection))
               promise.resolve(self.selectionSummary(selection))
             } catch {
               promise.reject("ERR_SELECTION_SAVE", error.localizedDescription)
@@ -459,6 +462,16 @@ public class Clean4JesusIosProtectionModule: Module {
     defaults.set(try PropertyListEncoder().encode(rules), forKey: perAppLimitsKey)
     defaults.set(2, forKey: "clean4jesus.limitSchemaVersion")
     defaults.set("perApplication", forKey: "clean4jesus.limitMode")
+  }
+
+  private func hasUserConfiguredPerAppLimits() -> Bool {
+    guard let defaults = userDefaults else { return false }
+    if defaults.object(forKey: perAppLimitsConfiguredKey) != nil {
+      return defaults.bool(forKey: perAppLimitsConfiguredKey)
+    }
+    // Releases before this marker already exposed rules to the user. Keep their
+    // existing settings protected on upgrade rather than silently allowing edits.
+    return !loadPerAppLimits().isEmpty
   }
 
   private func synchronizedPerAppLimits(for selection: FamilyActivitySelection) -> [StoredApplicationLimit] {

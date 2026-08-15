@@ -41,8 +41,36 @@ function selection(language: SupportedLanguage, value: IosSelectionSummary) {
 }
 
 export function getIosProtectionText(language: SupportedLanguage) {
+  const guardianCopy = {
+    es: {
+      guardianSetupTitle: "Protege los cambios con un PIN",
+      guardianSetupBody: "Tu primer límite ya quedó configurado. Ahora crea el PIN que guardará tu persona de confianza para proteger cambios futuros.",
+      guardianSetupRequiredBody: "Antes de volver a cambiar límites o apps, crea el PIN de tu persona de confianza.",
+      createGuardianPin: "Crear PIN del guardián",
+    },
+    en: {
+      guardianSetupTitle: "Protect changes with a PIN",
+      guardianSetupBody: "Your first limit is configured. Now create the PIN your trusted person will keep to protect future changes.",
+      guardianSetupRequiredBody: "Create your trusted person's PIN before changing limits or apps again.",
+      createGuardianPin: "Create guardian PIN",
+    },
+    fr: {
+      guardianSetupTitle: "Protégez les modifications avec un PIN",
+      guardianSetupBody: "Votre première limite est configurée. Créez maintenant le PIN que conservera votre personne de confiance.",
+      guardianSetupRequiredBody: "Créez le PIN de votre personne de confiance avant de modifier à nouveau les limites ou les apps.",
+      createGuardianPin: "Créer le PIN du gardien",
+    },
+    pt: {
+      guardianSetupTitle: "Proteja as alterações com um PIN",
+      guardianSetupBody: "Seu primeiro limite foi configurado. Agora crie o PIN que sua pessoa de confiança guardará para proteger mudanças futuras.",
+      guardianSetupRequiredBody: "Crie o PIN da sua pessoa de confiança antes de alterar limites ou apps novamente.",
+      createGuardianPin: "Criar PIN do guardião",
+    },
+  } as const;
+
   return {
     ...tables[language],
+    ...guardianCopy[language],
     selection: (value: IosSelectionSummary) => selection(language, value),
     status: (value?: string) => status(language, value),
   };

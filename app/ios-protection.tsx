@@ -1,6 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Button,
@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useI18n } from "@/features/i18n/I18nProvider";
+import { hasPin } from "@/features/pin/pinService";
 import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
 import {
   getIosAuthorizationErrorMessage,
@@ -34,6 +35,7 @@ const emptySelection: IosSelectionSummary = {
 const emptyLimitSummary: IosPerAppLimitSummary = {
   applications: 0,
   configuredApplications: 0,
+  hasUserConfiguredLimits: false,
 };
 
 export default function IosProtectionScreen() {
@@ -42,6 +44,10 @@ export default function IosProtectionScreen() {
   void iosProtectionNativeContract;
 
   const router = useRouter();
+  const { editLimits, editSelection } = useLocalSearchParams<{
+    editLimits?: string;
+    editSelection?: string;
+  }>();
   const { language } = useI18n();
   const copy = getIosProtectionText(language);
   const [loading, setLoading] = useState(true);
@@ -50,6 +56,7 @@ export default function IosProtectionScreen() {
   const [selection, setSelection] = useState<IosSelectionSummary>(emptySelection);
   const [limitSummary, setLimitSummary] = useState<IosPerAppLimitSummary>(emptyLimitSummary);
   const selectionCount = selection.applications + selection.categories + selection.webDomains;
+  const processedReturnAction = useRef<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
@@ -80,7 +87,41 @@ export default function IosProtectionScreen() {
     }, [loadStatus]),
   );
 
-  async function handleChooseProtection() {
+  async function openPerAppLimitEditor() {
+    try {
+      const summary = await iosProtectionService.presentPerAppLimitEditor(language);
+      setLimitSummary(summary);
+      await loadStatus();
+
+      if (await hasPin()) return;
+      Alert.alert(copy.guardianSetupTitle, copy.guardianSetupBody, [
+        {
+          text: copy.createGuardianPin,
+          onPress: () => router.push("/pin-setup?after=ios-limit-configured"),
+        },
+      ]);
+    } catch (error) {
+      const message = getIosAuthorizationErrorMessage(error);
+      if (!message.toLowerCase().includes("cancel")) {
+        Alert.alert(copy.limitErrorTitle, message);
+      }
+    }
+  }
+
+  async function requireGuardianPin(action: "edit-ios-limits" | "edit-ios-selection") {
+    if (await hasPin()) {
+      router.push(`/pin-verify?action=${action}`);
+      return;
+    }
+    Alert.alert(copy.guardianSetupTitle, copy.guardianSetupRequiredBody, [
+      {
+        text: copy.createGuardianPin,
+        onPress: () => router.push("/pin-setup?after=ios-limit-configured"),
+      },
+    ]);
+  }
+
+  async function openFamilyActivityPicker() {
     if (!statusInfo?.isAuthorized) {
       Alert.alert(copy.authorizeFirstTitle, copy.authorizeFirstBody);
       return;
@@ -94,6 +135,14 @@ export default function IosProtectionScreen() {
     } catch {
       Alert.alert(copy.pickerErrorTitle, copy.pickerErrorBody);
     }
+  }
+
+  async function handleChooseProtection() {
+    if (limitSummary.hasUserConfiguredLimits) {
+      await requireGuardianPin("edit-ios-selection");
+      return;
+    }
+    await openFamilyActivityPicker();
   }
 
   async function handleRequestAuth() {
@@ -146,17 +195,29 @@ export default function IosProtectionScreen() {
       Alert.alert(copy.limitErrorTitle, copy.limitErrorBody);
       return;
     }
-    try {
-      const summary = await iosProtectionService.presentPerAppLimitEditor(language);
-      setLimitSummary(summary);
-      await loadStatus();
-    } catch (error) {
-      const message = getIosAuthorizationErrorMessage(error);
-      if (!message.toLowerCase().includes("cancel")) {
-        Alert.alert(copy.limitErrorTitle, message);
-      }
+    if (limitSummary.hasUserConfiguredLimits) {
+      await requireGuardianPin("edit-ios-limits");
+      return;
     }
+    await openPerAppLimitEditor();
   }
+
+  useEffect(() => {
+    const action = editLimits === "1"
+      ? "limits"
+      : editSelection === "1"
+        ? "selection"
+        : null;
+    if (!action || loading || processedReturnAction.current === action) return;
+
+    processedReturnAction.current = action;
+    router.setParams(action === "limits" ? { editLimits: undefined } : { editSelection: undefined });
+    if (action === "limits") {
+      void openPerAppLimitEditor();
+    } else {
+      void openFamilyActivityPicker();
+    }
+  }, [editLimits, editSelection, loading]);
 
   if (loading) {
     return (

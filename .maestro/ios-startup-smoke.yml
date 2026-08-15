@@ -5,20 +5,19 @@ tags:
   - release
   - startup
 ---
-# The PIN gate is deliberately the first iOS screen. A deep link to diagnostics
-# must not bypass it, so startup stability only asserts the protected entry
-# state and repeated cold launches.
+# The app must open without asking for the guardian PIN. The PIN protects a
+# future change to configured limits, not devotional or community access.
 - launchApp
 - extendedWaitUntil:
-    visible: ".*(Nuevo PIN|New PIN).*"
+    visible: ".*(Refugio|Refuge|iOS).*"
     timeout: 20000
-- assertVisible: ".*(Nuevo PIN|New PIN).*"
+- assertVisible: ".*(Refugio|Refuge|iOS).*"
 - repeat:
     times: 20
     commands:
       - stopApp
       - launchApp
       - extendedWaitUntil:
-          visible: ".*(Nuevo PIN|New PIN).*"
+          visible: ".*(Refugio|Refuge|iOS).*"
           timeout: 20000
-      - assertVisible: ".*(Nuevo PIN|New PIN).*"
+      - assertVisible: ".*(Refugio|Refuge|iOS).*"

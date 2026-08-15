@@ -12,6 +12,8 @@ describe("iOS per-app limits and Shield contracts", () => {
 
     expect(source).toContain("presentPerAppLimitEditor");
     expect(source).toContain("ios-per-app-limits");
+    expect(source).toContain("hasUserConfiguredLimits");
+    expect(source).toContain('requireGuardianPin("edit-ios-limits")');
     expect(source).not.toContain("dailyLimitOptions");
     expect(source).not.toContain("setDailyLimit");
   });
@@ -23,6 +25,7 @@ describe("iOS per-app limits and Shield contracts", () => {
     expect(moduleSource).toContain("startPerAppLimitMonitoring");
     expect(moduleSource).toContain("for rule in enabledRules");
     expect(moduleSource).toContain("applications: [rule.token]");
+    expect(moduleSource).toContain("perAppLimitsConfiguredKey");
     expect(monitorSource).toContain("rules.first(where:");
     expect(monitorSource).toContain("shieldedApplications.insert(rule.token)");
   });
