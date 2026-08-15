@@ -26,8 +26,8 @@ const nativeIosProtection = vi.hoisted(() => ({
   configureProtection: vi.fn().mockResolvedValue(true),
   pauseProtection: vi.fn().mockResolvedValue(true),
   resumeProtection: vi.fn().mockResolvedValue(true),
-  getPerAppLimitSummary: vi.fn().mockResolvedValue({ applications: 1, configuredApplications: 1 }),
-  presentPerAppLimitEditor: vi.fn().mockResolvedValue({ applications: 1, configuredApplications: 1 }),
+  getPerAppLimitSummary: vi.fn().mockResolvedValue({ applications: 1, configuredApplications: 1, hasUserConfiguredLimits: true }),
+  presentPerAppLimitEditor: vi.fn().mockResolvedValue({ applications: 1, configuredApplications: 1, hasUserConfiguredLimits: true }),
   clearProtection: vi.fn().mockResolvedValue(true),
 }));
 
@@ -81,7 +81,7 @@ describe("Pruebas de Contrato de Protección iOS", () => {
 
   it("configura límites independientes mediante la pantalla nativa", async () => {
     const summary = await iosProtectionService.presentPerAppLimitEditor("es");
-    expect(summary).toEqual({ applications: 1, configuredApplications: 1 });
+    expect(summary).toEqual({ applications: 1, configuredApplications: 1, hasUserConfiguredLimits: true });
     expect(nativeIosProtection.presentPerAppLimitEditor).toHaveBeenCalledOnce();
   });
 });

@@ -16,8 +16,7 @@ import { InfoCard } from "@/components/InfoCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
-import { hasPin, syncPinToNative } from "@/features/pin/pinService";
-import { isIosPinSessionVerified } from "@/features/pin/pinSession";
+import { hasPin } from "@/features/pin/pinService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
   isAccessibilityInterventionActive,
@@ -54,7 +53,6 @@ function IosGateScreen() {
   const { language } = useI18n();
   const copy = getIosGateText(language);
   const styles = useMemo(() => createIosStyles(colors), [colors]);
-  const [pinReady, setPinReady] = useState(false);
   const [familyControlsAuthorized, setFamilyControlsAuthorized] =
     useState(false);
   const [protectionActive, setProtectionActive] = useState(false);
@@ -73,24 +71,10 @@ function IosGateScreen() {
 
   async function refreshIosState() {
     try {
-      const [pinExists, status] = await Promise.all([
-        hasPin(),
-        iosProtectionService.getProtectionStatus(),
-      ]);
-      if (pinExists) await syncPinToNative();
-      if (!pinExists) {
-        router.replace("/pin-setup?after=shield-setup");
-        return;
-      }
-      if (pinExists && !isIosPinSessionVerified()) {
-        router.replace("/pin-verify?action=enter-ios-refuge");
-        return;
-      }
-      setPinReady(pinExists);
+      const status = await iosProtectionService.getProtectionStatus();
       setFamilyControlsAuthorized(status.isAuthorized);
       setProtectionActive(status.isEnabled);
     } catch {
-      setPinReady(false);
       setFamilyControlsAuthorized(false);
       setProtectionActive(false);
     } finally {
@@ -99,8 +83,8 @@ function IosGateScreen() {
   }
 
   const readiness =
-    [pinReady, familyControlsAuthorized].filter(Boolean).length / 2;
-  const refugeReady = pinReady && familyControlsAuthorized;
+    [familyControlsAuthorized, protectionActive].filter(Boolean).length / 2;
+  const refugeReady = familyControlsAuthorized && protectionActive;
   const coverageLabel = Math.round(readiness * 100);
 
   async function handleRequestPermission() {
@@ -142,10 +126,6 @@ function IosGateScreen() {
   }
 
   async function handleEnter() {
-    if (!pinReady) {
-      router.push("/pin-setup?after=shield-setup");
-      return;
-    }
     if (!familyControlsAuthorized) {
       const prepared = await handleRequestPermission();
       if (prepared) router.replace("/(tabs)");
@@ -224,12 +204,6 @@ function IosGateScreen() {
 
       <InfoCard tone="outline" style={styles.layersCard}>
         <IosCheckRow
-          label="PIN"
-          ready={pinReady}
-          value={pinReady ? copy.ready : copy.create}
-        />
-        <View style={styles.divider} />
-        <IosCheckRow
           label={copy.familyControls}
           ready={familyControlsAuthorized}
           value={
@@ -250,7 +224,6 @@ function IosGateScreen() {
 
       <InfoCard tone="light" style={styles.stepsCard}>
         <Text style={styles.stepsLabel}>{copy.steps}</Text>
-        <IosStep ready={pinReady} text={copy.stepPin} />
         <IosStep
           ready={familyControlsAuthorized}
           text={copy.stepFamilyControls}

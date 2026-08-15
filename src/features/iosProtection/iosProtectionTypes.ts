@@ -49,4 +49,6 @@ export interface IosSelectionSummary {
 export interface IosPerAppLimitSummary {
   applications: number;
   configuredApplications: number;
+  /** True after an explicit save in the native per-app limits editor. */
+  hasUserConfiguredLimits: boolean;
 }

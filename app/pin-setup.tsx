@@ -60,9 +60,13 @@ export default function PinSetupScreen() {
       }
       await savePin(pin);
 
-      if (after === "shield-setup") markIosPinSessionVerified();
+      if (after === "shield-setup") {
+        markIosPinSessionVerified();
+        router.replace("/?setup=1");
+        return;
+      }
 
-      router.replace(after === "shield-setup" ? "/?setup=1" : "/");
+      router.replace(after === "ios-limit-configured" ? "/ios-protection" : "/");
     } finally {
       setSaving(false);
     }

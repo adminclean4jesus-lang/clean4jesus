@@ -17,6 +17,10 @@ await mkdir(output, { recursive: true });
 await mkdir(path.join(output, "fonts"), { recursive: true });
 await copyFile(path.join(root, "assets", "icon.png"), path.join(output, "brand-mark.png"));
 await copyFile(
+  path.join(root, "docs", "brand", "Clean4Jesus-Brandbook-Oficial.pdf"),
+  path.join(output, "brandbook-clean4jesus.pdf"),
+);
+await copyFile(
   path.join(root, "node_modules", "@expo-google-fonts", "lexend-deca", "400Regular", "LexendDeca_400Regular.ttf"),
   path.join(output, "fonts", "LexendDeca-Regular.ttf"),
 );
@@ -148,7 +152,7 @@ async function applyBranding() {
     const branded = html
       .replace(/<style>[\s\S]*?<\/style>/, styles)
       .replace('<a class="brand" href="/">Clean<span>4</span>Jesus</a>', '<a class="brand" href="/"><img src="/brand-mark.png" alt="" width="34" height="34"><span>Clean<span>4</span>Jesus</span></a>')
-      .replace(/<footer>[\s\S]*?<\/footer>/, "<footer>&copy; 2026 Clean4Jesus &middot; soporte@clean4jesus.com</footer>");
+      .replace(/<footer>[\s\S]*?<\/footer>/, "<footer>&copy; 2026 Clean4Jesus &middot; <a href=\"/brandbook-clean4jesus.pdf\">Brandbook</a> &middot; soporte@clean4jesus.com</footer>");
     await writeFile(filePath, branded, "utf8");
   }
 }
