@@ -16,6 +16,10 @@ tags:
     visible:
       id: "ios-protection-screen"
     timeout: 20000
+- scrollUntilVisible:
+    element: "Family Controls:"
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible: "Family Controls:"
     timeout: 20000
