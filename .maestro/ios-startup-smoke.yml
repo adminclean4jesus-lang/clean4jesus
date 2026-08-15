@@ -8,6 +8,7 @@ tags:
 # Open the native diagnostics route while the app is cold. Opening it after the
 # PIN gate races with the onboarding redirect on simulator and can leave the
 # test on pin-setup instead of exercising the Expo/Swift bridge.
+- launchApp
 - openLink: clean4jesus://ios-protection
 - tapOn:
     text: "Open"
