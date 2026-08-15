@@ -34,10 +34,11 @@ describe("iOS per-app limits and Shield contracts", () => {
     const configurationSource = read("targets/ShieldConfiguration/ShieldConfigurationExtension.swift");
     const actionSource = read("targets/ShieldAction/ShieldActionExtension.swift");
 
-    expect(configurationSource).toContain("makeClean4JesusIcon");
-    expect(configurationSource).toContain("Límite diario alcanzado");
+    expect(configurationSource).toContain("makeClean4JesusMark");
+    expect(configurationSource).toContain("Tu límite de hoy se cumplió");
     expect(configurationSource).toContain("secondaryButtonLabel: nil");
     expect(configurationSource).not.toContain('UIImage(named: "AppIcon")');
+    expect(configurationSource).not.toContain("ovalIn:");
     expect(actionSource).not.toContain("openParentalControlsApp");
   });
 
