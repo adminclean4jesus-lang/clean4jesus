@@ -1,4 +1,4 @@
-import { IosCapabilities, IosProtectionConfig, IosProtectionStatusInfo, IosSelectionSummary } from './iosProtectionTypes';
+import { IosCapabilities, IosPerAppLimitSummary, IosProtectionConfig, IosProtectionStatusInfo, IosSelectionSummary } from './iosProtectionTypes';
 import { iosProtectionService } from './iosProtectionService.ios';
 
 export interface IosReadinessItem {
@@ -17,7 +17,7 @@ export function getIosReadinessItems(): IosReadinessItem[] {
 }
 
 export const iosProtectionNativeContract = {
-  activateRefuge: async (minutes: number) => iosProtectionService.setDailyLimit(minutes),
+  configurePerAppLimits: async (language: string) => iosProtectionService.presentPerAppLimitEditor(language),
   clearRefuge: async () => iosProtectionService.clearProtection(''),
 };
 
@@ -25,15 +25,14 @@ export interface IIosProtectionContract {
   getProtectionCapabilities(): Promise<IosCapabilities>;
   getProtectionStatus(): Promise<IosProtectionStatusInfo>;
   getSelectionSummary(): Promise<IosSelectionSummary>;
-  presentFamilyActivityPicker(): Promise<IosSelectionSummary>;
+  presentFamilyActivityPicker(language: string): Promise<IosSelectionSummary>;
   requestAuthorization(): Promise<boolean>;
   configureProtection(config: IosProtectionConfig): Promise<boolean>;
   pauseProtection(pinHash: string): Promise<boolean>;
   resumeProtection(): Promise<boolean>;
-  setDailyLimit(minutes: number): Promise<boolean>;
+  getPerAppLimitSummary(): Promise<IosPerAppLimitSummary>;
+  presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary>;
   clearProtection(pinHash: string): Promise<boolean>;
-  startRescue(): Promise<boolean>;
-  getRescueState(): Promise<{ rescueActive: boolean; timeRemaining: number }>;
   setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
   refreshNativeState(): Promise<IosProtectionStatusInfo>;
 }

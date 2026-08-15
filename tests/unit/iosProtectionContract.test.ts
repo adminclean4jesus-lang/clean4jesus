@@ -15,8 +15,6 @@ const nativeIosProtection = vi.hoisted(() => ({
     isEnabled: false,
     isAuthorized: false,
     appGroupSynced: true,
-    rescueActive: false,
-    rescueTimeRemainingSeconds: 0,
     lastSyncTimestamp: 0,
   }),
   getSelectionSummary: vi
@@ -28,12 +26,9 @@ const nativeIosProtection = vi.hoisted(() => ({
   configureProtection: vi.fn().mockResolvedValue(true),
   pauseProtection: vi.fn().mockResolvedValue(true),
   resumeProtection: vi.fn().mockResolvedValue(true),
-  setDailyLimit: vi.fn().mockResolvedValue(true),
+  getPerAppLimitSummary: vi.fn().mockResolvedValue({ applications: 1, configuredApplications: 1 }),
+  presentPerAppLimitEditor: vi.fn().mockResolvedValue({ applications: 1, configuredApplications: 1 }),
   clearProtection: vi.fn().mockResolvedValue(true),
-  startRescue: vi.fn().mockResolvedValue(true),
-  getRescueState: vi
-    .fn()
-    .mockResolvedValue({ rescueActive: true, timeRemaining: 60 }),
 }));
 
 vi.mock("react-native", () => ({
@@ -84,10 +79,9 @@ describe("Pruebas de Contrato de Protección iOS", () => {
     expect(caps.appGroupConfigured).toBe(true);
   });
 
-  it("maneja el inicio del rescate de 60 segundos correctamente", async () => {
-    const ok = await iosProtectionService.startRescue();
-    expect(typeof ok).toBe("boolean");
-    const rescueState = await iosProtectionService.getRescueState();
-    expect(rescueState).toBeDefined();
+  it("configura límites independientes mediante la pantalla nativa", async () => {
+    const summary = await iosProtectionService.presentPerAppLimitEditor("es");
+    expect(summary).toEqual({ applications: 1, configuredApplications: 1 });
+    expect(nativeIosProtection.presentPerAppLimitEditor).toHaveBeenCalledOnce();
   });
 });

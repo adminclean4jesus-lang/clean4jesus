@@ -17,6 +17,14 @@ export function getStatus() {
   return Clean4JesusIosProtectionModule.getStatus();
 }
 
+export function getSelectionSummary() {
+  return Clean4JesusIosProtectionModule.getSelectionSummary();
+}
+
+export function presentFamilyActivityPicker(language) {
+  return Clean4JesusIosProtectionModule.presentFamilyActivityPicker(language);
+}
+
 export function configureProtection(config) {
   return Clean4JesusIosProtectionModule.configureProtection(config);
 }
@@ -29,20 +37,16 @@ export function resumeProtection() {
   return Clean4JesusIosProtectionModule.resumeProtection();
 }
 
-export function setDailyLimit(minutes) {
-  return Clean4JesusIosProtectionModule.setDailyLimit(minutes);
+export function getPerAppLimitSummary() {
+  return Clean4JesusIosProtectionModule.getPerAppLimitSummary();
+}
+
+export function presentPerAppLimitEditor(language) {
+  return Clean4JesusIosProtectionModule.presentPerAppLimitEditor(language);
 }
 
 export function clearProtection(pinHash) {
   return Clean4JesusIosProtectionModule.clearProtection(pinHash);
-}
-
-export function startRescue() {
-  return Clean4JesusIosProtectionModule.startRescue();
-}
-
-export function getRescueState() {
-  return Clean4JesusIosProtectionModule.getRescueState();
 }
 
 export function setShieldCopy(title, message, primaryLabel, secondaryLabel) {

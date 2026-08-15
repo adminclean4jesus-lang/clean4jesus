@@ -119,7 +119,7 @@ function IosGateScreen() {
         selection.applications + selection.categories + selection.webDomains ===
         0
       ) {
-        await iosProtectionService.presentFamilyActivityPicker();
+        await iosProtectionService.presentFamilyActivityPicker(language);
       }
 
       const configured = await iosProtectionService.configureProtection({

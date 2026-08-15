@@ -368,9 +368,15 @@ export function normalizeLanguage(value: string | null | undefined): SupportedLa
   return isSupportedLanguage(normalized) ? normalized : "es";
 }
 
-export function detectSystemLanguage(): SupportedLanguage {
+export function detectSystemLanguage(
+  getDeviceLocales: () => ReadonlyArray<{ languageCode?: string | null; languageTag?: string | null }> = () => {
+    const { getLocales } = require("expo-localization") as typeof import("expo-localization");
+    return getLocales();
+  },
+): SupportedLanguage {
   try {
-    return normalizeLanguage(Intl.DateTimeFormat().resolvedOptions().locale);
+    const locale = getDeviceLocales()[0];
+    return normalizeLanguage(locale?.languageCode ?? locale?.languageTag);
   } catch {
     return "es";
   }

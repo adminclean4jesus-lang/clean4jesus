@@ -10,15 +10,15 @@ tags:
 # state and repeated cold launches.
 - launchApp
 - extendedWaitUntil:
-    visible: "New PIN"
+    visible: ".*(Nuevo PIN|New PIN).*"
     timeout: 20000
-- assertVisible: "New PIN"
+- assertVisible: ".*(Nuevo PIN|New PIN).*"
 - repeat:
     times: 20
     commands:
       - stopApp
       - launchApp
       - extendedWaitUntil:
-          visible: "New PIN"
+          visible: ".*(Nuevo PIN|New PIN).*"
           timeout: 20000
-      - assertVisible: "New PIN"
+      - assertVisible: ".*(Nuevo PIN|New PIN).*"

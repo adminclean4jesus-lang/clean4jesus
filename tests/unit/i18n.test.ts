@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeLanguage, supportedLanguages, translate } from "../../src/features/i18n/i18n";
+import { detectSystemLanguage, normalizeLanguage, supportedLanguages, translate } from "../../src/features/i18n/i18n";
 
 describe("i18n", () => {
   it("supports the beta languages", () => {
@@ -17,6 +17,11 @@ describe("i18n", () => {
   it("falls back to Spanish for unsupported languages", () => {
     expect(normalizeLanguage("de-DE")).toBe("es");
     expect(normalizeLanguage(null)).toBe("es");
+  });
+
+  it("reads the native device locale instead of Intl", () => {
+    expect(detectSystemLanguage(() => [{ languageCode: "es", languageTag: "es-CO" }])).toBe("es");
+    expect(detectSystemLanguage(() => [{ languageCode: "en", languageTag: "en-US" }])).toBe("en");
   });
 
   it("keeps language labels available in all supported languages", () => {
