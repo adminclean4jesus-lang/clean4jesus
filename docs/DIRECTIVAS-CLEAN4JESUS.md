@@ -4,7 +4,7 @@
 ## Checkpoint Legal Y Privacidad - 2026-07-23
 
 - El sitio `legal.clean4jesus.com` usa el look and feel oficial de Clean4Jesus: logo `icon.png`, Lexend para titulares, Inter para lectura, azul marino/dorado y footer con copyright y `soporte@clean4jesus.com`. No volver a mostrar el nombre personal del responsable en el footer público.
-- El wordmark legal usa `Clean` y `Jesus` en azul; el `4` es blanco con contorno azul. Mantener este tratamiento salvo decisión explícita de marca.
+- La única marca oficial vigente es el escudo abierto con cruz blanca sobre azul marino (`assets/icon.png`). No construir ni declarar un wordmark, lockup o variante final hasta contar con un archivo maestro aprobado.
 - La privacidad publicada esta en version 1.1; Terminos, Reglas de Comunidad, Seguridad Infantil, Eliminacion de Cuenta y Soporte siguen en version 1.0 en `legal.clean4jesus.com`.
 - Supabase conserva consentimiento legal versionado y ejecuta retencion automatica diaria: falsos positivos a 12 meses y moderacion/auditoria a 24 meses.
 - Comunidad exige aceptacion vigente y se mantiene para mayores de 18 anos durante la beta. Refugio y Palabra pueden usarse localmente sin cuenta.

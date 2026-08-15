@@ -17,9 +17,9 @@ La marca oficial es el escudo abierto con cruz blanca sobre azul marino. Sus act
 | Icono principal iOS/Android | `assets/icon.png` | No redibujar, recortar ni sustituir. |
 | Marca transparente en fondos de producto | `assets/android-icon-foreground.png` | Usar sobre azul marino oficial. |
 | Icono adaptativo Android | `assets/android-icon-background.png` + `assets/android-icon-foreground.png` | Mantener como pareja. |
-| Wordmark legal/público | `Clean4Jesus` | `Clean` y `Jesus` azules; `4` blanco con contorno azul. |
+| Nombre de producto | `Clean4Jesus` en texto | No construir un wordmark, lockup ni variante de logo hasta que exista un archivo maestro aprobado. |
 
-No usar círculos dorados detrás del escudo, relojes de arena, símbolos genéricos de pausa ni variantes improvisadas del logo. El escudo no se distorsiona, no recibe sombra ornamental y debe conservar área libre alrededor.
+No usar círculos dorados detrás del escudo, relojes de arena, símbolos genéricos de pausa ni variantes improvisadas del logo. El escudo no se distorsiona, no recibe sombra ornamental y debe conservar área libre alrededor. El antiguo logo de corazón, verde lima y cruz roja fue retirado y no forma parte de Clean4Jesus.
 
 ## Color
 
