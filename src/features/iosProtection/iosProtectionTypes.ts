@@ -26,8 +26,6 @@ export interface IosProtectionStatusInfo {
   isEnabled: boolean;
   isAuthorized: boolean;
   appGroupSynced: boolean;
-  rescueActive: boolean;
-  rescueTimeRemainingSeconds: number;
   dailyLimitMinutes?: number;
   lastSyncTimestamp: number;
 }
@@ -46,4 +44,9 @@ export interface IosSelectionSummary {
   applications: number;
   categories: number;
   webDomains: number;
+}
+
+export interface IosPerAppLimitSummary {
+  applications: number;
+  configuredApplications: number;
 }

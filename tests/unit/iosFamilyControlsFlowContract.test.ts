@@ -7,7 +7,7 @@ describe("Family Controls activation flow", () => {
   it("selects Family Activity items before configuring Managed Settings", () => {
     const source = readFileSync(join(process.cwd(), "app/index.tsx"), "utf8");
     const selectionCheck = source.indexOf("getSelectionSummary()");
-    const picker = source.indexOf("presentFamilyActivityPicker()");
+    const picker = source.indexOf("presentFamilyActivityPicker(language)");
     const configure = source.indexOf("configureProtection({");
 
     expect(selectionCheck).toBeGreaterThan(-1);

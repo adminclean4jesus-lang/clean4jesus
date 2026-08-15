@@ -48,8 +48,8 @@ describe("Phase 1 protection contracts", () => {
     expect(source).toContain('testID="pin-setup-new"');
     expect(source).toContain('testID="pin-setup-confirm"');
     expect(source).toContain('testID="pin-setup-save"');
-    expect(maestro).toContain('visible: "New PIN"');
-    expect(maestro).toContain('- assertVisible: "New PIN"');
+    expect(maestro).toContain('visible: ".*(Nuevo PIN|New PIN).*"');
+    expect(maestro).toContain('- assertVisible: ".*(Nuevo PIN|New PIN).*"');
     expect(maestro).not.toContain("openLink:");
   });
 

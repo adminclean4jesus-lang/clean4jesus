@@ -20,6 +20,7 @@ import {
 import { iosProtectionNativeContract } from "@/features/iosProtection/iosProtectionContract";
 import type {
   IosCapabilities,
+  IosPerAppLimitSummary,
   IosProtectionStatusInfo,
   IosSelectionSummary,
 } from "@/features/iosProtection/iosProtectionTypes";
@@ -30,7 +31,10 @@ const emptySelection: IosSelectionSummary = {
   webDomains: 0,
 };
 
-const dailyLimitOptions = [0, 15, 30, 60, 120] as const;
+const emptyLimitSummary: IosPerAppLimitSummary = {
+  applications: 0,
+  configuredApplications: 0,
+};
 
 export default function IosProtectionScreen() {
   // Contract aliases retained for the startup boundary: iosProtectionNativeContract.requestAuthorization(),
@@ -44,25 +48,27 @@ export default function IosProtectionScreen() {
   const [capabilities, setCapabilities] = useState<IosCapabilities | null>(null);
   const [statusInfo, setStatusInfo] = useState<IosProtectionStatusInfo | null>(null);
   const [selection, setSelection] = useState<IosSelectionSummary>(emptySelection);
-  const [dailyLimitMinutes, setDailyLimitMinutes] = useState(30);
+  const [limitSummary, setLimitSummary] = useState<IosPerAppLimitSummary>(emptyLimitSummary);
   const selectionCount = selection.applications + selection.categories + selection.webDomains;
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
     try {
-      const [caps, status, selectionSummary] = await Promise.all([
+      const [caps, status, selectionSummary, perAppSummary] = await Promise.all([
         iosProtectionService.getProtectionCapabilities(),
         iosProtectionService.getProtectionStatus(),
         iosProtectionService.getSelectionSummary(),
+        iosProtectionService.getPerAppLimitSummary(),
       ]);
       setCapabilities(caps);
       setStatusInfo(status);
-      setDailyLimitMinutes(status.dailyLimitMinutes ?? 30);
       setSelection(selectionSummary);
+      setLimitSummary(perAppSummary);
     } catch {
       setCapabilities(null);
       setStatusInfo(null);
       setSelection(emptySelection);
+      setLimitSummary(emptyLimitSummary);
     } finally {
       setLoading(false);
     }
@@ -81,8 +87,9 @@ export default function IosProtectionScreen() {
     }
 
     try {
-      const summary = await iosProtectionService.presentFamilyActivityPicker();
+      const summary = await iosProtectionService.presentFamilyActivityPicker(language);
       setSelection(summary);
+      setLimitSummary(await iosProtectionService.getPerAppLimitSummary());
       Alert.alert(copy.selectionSaved, copy.selectionSavedBody);
     } catch {
       Alert.alert(copy.pickerErrorTitle, copy.pickerErrorBody);
@@ -120,7 +127,6 @@ export default function IosProtectionScreen() {
       const configured = await iosProtectionService.configureProtection({
         blockCategories: ["adult"],
         blockWebDomains: [],
-        dailyLimitMinutes,
         customShieldTitle: copy.shieldTitle,
         customShieldMessage: copy.shieldMessage,
         customShieldPrimaryLabel: copy.shieldPrimaryAction,
@@ -135,15 +141,21 @@ export default function IosProtectionScreen() {
     await loadStatus();
   }
 
-  async function handleDailyLimitChange(minutes: number) {
-    setDailyLimitMinutes(minutes);
-    if (!statusInfo?.isEnabled) return;
-    const updated = await iosProtectionService.setDailyLimit(minutes);
-    if (!updated) {
+  async function handleConfigurePerAppLimits() {
+    if (selection.applications === 0) {
       Alert.alert(copy.limitErrorTitle, copy.limitErrorBody);
       return;
     }
-    await loadStatus();
+    try {
+      const summary = await iosProtectionService.presentPerAppLimitEditor(language);
+      setLimitSummary(summary);
+      await loadStatus();
+    } catch (error) {
+      const message = getIosAuthorizationErrorMessage(error);
+      if (!message.toLowerCase().includes("cancel")) {
+        Alert.alert(copy.limitErrorTitle, message);
+      }
+    }
   }
 
   if (loading) {
@@ -184,19 +196,21 @@ export default function IosProtectionScreen() {
           <Card.Content>
             <Text style={styles.cardTitle}>{copy.limitTitle}</Text>
             <Text style={styles.selectionHelp}>{copy.limitHelp}</Text>
-            <View style={styles.limitGrid}>
-              {dailyLimitOptions.map((minutes) => (
-                <Button
-                  key={minutes}
-                  mode={dailyLimitMinutes === minutes ? "contained" : "outlined"}
-                  onPress={() => void handleDailyLimitChange(minutes)}
-                  style={styles.limitButton}
-                  buttonColor={dailyLimitMinutes === minutes ? "#071F52" : undefined}
-                >
-                  {copy.limitOption(minutes)}
-                </Button>
-              ))}
-            </View>
+            <Text style={styles.selectionText}>
+              {copy.configuredLimits(limitSummary.configuredApplications, limitSummary.applications)}
+            </Text>
+            <Button
+              buttonColor="#071F52"
+              disabled={!statusInfo?.isAuthorized || selection.applications === 0}
+              mode="contained"
+              onPress={() => void handleConfigurePerAppLimits()}
+              style={styles.selectButton}
+              testID="ios-per-app-limits"
+            >
+              {copy.configureLimits}
+            </Button>
+            <Text style={styles.selectionHelp}>{copy.limitPrivacy}</Text>
+            <Text style={styles.pendingNotice}>{copy.limitCounterPending}</Text>
           </Card.Content>
         </Card>
 
@@ -247,9 +261,6 @@ export default function IosProtectionScreen() {
           </Button>
         ) : null}
 
-        <Button mode="outlined" onPress={() => router.push("/ios-rescue")} style={styles.button}>
-          {copy.rescue}
-        </Button>
         <Button mode="text" onPress={() => router.push("/ios-readiness")} style={styles.button}>
           {copy.readiness}
         </Button>
@@ -276,9 +287,8 @@ const styles = StyleSheet.create({
   content: { padding: 16 },
   divider: { marginVertical: 8 },
   label: { color: "#4A5568", flex: 1, fontSize: 14 },
-  limitButton: { marginBottom: 8, marginRight: 8 },
-  limitGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 12 },
   loadingText: { color: "#4A5568", marginTop: 12 },
+  pendingNotice: { color: "#8A5A00", fontSize: 12, lineHeight: 18, marginTop: 10 },
   row: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 },
   selectButton: { marginTop: 12 },
   selectionHelp: { color: "#667085", fontSize: 12, lineHeight: 18, marginTop: 6 },

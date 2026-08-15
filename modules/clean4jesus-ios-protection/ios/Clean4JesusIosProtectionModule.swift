@@ -10,23 +10,33 @@ import UIKit
 private struct FamilyPickerScreen: View {
   @Environment(\.dismiss) private var dismiss
   @State var selection: FamilyActivitySelection
+  let language: String
   let onCancel: () -> Void
   let onSave: (FamilyActivitySelection) -> Void
+
+  private func localized(es: String, en: String, fr: String, pt: String) -> String {
+    switch language {
+    case "en": return en
+    case "fr": return fr
+    case "pt": return pt
+    default: return es
+    }
+  }
 
   var body: some View {
     NavigationStack {
       FamilyActivityPicker(selection: $selection)
-        .navigationTitle("Elegir proteccion")
+        .navigationTitle(localized(es: "Elegir protección", en: "Choose protection", fr: "Choisir la protection", pt: "Escolher proteção"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
-            Button("Cancelar") {
+            Button(localized(es: "Cancelar", en: "Cancel", fr: "Annuler", pt: "Cancelar")) {
               onCancel()
               dismiss()
             }
           }
           ToolbarItem(placement: .confirmationAction) {
-            Button("Guardar") {
+            Button(localized(es: "Guardar", en: "Save", fr: "Enregistrer", pt: "Salvar")) {
               onSave(selection)
               dismiss()
             }
@@ -36,11 +46,116 @@ private struct FamilyPickerScreen: View {
   }
 }
 
+@available(iOS 16.0, *)
+private struct StoredApplicationLimit: Codable, Identifiable {
+  let id: UUID
+  let token: ApplicationToken
+  var minutes: Int
+  var enabled: Bool
+}
+
+@available(iOS 16.0, *)
+private struct PerAppEditorCopy {
+  let title: String
+  let help: String
+  let apps: String
+  let dailyTime: String
+  let categories: String
+  let categoriesHelp: String
+  let privacy: String
+  let cancel: String
+  let save: String
+
+  static func forLanguage(_ requestedLanguage: String) -> PerAppEditorCopy {
+    let language = requestedLanguage.isEmpty
+      ? (Locale.preferredLanguages.first?.split(separator: "-").first.map(String.init) ?? "es")
+      : requestedLanguage
+    switch language {
+    case "en": return .init(title: "Limits per app", help: "Choose a different time for each app. Usage resets every day.", apps: "Selected apps", dailyTime: "Daily time", categories: "Categories and sites", categoriesHelp: "For different times, choose apps one by one. Categories and sites do not receive an individual limit.", privacy: "Apple keeps your selections private. Clean4Jesus does not send this information.", cancel: "Cancel", save: "Save")
+    case "fr": return .init(title: "Limites par app", help: "Choisissez un temps différent pour chaque app. L’usage est réinitialisé chaque jour.", apps: "Apps choisies", dailyTime: "Temps quotidien", categories: "Catégories et sites", categoriesHelp: "Pour des temps différents, choisissez les apps une par une. Les catégories et sites n’ont pas de limite individuelle.", privacy: "Apple garde vos sélections privées. Clean4Jesus n’envoie pas ces informations.", cancel: "Annuler", save: "Enregistrer")
+    case "pt": return .init(title: "Limites por app", help: "Escolha um tempo diferente para cada app. O uso reinicia todos os dias.", apps: "Apps escolhidos", dailyTime: "Tempo diário", categories: "Categorias e sites", categoriesHelp: "Para tempos diferentes, escolha os apps um a um. Categorias e sites não recebem limite individual.", privacy: "A Apple mantém suas seleções privadas. O Clean4Jesus não envia essas informações.", cancel: "Cancelar", save: "Salvar")
+    default: return .init(title: "Límites por aplicación", help: "Elige un tiempo distinto para cada app. El uso se reinicia cada día.", apps: "Apps elegidas", dailyTime: "Tiempo diario", categories: "Categorías y sitios", categoriesHelp: "Para usar tiempos distintos, elige las apps una por una. Las categorías y sitios no reciben un límite individual.", privacy: "Apple mantiene privadas tus selecciones. Clean4Jesus no envía esta información.", cancel: "Cancelar", save: "Guardar")
+    }
+  }
+}
+
+@available(iOS 16.0, *)
+private struct PerAppLimitEditorScreen: View {
+  @Environment(\.dismiss) private var dismiss
+  @State var rules: [StoredApplicationLimit]
+  let language: String
+  let categoryCount: Int
+  let webDomainCount: Int
+  let onCancel: () -> Void
+  let onSave: ([StoredApplicationLimit]) -> Void
+  private let options = [15, 30, 60, 120]
+  private var copy: PerAppEditorCopy { .forLanguage(language) }
+
+  var body: some View {
+    NavigationStack {
+      List {
+        Section {
+          Text(copy.help)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+
+        Section(copy.apps) {
+          ForEach($rules) { $rule in
+            VStack(alignment: .leading, spacing: 12) {
+              Label(rule.token)
+                .font(.headline)
+              Picker(copy.dailyTime, selection: $rule.minutes) {
+                ForEach(options, id: \.self) { minutes in
+                  Text("\(minutes) min").tag(minutes)
+                }
+              }
+              .pickerStyle(.segmented)
+            }
+            .padding(.vertical, 8)
+          }
+        }
+
+        if categoryCount > 0 || webDomainCount > 0 {
+          Section(copy.categories) {
+            Text(copy.categoriesHelp)
+              .font(.footnote)
+              .foregroundStyle(.secondary)
+          }
+        }
+
+        Section {
+          Text(copy.privacy)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+      }
+      .navigationTitle(copy.title)
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button(copy.cancel) {
+            onCancel()
+            dismiss()
+          }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+          Button(copy.save) {
+            onSave(rules)
+            dismiss()
+          }
+          .disabled(rules.isEmpty)
+        }
+      }
+    }
+  }
+}
+
 public class Clean4JesusIosProtectionModule: Module {
   private let appGroupID = "group.com.clean4jesus.app"
   private let selectionKey = "clean4jesus.familyActivitySelection"
+  private let perAppLimitsKey = "clean4jesus.perAppLimits.v2"
   private let dailyActivityName = DeviceActivityName("clean4jesus.daily-limit")
-  private let dailyEventName = DeviceActivityEvent.Name("clean4jesus.daily-limit-event")
   private let settingsStore = ManagedSettingsStore(named: .init("clean4jesus"))
   private let activityCenter = DeviceActivityCenter()
   
@@ -107,8 +222,6 @@ public class Clean4JesusIosProtectionModule: Module {
     AsyncFunction("getStatus") { () -> [String: Any] in
       let defaults = self.userDefaults
       let isEnabled = defaults?.bool(forKey: "shieldEnabled") ?? false
-      let rescueActive = defaults?.bool(forKey: "rescueActive") ?? false
-      let rescueTimestamp = defaults?.double(forKey: "rescueActiveTimestamp") ?? 0.0
       
       var statusString = "not_configured"
       if #available(iOS 16.0, *) {
@@ -120,23 +233,11 @@ public class Clean4JesusIosProtectionModule: Module {
         }
       }
 
-      var timeRemaining = 0
-      if rescueActive {
-        let elapsed = Date().timeIntervalSince1970 - rescueTimestamp
-        if elapsed < 60 {
-          timeRemaining = Int(60 - elapsed)
-        } else {
-          defaults?.set(false, forKey: "rescueActive")
-        }
-      }
-
       return [
         "status": statusString,
         "isEnabled": isEnabled,
         "isAuthorized": statusString == "protection_active" || statusString == "permission_granted",
         "appGroupSynced": defaults != nil,
-        "rescueActive": timeRemaining > 0,
-        "rescueTimeRemainingSeconds": timeRemaining,
         "dailyLimitMinutes": defaults?.integer(forKey: "dailyLimitMinutes") ?? 0,
         "lastSyncTimestamp": Date().timeIntervalSince1970
       ]
@@ -147,7 +248,62 @@ public class Clean4JesusIosProtectionModule: Module {
       return self.selectionSummary(selection)
     }.runOnQueue(.main)
 
-    AsyncFunction("presentFamilyActivityPicker") { (promise: Promise) in
+    AsyncFunction("getPerAppLimitSummary") { () -> [String: Int] in
+      let selection = self.loadSelection()
+      let rules = self.loadPerAppLimits().filter { selection.applicationTokens.contains($0.token) }
+      return [
+        "applications": selection.applicationTokens.count,
+        "configuredApplications": rules.filter { $0.enabled }.count
+      ]
+    }.runOnQueue(.main)
+
+    AsyncFunction("presentPerAppLimitEditor") { (language: String, promise: Promise) in
+      DispatchQueue.main.async {
+        guard #available(iOS 16.0, *) else {
+          promise.reject("ERR_IOS_VERSION", "Los límites por aplicación requieren iOS 16 o posterior.")
+          return
+        }
+        guard self.authorizationCenter.authorizationStatus == .approved else {
+          promise.reject("ERR_FAMILY_CONTROLS_AUTHORIZATION", "Autoriza Family Controls antes de configurar límites.")
+          return
+        }
+        let selection = self.loadSelection()
+        guard !selection.applicationTokens.isEmpty else {
+          promise.reject("ERR_EMPTY_APP_SELECTION", "Elige al menos una app para asignarle un límite.")
+          return
+        }
+        guard let viewController = self.appContext?.utilities?.currentViewController() else {
+          promise.reject("ERR_NO_VIEW_CONTROLLER", "No fue posible abrir los límites por aplicación.")
+          return
+        }
+
+        let editor = PerAppLimitEditorScreen(
+          rules: self.synchronizedPerAppLimits(for: selection),
+          language: language,
+          categoryCount: selection.categoryTokens.count,
+          webDomainCount: selection.webDomainTokens.count,
+          onCancel: { promise.reject("ERR_LIMIT_EDITOR_CANCELLED", "Configuración cancelada.") },
+          onSave: { rules in
+            do {
+              try self.savePerAppLimits(rules)
+              if self.userDefaults?.bool(forKey: "shieldEnabled") == true {
+                try self.startPerAppLimitMonitoring(rules: rules)
+                self.settingsStore.shield.applications = nil
+              }
+              promise.resolve([
+                "applications": selection.applicationTokens.count,
+                "configuredApplications": rules.filter { $0.enabled }.count
+              ])
+            } catch {
+              promise.reject("ERR_LIMIT_SAVE", error.localizedDescription)
+            }
+          }
+        )
+        viewController.present(UIHostingController(rootView: editor), animated: true)
+      }
+    }.runOnQueue(.main)
+
+    AsyncFunction("presentFamilyActivityPicker") { (language: String, promise: Promise) in
       DispatchQueue.main.async {
         guard #available(iOS 16.0, *) else {
           promise.reject("ERR_IOS_VERSION", "Family Controls requiere iOS 16 o posterior.")
@@ -164,10 +320,12 @@ public class Clean4JesusIosProtectionModule: Module {
 
         let picker = FamilyPickerScreen(
           selection: self.loadSelection(),
+          language: language,
           onCancel: { promise.reject("ERR_PICKER_CANCELLED", "Selección cancelada.") },
           onSave: { selection in
             do {
               try self.saveSelection(selection)
+              try self.savePerAppLimits(self.synchronizedPerAppLimits(for: selection))
               promise.resolve(self.selectionSummary(selection))
             } catch {
               promise.reject("ERR_SELECTION_SAVE", error.localizedDescription)
@@ -187,21 +345,16 @@ public class Clean4JesusIosProtectionModule: Module {
               !selection.categoryTokens.isEmpty ||
               !selection.webDomainTokens.isEmpty else { return false }
 
-      let requestedLimit = (config["dailyLimitMinutes"] as? Int) ?? (config["dailyLimitMinutes"] as? NSNumber)?.intValue ?? 0
-      defaults.set(requestedLimit, forKey: "dailyLimitMinutes")
-      defaults.set(requestedLimit > 0, forKey: "dailyLimitEnabled")
       defaults.set(config["customShieldTitle"] as? String, forKey: "customShieldTitle")
       defaults.set(config["customShieldMessage"] as? String, forKey: "customShieldMessage")
       defaults.set(config["customShieldPrimaryLabel"] as? String, forKey: "customShieldPrimaryLabel")
       defaults.set(config["customShieldSecondaryLabel"] as? String, forKey: "customShieldSecondaryLabel")
       do {
-        if requestedLimit > 0 {
-          try self.startDailyLimitMonitoring(selection: selection, minutes: requestedLimit)
-          self.settingsStore.clearAllSettings()
-        } else {
-          self.activityCenter.stopMonitoring([self.dailyActivityName])
-          self.applyShield(selection)
-        }
+        let rules = self.synchronizedPerAppLimits(for: selection)
+        try self.savePerAppLimits(rules)
+        try self.startPerAppLimitMonitoring(rules: rules)
+        self.settingsStore.clearAllSettings()
+        self.applyNonApplicationShield(selection)
       } catch {
         return false
       }
@@ -220,7 +373,6 @@ public class Clean4JesusIosProtectionModule: Module {
       guard !pinHash.isEmpty, let defaults = self.userDefaults else { return false }
       guard let storedHash = defaults.string(forKey: "pinHash"), storedHash == pinHash else { return false }
       defaults.set(false, forKey: "shieldEnabled")
-      defaults.set(false, forKey: "dailyLimitEnabled")
       self.activityCenter.stopMonitoring([self.dailyActivityName])
       self.settingsStore.clearAllSettings()
       defaults.set(Date().timeIntervalSince1970, forKey: "pausedTimestamp")
@@ -235,44 +387,17 @@ public class Clean4JesusIosProtectionModule: Module {
       guard !selection.applicationTokens.isEmpty ||
               !selection.categoryTokens.isEmpty ||
               !selection.webDomainTokens.isEmpty else { return false }
-      let dailyLimit = defaults.integer(forKey: "dailyLimitMinutes")
       do {
-        if dailyLimit > 0 {
-          try self.startDailyLimitMonitoring(selection: selection, minutes: dailyLimit)
-          self.settingsStore.clearAllSettings()
-        } else {
-          self.applyShield(selection)
-        }
+        let rules = self.synchronizedPerAppLimits(for: selection)
+        try self.savePerAppLimits(rules)
+        try self.startPerAppLimitMonitoring(rules: rules)
+        self.settingsStore.clearAllSettings()
+        self.applyNonApplicationShield(selection)
       } catch {
         return false
       }
       defaults.set(true, forKey: "shieldEnabled")
       return true
-    }.runOnQueue(.main)
-
-    AsyncFunction("setDailyLimit") { (minutes: Int) -> Bool in
-      guard #available(iOS 16.0, *),
-            self.authorizationCenter.authorizationStatus == .approved,
-            let defaults = self.userDefaults else { return false }
-      let selection = self.loadSelection()
-      guard !selection.applicationTokens.isEmpty ||
-              !selection.categoryTokens.isEmpty ||
-              !selection.webDomainTokens.isEmpty else { return false }
-      do {
-        defaults.set(max(0, minutes), forKey: "dailyLimitMinutes")
-        defaults.set(minutes > 0, forKey: "dailyLimitEnabled")
-        if minutes > 0 {
-          try self.startDailyLimitMonitoring(selection: selection, minutes: minutes)
-          self.settingsStore.clearAllSettings()
-        } else {
-          self.activityCenter.stopMonitoring([self.dailyActivityName])
-          self.applyShield(selection)
-        }
-        defaults.set(true, forKey: "shieldEnabled")
-        return true
-      } catch {
-        return false
-      }
     }.runOnQueue(.main)
 
     AsyncFunction("clearProtection") { (pinHash: String) -> Bool in
@@ -283,35 +408,7 @@ public class Clean4JesusIosProtectionModule: Module {
       self.activityCenter.stopMonitoring([self.dailyActivityName])
       self.settingsStore.clearAllSettings()
       defaults.set(false, forKey: "shieldEnabled")
-      defaults.set(false, forKey: "dailyLimitEnabled")
-      defaults.removeObject(forKey: "dailyLimitMinutes")
       return true
-    }.runOnQueue(.main)
-
-    AsyncFunction("startRescue") { () -> Bool in
-      guard let defaults = self.userDefaults else { return false }
-      defaults.set(true, forKey: "rescueActive")
-      defaults.set(Date().timeIntervalSince1970, forKey: "rescueActiveTimestamp")
-      return true
-    }.runOnQueue(.main)
-
-    AsyncFunction("getRescueState") { () -> [String: Any] in
-      let defaults = self.userDefaults
-      let active = defaults?.bool(forKey: "rescueActive") ?? false
-      let timestamp = defaults?.double(forKey: "rescueActiveTimestamp") ?? 0.0
-      
-      var timeRemaining = 0
-      if active {
-        let elapsed = Date().timeIntervalSince1970 - timestamp
-        if elapsed < 60 {
-          timeRemaining = Int(60 - elapsed)
-        }
-      }
-
-      return [
-        "rescueActive": timeRemaining > 0,
-        "timeRemaining": timeRemaining
-      ]
     }.runOnQueue(.main)
 
     AsyncFunction("setShieldCopy") { (title: String, message: String, primaryLabel: String, secondaryLabel: String) -> Bool in
@@ -341,30 +438,62 @@ public class Clean4JesusIosProtectionModule: Module {
     defaults.set(try PropertyListEncoder().encode(selection), forKey: selectionKey)
   }
 
-  private func applyShield(_ selection: FamilyActivitySelection) {
-    self.settingsStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
+  private func applyNonApplicationShield(_ selection: FamilyActivitySelection) {
     self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
     self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
     self.settingsStore.webContent.blockedByFilter = .auto()
   }
 
-  private func startDailyLimitMonitoring(selection: FamilyActivitySelection, minutes: Int) throws {
+  private func loadPerAppLimits() -> [StoredApplicationLimit] {
+    guard let data = userDefaults?.data(forKey: perAppLimitsKey),
+          let rules = try? PropertyListDecoder().decode([StoredApplicationLimit].self, from: data) else {
+      return []
+    }
+    return rules
+  }
+
+  private func savePerAppLimits(_ rules: [StoredApplicationLimit]) throws {
+    guard let defaults = userDefaults else {
+      throw NSError(domain: "Clean4Jesus", code: 2, userInfo: [NSLocalizedDescriptionKey: "El App Group no está disponible."])
+    }
+    defaults.set(try PropertyListEncoder().encode(rules), forKey: perAppLimitsKey)
+    defaults.set(2, forKey: "clean4jesus.limitSchemaVersion")
+    defaults.set("perApplication", forKey: "clean4jesus.limitMode")
+  }
+
+  private func synchronizedPerAppLimits(for selection: FamilyActivitySelection) -> [StoredApplicationLimit] {
+    let existing = loadPerAppLimits()
+    let storedLegacyLimit = userDefaults?.integer(forKey: "dailyLimitMinutes") ?? 0
+    let legacyLimit = storedLegacyLimit > 0 ? storedLegacyLimit : 30
+    return selection.applicationTokens.map { token in
+      if let rule = existing.first(where: { $0.token == token }) {
+        return rule
+      }
+      return StoredApplicationLimit(id: UUID(), token: token, minutes: legacyLimit, enabled: true)
+    }
+  }
+
+  private func startPerAppLimitMonitoring(rules: [StoredApplicationLimit]) throws {
     self.activityCenter.stopMonitoring([self.dailyActivityName])
+    let enabledRules = rules.filter { $0.enabled && $0.minutes > 0 }
+    guard !enabledRules.isEmpty else { return }
     let schedule = DeviceActivitySchedule(
       intervalStart: DateComponents(hour: 0, minute: 0),
       intervalEnd: DateComponents(hour: 23, minute: 59),
       repeats: true
     )
-    let event = DeviceActivityEvent(
-      applications: selection.applicationTokens,
-      categories: selection.categoryTokens,
-      webDomains: selection.webDomainTokens,
-      threshold: DateComponents(minute: max(1, minutes))
-    )
+    var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
+    for rule in enabledRules {
+      let eventName = DeviceActivityEvent.Name("clean4jesus.app-limit.\(rule.id.uuidString)")
+      events[eventName] = DeviceActivityEvent(
+        applications: [rule.token],
+        threshold: DateComponents(minute: max(1, rule.minutes))
+      )
+    }
     try self.activityCenter.startMonitoring(
       self.dailyActivityName,
       during: schedule,
-      events: [self.dailyEventName: event]
+      events: events
     )
   }
 

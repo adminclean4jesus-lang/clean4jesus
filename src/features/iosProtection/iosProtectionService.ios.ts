@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import { IIosProtectionContract } from "./iosProtectionContract";
 import {
   IosCapabilities,
+  IosPerAppLimitSummary,
   IosProtectionConfig,
   IosProtectionStatusInfo,
   IosSelectionSummary,
@@ -17,15 +18,14 @@ type NativeIosProtectionModule = {
   getCapabilities(): Promise<IosCapabilities>;
   getStatus(): Promise<IosProtectionStatusInfo>;
   getSelectionSummary(): Promise<IosSelectionSummary>;
-  presentFamilyActivityPicker(): Promise<IosSelectionSummary>;
+  presentFamilyActivityPicker(language: string): Promise<IosSelectionSummary>;
   requestAuthorization(): Promise<boolean>;
   configureProtection(config: IosProtectionConfig): Promise<boolean>;
   pauseProtection(pinHash: string): Promise<boolean>;
   resumeProtection(): Promise<boolean>;
-  setDailyLimit(minutes: number): Promise<boolean>;
+  getPerAppLimitSummary(): Promise<IosPerAppLimitSummary>;
+  presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary>;
   clearProtection(pinHash: string): Promise<boolean>;
-  startRescue(): Promise<boolean>;
-  getRescueState(): Promise<{ rescueActive: boolean; timeRemaining: number }>;
   setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
 };
 
@@ -96,14 +96,14 @@ class IosProtectionService implements IIosProtectionContract {
     return await requireIosProtectionModule().getSelectionSummary();
   }
 
-  async presentFamilyActivityPicker(): Promise<IosSelectionSummary> {
+  async presentFamilyActivityPicker(language: string): Promise<IosSelectionSummary> {
     if (Platform.OS !== "ios") {
       throw new IosProtectionError(
         "El selector nativo de Apple no está incluido en este build.",
         IOS_PROTECTION_ERROR_CODES.MODULE_NOT_FOUND,
       );
     }
-    return await requireIosProtectionModule().presentFamilyActivityPicker();
+    return await requireIosProtectionModule().presentFamilyActivityPicker(language);
   }
 
   async requestAuthorization(): Promise<boolean> {
@@ -157,10 +157,19 @@ class IosProtectionService implements IIosProtectionContract {
     return ok;
   }
 
-  async setDailyLimit(minutes: number): Promise<boolean> {
-    if (Platform.OS !== "ios") return false;
+  async getPerAppLimitSummary(): Promise<IosPerAppLimitSummary> {
+    if (Platform.OS !== "ios") return { applications: 0, configuredApplications: 0 };
+    return await requireIosProtectionModule().getPerAppLimitSummary();
+  }
 
-    return await requireIosProtectionModule().setDailyLimit(minutes);
+  async presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary> {
+    if (Platform.OS !== "ios") {
+      throw new IosProtectionError(
+        "Los límites por aplicación solo están disponibles en iOS.",
+        IOS_PROTECTION_ERROR_CODES.MODULE_NOT_FOUND,
+      );
+    }
+    return await requireIosProtectionModule().presentPerAppLimitEditor(language);
   }
 
   async clearProtection(_pinHash: string): Promise<boolean> {
@@ -171,21 +180,6 @@ class IosProtectionService implements IIosProtectionContract {
       this.currentStatus = { ...INITIAL_IOS_PROTECTION_STATE };
     }
     return ok;
-  }
-
-  async startRescue(): Promise<boolean> {
-    if (Platform.OS !== "ios") return false;
-
-    return await requireIosProtectionModule().startRescue();
-  }
-
-  async getRescueState(): Promise<{
-    rescueActive: boolean;
-    timeRemaining: number;
-  }> {
-    if (Platform.OS !== "ios") return { rescueActive: false, timeRemaining: 0 };
-
-    return await requireIosProtectionModule().getRescueState();
   }
 
   async setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean> {

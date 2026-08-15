@@ -5,7 +5,5 @@ export const INITIAL_IOS_PROTECTION_STATE: IosProtectionStatusInfo = {
   isEnabled: false,
   isAuthorized: false,
   appGroupSynced: false,
-  rescueActive: false,
-  rescueTimeRemainingSeconds: 0,
   lastSyncTimestamp: 0,
 };

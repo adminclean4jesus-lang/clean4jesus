@@ -24,7 +24,6 @@ import { useShieldGate } from "@/features/shield/useShieldGate";
 import { fonts, ThemeColors } from "@/theme";
 import { getLegalAccessText } from "@/features/legal/legalAccessText";
 import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
-import { getIosRescueText } from "@/features/i18n/iosRescueText";
 
 type SettingsRowProps = {
   accessory?: React.ReactNode;
@@ -42,7 +41,6 @@ export default function SettingsScreen() {
   const { colors, isDark, preference, setPreference } = useAppAppearance();
   const { language, setLanguage, t } = useI18n();
   const iosProtectionCopy = getIosProtectionText(language);
-  const iosRescueCopy = getIosRescueText(language);
   const styles = useMemo(() => createStyles(colors), [colors]);
   const legalCopy = getLegalAccessText(language);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -126,12 +124,14 @@ export default function SettingsScreen() {
           subtitle={t(language, "settings.row.trustedPersonHint")}
           title={t(language, "settings.row.trustedPerson")}
         />
-        <SettingsRow
-          onPress={() => router.push(isIos ? "/ios-rescue" : "/interruption-settings")}
-          testID="settings-interruption"
-          subtitle={isIos ? iosRescueCopy.subtitle : t(language, "settings.row.interruptionHint")}
-          title={isIos ? iosRescueCopy.title : t(language, "settings.row.interruption")}
-        />
+        {!isIos ? (
+          <SettingsRow
+            onPress={() => router.push("/interruption-settings")}
+            testID="settings-interruption"
+            subtitle={t(language, "settings.row.interruptionHint")}
+            title={t(language, "settings.row.interruption")}
+          />
+        ) : null}
       </SettingsSection>
 
       <SettingsSection

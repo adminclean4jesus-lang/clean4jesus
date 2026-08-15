@@ -15,8 +15,6 @@ vi.mock("expo-modules-core", () => ({
       isEnabled: false,
       isAuthorized: false,
       appGroupSynced: true,
-      rescueActive: false,
-      rescueTimeRemainingSeconds: 0,
       lastSyncTimestamp: 0,
     }),
     getCapabilities: async () => ({
