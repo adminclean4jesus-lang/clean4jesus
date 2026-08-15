@@ -6,14 +6,14 @@ Clean4Jesus es una aplicación móvil de acompañamiento para vivir con mayor li
 
 | Componente | Estado actual |
 | --- | --- |
-| Versión de la app | `1.3.28` |
+| Versión de la app | `1.3.29` |
 | Android | `versionCode 50`; beta técnica con protección nativa mediante VPN local, Accesibilidad e interrupción |
-| iOS | `build 19`; PIN de guardianía para cambios posteriores, límites independientes y Shield Clean4Jesus refinado |
+| iOS | `build 20`; PIN de guardianía, límites independientes y Shield con logo oficial Clean4Jesus |
 | Backend | Supabase para autenticación, comunidad, contenido y moderación |
 | Idiomas | Español, inglés, francés y portugués brasileño; el idioma inicial sigue al dispositivo |
 | Distribución iOS | IPA firmada generada manualmente en GitHub Actions después del merge |
 
-La versión `1.3.28 (build 19)` parte del checkpoint estable `1.3.25 (build 16)`. En iOS la app abre sin PIN; el PIN de guardianía se configura después del primer límite y protege cualquier cambio posterior de apps o tiempos. Detecta el idioma nativo del dispositivo, asigna un límite independiente a cada app seleccionada y aplica el Shield únicamente a la app que alcanza su propio umbral. El Shield usa una marca Clean4Jesus sin círculo, azul marino, dorado de acento y una acción honesta de cierre; el rescate guiado se mantiene exclusivamente en Android. El contador exacto usado/restante queda pendiente de una cuarta extensión `DeviceActivityReport` con perfil de firma propio de Apple; esta build no inventa ni expone esos datos privados.
+La versión `1.3.29 (build 20)` parte del checkpoint estable `1.3.25 (build 16)`. En iOS la app abre sin PIN; el PIN de guardianía se configura después del primer límite y protege cualquier cambio posterior de apps o tiempos. Detecta el idioma nativo del dispositivo, asigna un límite independiente a cada app seleccionada y aplica el Shield únicamente a la app que alcanza su propio umbral. El Shield carga la marca oficial de Clean4Jesus desde su propio bundle, usa azul marino, blanco y dorado de acento, y conserva una sola acción honesta de cierre; el rescate guiado se mantiene exclusivamente en Android. El contador exacto usado/restante queda pendiente de una cuarta extensión `DeviceActivityReport` con perfil de firma propio de Apple; esta build no inventa ni expone esos datos privados.
 
 ## Funcionalidades
 
@@ -156,7 +156,7 @@ La IPA se genera únicamente después de fusionar el pull request aprobado:
 5. Pulsa **Run workflow** sobre `main`.
 6. Descarga el artifact `clean4jesus-ios-ipa-vX.Y.Z-build-N`.
 
-El artifact contiene solamente `Clean4Jesus.ipa`. Para la versión actual, el nombre esperado es `clean4jesus-ios-ipa-v1.3.28-build-19`. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
+El artifact contiene solamente `Clean4Jesus.ipa`. Para la versión actual, el nombre esperado es `clean4jesus-ios-ipa-v1.3.29-build-20`. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
 
 ## Validación
 

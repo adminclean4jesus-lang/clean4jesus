@@ -26,7 +26,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
 
         return ShieldConfiguration(
             backgroundColor: UIColor(red: 0.027, green: 0.122, blue: 0.322, alpha: 1.0),
-            icon: makeClean4JesusMark(),
+            icon: UIImage(named: "Clean4JesusOfficialMark") ?? makeClean4JesusMark(),
             title: ShieldConfiguration.Label(text: titleText, color: .white),
             subtitle: ShieldConfiguration.Label(text: subtitleText, color: UIColor(red: 0.88, green: 0.90, blue: 0.95, alpha: 1.0)),
             primaryButtonLabel: ShieldConfiguration.Label(text: primaryLabel, color: UIColor(red: 0.03, green: 0.12, blue: 0.32, alpha: 1.0)),

@@ -33,9 +33,12 @@ describe("iOS per-app limits and Shield contracts", () => {
   it("uses a branded shield icon and one honest close action", () => {
     const configurationSource = read("targets/ShieldConfiguration/ShieldConfigurationExtension.swift");
     const actionSource = read("targets/ShieldAction/ShieldActionExtension.swift");
+    const targetConfig = read("targets/ShieldConfiguration/expo-target.config.js");
 
     expect(configurationSource).toContain("makeClean4JesusMark");
     expect(configurationSource).toContain("Tu límite de hoy se cumplió");
+    expect(configurationSource).toContain('UIImage(named: "Clean4JesusOfficialMark")');
+    expect(targetConfig).toContain('Clean4JesusOfficialMark: "../../assets/android-icon-foreground.png"');
     expect(configurationSource).toContain("secondaryButtonLabel: nil");
     expect(configurationSource).not.toContain('UIImage(named: "AppIcon")');
     expect(configurationSource).not.toContain("ovalIn:");
