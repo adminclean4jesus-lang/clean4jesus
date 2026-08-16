@@ -49,7 +49,6 @@
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.10",
     "metro-runtime": "^0.83.3",
-    "patch-package": "^8.0.1",
     "typescript": "~5.9.2",
     "vitest": "^4.1.9"
   },
@@ -99,7 +98,7 @@
     "landing:build": "node scripts/build-landing-site.mjs",
     "test:landing": "npm run landing:build && node scripts/validate-landing-layout.mjs",
     "landing:deploy": "npm run landing:build && npx wrangler deploy --config wrangler.landing.jsonc",
-    "postinstall": "patch-package"
+    "postinstall": "node scripts/patch-apple-targets.mjs"
   },
   "private": true
 }

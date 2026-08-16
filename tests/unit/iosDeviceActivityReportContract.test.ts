@@ -10,7 +10,7 @@ describe("iOS DeviceActivityReport contract", () => {
   it("registers the official report extension point and target", () => {
     const target = read("targets/DeviceActivityReport/expo-target.config.js");
     const source = read("targets/DeviceActivityReport/DeviceActivityReportExtension.swift");
-    const pluginPatch = read("patches/@bacons+apple-targets+5.0.0.patch");
+    const pluginPatch = read("scripts/patch-apple-targets.mjs");
 
     expect(existsSync(join(process.cwd(), "targets/DeviceActivityReport/DeviceActivityReportExtension.swift"))).toBe(true);
     expect(target).toContain('type: "device-activity-report"');
