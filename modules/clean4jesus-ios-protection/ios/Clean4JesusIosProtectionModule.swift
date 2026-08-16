@@ -151,6 +151,43 @@ private struct PerAppLimitEditorScreen: View {
   }
 }
 
+@available(iOS 16.0, *)
+private struct DailyUsageReportScreen: View {
+  @Environment(\.dismiss) private var dismiss
+  let selection: FamilyActivitySelection
+  let language: String
+
+  private var copy: (title: String, close: String) {
+    switch language {
+    case "en": return ("Today’s usage", "Close")
+    case "fr": return ("Utilisation du jour", "Fermer")
+    case "pt": return ("Uso de hoje", "Fechar")
+    default: return ("Uso de hoy", "Cerrar")
+    }
+  }
+
+  var body: some View {
+    NavigationStack {
+      DeviceActivityReport(
+        DeviceActivityReport.Context(rawValue: "clean4jesus.daily-usage"),
+        filter: DeviceActivityFilter(
+          segment: .daily(during: Calendar.current.dateInterval(of: .day, for: .now) ?? DateInterval(start: .now, duration: 86400)),
+          applications: selection.applicationTokens,
+          categories: selection.categoryTokens,
+          webDomains: selection.webDomainTokens
+        )
+      )
+      .navigationTitle(copy.title)
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button(copy.close) { dismiss() }
+        }
+      }
+    }
+  }
+}
+
 public class Clean4JesusIosProtectionModule: Module {
   private let appGroupID = "group.com.clean4jesus.app"
   private let selectionKey = "clean4jesus.familyActivitySelection"
@@ -304,6 +341,31 @@ public class Clean4JesusIosProtectionModule: Module {
           }
         )
         viewController.present(UIHostingController(rootView: editor), animated: true)
+      }
+    }.runOnQueue(.main)
+
+    AsyncFunction("presentDailyUsageReport") { (language: String, promise: Promise) in
+      DispatchQueue.main.async {
+        guard #available(iOS 16.0, *) else {
+          promise.reject("ERR_IOS_VERSION", "El reporte de uso requiere iOS 16 o posterior.")
+          return
+        }
+        guard self.authorizationCenter.authorizationStatus == .approved else {
+          promise.reject("ERR_FAMILY_CONTROLS_AUTHORIZATION", "Autoriza Family Controls antes de consultar el uso.")
+          return
+        }
+        guard !self.loadSelection().applicationTokens.isEmpty else {
+          promise.reject("ERR_EMPTY_APP_SELECTION", "Elige al menos una app antes de consultar el uso.")
+          return
+        }
+        guard let viewController = self.appContext?.utilities?.currentViewController() else {
+          promise.reject("ERR_NO_VIEW_CONTROLLER", "No fue posible abrir el reporte de uso.")
+          return
+        }
+        let report = DailyUsageReportScreen(selection: self.loadSelection(), language: language)
+        viewController.present(UIHostingController(rootView: report), animated: true) {
+          promise.resolve(true)
+        }
       }
     }.runOnQueue(.main)
 

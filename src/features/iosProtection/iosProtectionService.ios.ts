@@ -25,6 +25,7 @@ type NativeIosProtectionModule = {
   resumeProtection(): Promise<boolean>;
   getPerAppLimitSummary(): Promise<IosPerAppLimitSummary>;
   presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary>;
+  presentDailyUsageReport(language: string): Promise<boolean>;
   clearProtection(pinHash: string): Promise<boolean>;
   setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
 };
@@ -172,6 +173,16 @@ class IosProtectionService implements IIosProtectionContract {
       );
     }
     return await requireIosProtectionModule().presentPerAppLimitEditor(language);
+  }
+
+  async presentDailyUsageReport(language: string): Promise<boolean> {
+    if (Platform.OS !== "ios") {
+      throw new IosProtectionError(
+        "El reporte de uso solo está disponible en iOS.",
+        IOS_PROTECTION_ERROR_CODES.MODULE_NOT_FOUND,
+      );
+    }
+    return await requireIosProtectionModule().presentDailyUsageReport(language);
   }
 
   async clearProtection(_pinHash: string): Promise<boolean> {

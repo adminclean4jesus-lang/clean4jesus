@@ -202,6 +202,17 @@ export default function IosProtectionScreen() {
     await openPerAppLimitEditor();
   }
 
+  async function handleViewUsage() {
+    try {
+      await iosProtectionService.presentDailyUsageReport(language);
+    } catch (error) {
+      const message = getIosAuthorizationErrorMessage(error);
+      if (!message.toLowerCase().includes("cancel")) {
+        Alert.alert(copy.limitErrorTitle, message);
+      }
+    }
+  }
+
   useEffect(() => {
     const action = editLimits === "1"
       ? "limits"
@@ -271,7 +282,16 @@ export default function IosProtectionScreen() {
               {copy.configureLimits}
             </Button>
             <Text style={styles.selectionHelp}>{copy.limitPrivacy}</Text>
-            <Text style={styles.pendingNotice}>{copy.limitCounterPending}</Text>
+            <Button
+              buttonColor="#071F52"
+              disabled={!statusInfo?.isAuthorized || selection.applications === 0}
+              mode="outlined"
+              onPress={() => void handleViewUsage()}
+              style={styles.selectButton}
+              testID="ios-usage-report"
+            >
+              {language === "en" ? "View today's usage" : language === "fr" ? "Voir l’usage du jour" : language === "pt" ? "Ver uso de hoje" : "Ver uso de hoy"}
+            </Button>
           </Card.Content>
         </Card>
 

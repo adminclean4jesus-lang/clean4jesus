@@ -1,6 +1,6 @@
 {
   "name": "clean4jesus",
-  "version": "1.3.30",
+  "version": "1.3.31",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -97,7 +97,8 @@
     "legal:deploy": "npm run legal:build && npx wrangler deploy --config wrangler.legal.jsonc",
     "landing:build": "node scripts/build-landing-site.mjs",
     "test:landing": "npm run landing:build && node scripts/validate-landing-layout.mjs",
-    "landing:deploy": "npm run landing:build && npx wrangler deploy --config wrangler.landing.jsonc"
+    "landing:deploy": "npm run landing:build && npx wrangler deploy --config wrangler.landing.jsonc",
+    "postinstall": "node scripts/patch-apple-targets.mjs"
   },
   "private": true
 }
