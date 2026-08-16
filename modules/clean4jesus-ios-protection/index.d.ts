@@ -15,3 +15,4 @@ export function setShieldCopy(title: string, message: string, primaryLabel: stri
 
 declare const _default: any;
 export default _default;
+export function presentDailyUsageReport(language: string): Promise<boolean>;

@@ -45,6 +45,10 @@ export function presentPerAppLimitEditor(language) {
   return Clean4JesusIosProtectionModule.presentPerAppLimitEditor(language);
 }
 
+export function presentDailyUsageReport(language) {
+  return Clean4JesusIosProtectionModule.presentDailyUsageReport(language);
+}
+
 export function clearProtection(pinHash) {
   return Clean4JesusIosProtectionModule.clearProtection(pinHash);
 }

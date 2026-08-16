@@ -1,6 +1,6 @@
 {
   "name": "clean4jesus",
-  "version": "1.3.30",
+  "version": "1.3.31",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -49,6 +49,7 @@
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.10",
     "metro-runtime": "^0.83.3",
+    "patch-package": "^8.0.1",
     "typescript": "~5.9.2",
     "vitest": "^4.1.9"
   },
@@ -97,7 +98,8 @@
     "legal:deploy": "npm run legal:build && npx wrangler deploy --config wrangler.legal.jsonc",
     "landing:build": "node scripts/build-landing-site.mjs",
     "test:landing": "npm run landing:build && node scripts/validate-landing-layout.mjs",
-    "landing:deploy": "npm run landing:build && npx wrangler deploy --config wrangler.landing.jsonc"
+    "landing:deploy": "npm run landing:build && npx wrangler deploy --config wrangler.landing.jsonc",
+    "postinstall": "patch-package"
   },
   "private": true
 }
