@@ -30,6 +30,12 @@ describe("iOS per-app limits and Shield contracts", () => {
     expect(monitorSource).toContain("shieldedApplications.insert(rule.token)");
   });
 
+  it("counts a selected app's use from the start of today's active interval", () => {
+    const moduleSource = read("modules/clean4jesus-ios-protection/ios/Clean4JesusIosProtectionModule.swift");
+
+    expect(moduleSource).toContain("includesPastActivity: true");
+  });
+
   it("uses a branded shield icon and one honest close action", () => {
     const configurationSource = read("targets/ShieldConfiguration/ShieldConfigurationExtension.swift");
     const actionSource = read("targets/ShieldAction/ShieldActionExtension.swift");

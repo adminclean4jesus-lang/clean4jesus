@@ -500,7 +500,8 @@ public class Clean4JesusIosProtectionModule: Module {
       let eventName = DeviceActivityEvent.Name("clean4jesus.app-limit.\(rule.id.uuidString)")
       events[eventName] = DeviceActivityEvent(
         applications: [rule.token],
-        threshold: DateComponents(minute: max(1, rule.minutes))
+        threshold: DateComponents(minute: max(1, rule.minutes)),
+        includesPastActivity: true
       )
     }
     try self.activityCenter.startMonitoring(
