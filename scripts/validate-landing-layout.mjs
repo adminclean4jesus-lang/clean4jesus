@@ -40,7 +40,7 @@ try {
     await page.goto(`http://127.0.0.1:${port}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(700);
     const heroCopy = await page.locator(".hero-copy").innerText();
-    if (!heroCopy.includes("bloquea contenido adulto") || !heroCopy.includes("pantalla de protección")) {
+    if (!heroCopy.includes("libertad frente al contenido para adultos") || !heroCopy.includes("Jesús en el centro")) {
       throw new Error(`${viewport.name}: el primer viewport no explica claramente la función principal`);
     }
     const hiddenReveals = await page.locator(".reveal:visible").evaluateAll(

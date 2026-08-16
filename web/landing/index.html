@@ -3,11 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Clean4Jesus reúne protección digital, devocionales cristocéntricos y una comunidad moderada para ayudarte a recuperar claridad.">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Clean4Jesus reúne protección digital, devocionales cristocéntricos y una comunidad moderada para acompañarte a la libertad.">
+  <meta name="theme-color" content="#071F52">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Clean4Jesus">
+  <meta property="og:url" content="https://clean4jesus.com/">
   <meta property="og:title" content="Clean4Jesus | Protección digital con propósito">
-  <meta property="og:description" content="Protección local, Palabra y comunidad para volver a elegir con libertad.">
-  <meta property="og:image" content="https://clean4jesus.com/app-refugio.png">
+  <meta property="og:description" content="Protección digital, Palabra y comunidad para acompañarte a la libertad.">
+  <meta property="og:image" content="https://clean4jesus.com/brand-mark.png">
+  <meta property="og:image:alt" content="Escudo con cruz de Clean4Jesus">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Clean4Jesus | Protección digital con propósito">
+  <meta name="twitter:description" content="Protección digital, Palabra y comunidad para acompañarte a la libertad.">
+  <meta name="twitter:image" content="https://clean4jesus.com/brand-mark.png">
   <title>Clean4Jesus | Protección digital con propósito</title>
   <style>
     @font-face{font-family:Lexend;src:url('/fonts/lexend-regular.ttf');font-display:swap}
@@ -41,6 +52,7 @@
     .phone:before{background:#0b0f18;border-radius:50%;content:"";height:10px;left:50%;position:absolute;top:7px;transform:translateX(-50%);width:10px;z-index:2}
     .phone img{display:block;height:100%;object-fit:contain;object-position:top;width:100%}
     .numbers{background:var(--navy-deep);color:var(--white);padding:78px 0}
+    .platforms{background:var(--white);padding:82px 0}.platform-intro{display:flex;gap:48px;justify-content:space-between;margin-bottom:34px}.platform-intro h2{color:var(--navy-deep);font-size:clamp(34px,4.6vw,60px);letter-spacing:-.05em;line-height:1.04;margin:10px 0 0;max-width:650px}.platform-intro p{color:var(--muted);font-size:17px;max-width:430px}.platform-grid{display:grid;gap:18px;grid-template-columns:1fr 1fr}.platform-card{border:1px solid var(--line);border-radius:24px;padding:36px}.platform-card.android{border-top:6px solid var(--blue)}.platform-card.ios{background:#f5f7ff;border-top:6px solid var(--gold)}.platform-card .os{color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.platform-card h3{color:var(--navy-deep);font-size:31px;letter-spacing:-.035em;line-height:1.14;margin:16px 0}.platform-card p{color:#596762;font-size:15px}.platform-card ul{color:#394640;font-size:14px;margin:23px 0;padding-left:19px}.platform-card li{margin:10px 0}.platform-card small{color:#64726d;display:block;font-size:12px;line-height:1.5;margin-top:23px}.how{background:#eef2f8}.how-grid{display:grid;gap:24px;grid-template-columns:1fr 1fr}.flow{background:var(--white);border-radius:24px;padding:36px}.flow h3{color:var(--navy-deep);font-size:27px;margin:10px 0 24px}.flow-step{border-top:1px solid var(--line);display:grid;gap:16px;grid-template-columns:36px 1fr;padding:18px 0}.flow-step b{color:var(--gold);font-size:15px}.flow-step strong{color:var(--navy-deep);display:block;font-size:16px;margin-bottom:4px}.flow-step p{color:var(--muted);font-size:14px;margin:0}.faq{background:var(--white)}.faq-list{border-top:1px solid var(--line)}.faq-item{border-bottom:1px solid var(--line);padding:24px 0}.faq-item h3{color:var(--navy-deep);font-size:19px;margin:0 0 9px}.faq-item p{color:var(--muted);font-size:15px;margin:0;max-width:760px}
     .numbers-head{align-items:end;display:flex;gap:40px;justify-content:space-between;margin-bottom:46px}.numbers-head h2{font-size:clamp(34px,4.3vw,56px);letter-spacing:-.04em;line-height:1.05;margin:12px 0 0;max-width:690px}.numbers-head p{color:#c9d2ee;margin:0;max-width:360px}
     .number-grid{border-bottom:1px solid rgba(255,255,255,.2);border-top:1px solid rgba(255,255,255,.2);display:grid;grid-template-columns:repeat(3,1fr)}
     .stat{min-height:230px;padding:30px}.stat+ .stat{border-left:1px solid rgba(255,255,255,.2)}.stat strong{color:var(--gold);display:block;font-size:clamp(53px,6vw,78px);letter-spacing:-.06em;line-height:1}.stat h3{font-size:19px;line-height:1.25;margin:22px 0 10px}.stat p{color:#bfc9e6;font-size:13px;margin:0}.stat a{color:var(--white);display:inline-block;font-size:12px;margin-top:15px}
@@ -61,7 +73,7 @@
     .reveal{animation:reveal-in .6s ease both;opacity:1}
     @keyframes reveal-in{from{transform:translateY(18px)}to{transform:none}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{animation:none}.button{transition:none}}
-    @media(max-width:900px){.hero-grid{gap:20px;grid-template-columns:1fr}.hero-copy{padding-bottom:25px}.product-stage{min-height:545px}.numbers-head{align-items:start;flex-direction:column}.number-grid{grid-template-columns:1fr}.stat{min-height:0}.stat+ .stat{border-left:0;border-top:1px solid rgba(255,255,255,.2)}.section-title,.palabra-grid,.privacy-grid{gap:34px;grid-template-columns:1fr}.section-title p{margin-top:0}.screens{grid-template-columns:1fr}.screen-card{display:grid;grid-template-columns:.9fr 1.1fr}.science-grid{grid-template-columns:1fr}.science-panel+ .science-panel{border-left:1px solid var(--line);border-top:0}.beta-grid{align-items:start;grid-template-columns:1fr}.beta .button{justify-self:start}}
+    @media(max-width:900px){.hero-grid{gap:20px;grid-template-columns:1fr}.hero-copy{padding-bottom:25px}.product-stage{min-height:545px}.platform-intro{flex-direction:column;gap:10px}.platform-grid,.how-grid{grid-template-columns:1fr}.numbers-head{align-items:start;flex-direction:column}.number-grid{grid-template-columns:1fr}.stat{min-height:0}.stat+ .stat{border-left:0;border-top:1px solid rgba(255,255,255,.2)}.section-title,.palabra-grid,.privacy-grid{gap:34px;grid-template-columns:1fr}.section-title p{margin-top:0}.screens{grid-template-columns:1fr}.screen-card{display:grid;grid-template-columns:.9fr 1.1fr}.science-grid{grid-template-columns:1fr}.science-panel+ .science-panel{border-left:1px solid var(--line);border-top:0}.beta-grid{align-items:start;grid-template-columns:1fr}.beta .button{justify-self:start}}
     @media(max-width:640px){.shell{padding-left:21px;padding-right:21px}.site-nav{height:70px}.nav-links{display:none}.brand{font-size:18px}.hero-grid{min-height:auto;padding-bottom:45px;padding-top:18px}.hero-copy{padding-top:24px}.hero-copy h1{font-size:43px;margin-bottom:24px}.hero-copy>p{font-size:16px}.desktop-product{display:none}.mobile-product{display:flex;margin:0 0 28px;min-height:410px;padding:20px}.mobile-product .phone{border-radius:29px;border-width:5px;width:166px}.numbers{padding:61px 0}.numbers-head{margin-bottom:32px}.stat{padding:28px 0}.section{padding-bottom:72px;padding-top:72px}.section-title{margin-bottom:38px}.science-panel{min-height:0;padding:27px 23px}.study-note{grid-template-columns:1fr;gap:7px}.screen-card{display:block}.screen-frame{height:410px;padding:16px 44px 0}.screen-frame img{width:176px}.palabra-grid{gap:45px}.privacy-points{padding-left:21px}.beta{padding:74px 0}.footer-row{align-items:flex-start;flex-direction:column}.footer-links{gap:12px}}
   </style>
 </head>
@@ -70,19 +82,19 @@
   <header class="hero" id="inicio">
     <div class="shell site-nav">
       <a class="brand" href="#inicio" aria-label="Clean4Jesus, inicio"><img src="/brand-mark.png" alt=""><span>Clean<span class="four">4</span>Jesus</span></a>
-      <nav class="nav-links" aria-label="Navegación"><a href="#evidencia">Evidencia</a><a href="#producto">La app</a><a href="#palabra">Palabra</a><a href="#privacidad">Privacidad</a></nav>
-      <a class="button" href="#beta">Acceso beta</a>
+      <nav class="nav-links" aria-label="Navegación"><a href="#plataformas">Android y iPhone</a><a href="#como-funciona">Cómo funciona</a><a href="#producto">La app</a><a href="#privacidad">Privacidad</a></nav>
+      <a class="button" href="https://tally.so/r/Y5BAzv" target="_blank" rel="noopener">Solicitar acceso</a>
     </div>
     <div class="shell hero-grid">
       <div class="hero-copy reveal">
-        <div class="eyebrow">Protección frente a la pornografía</div>
-        <h1>Rompe el ciclo. Recupera tu libertad.</h1>
+        <div class="eyebrow">Beta cerrada · Android e iPhone</div>
+        <h1>Un camino de libertad frente al contenido para adultos.</h1>
         <figure class="product-stage mobile-product" aria-label="Interfaz real de Clean4Jesus">
           <div class="phone"><img src="/app-refugio.png" alt="Captura real de la pantalla Refugio de Clean4Jesus"></div>
         </figure>
-        <p><strong>Clean4Jesus bloquea contenido adulto en navegadores y aplicaciones compatibles.</strong> Cuando detecta una señal de riesgo, interrumpe el acceso con una pantalla de protección para ayudarte a detenerte, respirar y volver a elegir.</p>
-        <div class="hero-actions"><a class="button gold" href="#beta">Quiero acceso a la beta <span aria-hidden="true">→</span></a><a class="text-link" href="#evidencia">Ver la evidencia ↓</a></div>
-        <p class="hero-proof">La actividad sensible se procesa en el dispositivo. No vendemos tu información ni publicamos tu correo en la comunidad.</p>
+        <p><strong>Clean4Jesus pone a Jesús en el centro de tu camino:</strong> une protección digital, devocionales cristocéntricos y comunidad para acompañarte a la libertad.</p>
+        <div class="hero-actions"><a class="button gold" href="https://tally.so/r/Y5BAzv" target="_blank" rel="noopener">Solicitar acceso a la beta <span aria-hidden="true">→</span></a><a class="text-link" href="#plataformas">Ver cómo funciona ↓</a></div>
+        <p class="hero-proof">El acceso es limitado mientras validamos la experiencia en dispositivos reales. Sin enlaces de tienda hasta que cada versión esté lista.</p>
       </div>
       <figure class="product-stage desktop-product reveal">
         <div class="phone"><img src="/app-refugio.png" alt="Captura real de la pantalla Refugio de Clean4Jesus"></div>
@@ -91,6 +103,22 @@
   </header>
 
   <main id="contenido">
+    <section class="platforms" id="plataformas">
+      <div class="shell">
+        <div class="platform-intro reveal"><div><div class="eyebrow">Elige tu dispositivo</div><h2>La misma misión. Dos protecciones nativas.</h2></div><p>No ocultamos las diferencias: Android protege navegación y apps compatibles con permisos nativos. En iPhone, Apple gestiona los límites por aplicación mediante Screen Time.</p></div>
+        <div class="platform-grid reveal">
+          <article class="platform-card android"><span class="os">Android · Beta controlada</span><h3>Protección para navegación y apps compatibles.</h3><p>Con tu autorización, la VPN local filtra dominios conocidos y Accesibilidad ayuda a interrumpir las apps que elijas proteger.</p><ul><li>Configura Refugio, PIN y permisos nativos.</li><li>Protege navegación y señales compatibles.</li><li>Vuelve a Clean4Jesus cuando aparece una interrupción.</li></ul><small>La eficacia depende de Android, los permisos y los servicios disponibles; no promete bloqueo perfecto.</small></article>
+          <article class="platform-card ios"><span class="os">iPhone · iOS 16 o posterior</span><h3>Límites por app con los controles de Apple.</h3><p>Autoriza Family Controls, elige aplicaciones y asigna un tiempo distinto a cada una. Apple muestra su Shield nativo al alcanzar el límite.</p><ul><li>Sin VPN ni Accesibilidad en iPhone.</li><li>Los nombres y elecciones de apps los mantiene Apple en privado.</li><li>PIN de guardianía para cambios sensibles después de configurar.</li></ul><small>Apple controla el permiso y parte de la experiencia. El contador exacto de uso por app sigue en desarrollo.</small></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="how section" id="como-funciona">
+      <div class="shell"><div class="section-title reveal"><div><div class="eyebrow">Un camino claro</div><h2>Configura la protección en tres pasos.</h2></div><p>Solicita acceso, instala la versión adecuada y completa los permisos de tu dispositivo. La app no presenta protección como activa hasta que puedas comprobarla.</p></div>
+        <div class="how-grid reveal"><article class="flow"><div class="eyebrow">Android</div><h3>Preparar el Refugio</h3><div class="flow-step"><b>01</b><div><strong>Instala y crea tu acceso de seguridad</strong><p>La beta te guía para instalar la versión y configurar la protección.</p></div></div><div class="flow-step"><b>02</b><div><strong>Autoriza VPN local y Accesibilidad</strong><p>Android te muestra cada permiso antes de activarlo.</p></div></div><div class="flow-step"><b>03</b><div><strong>Elige qué proteger</strong><p>Configura reglas compatibles y verifica el estado del Refugio.</p></div></div></article><article class="flow"><div class="eyebrow">iPhone</div><h3>Activar límites por app</h3><div class="flow-step"><b>01</b><div><strong>Autoriza Family Controls</strong><p>Apple presenta su diálogo de permiso desde Clean4Jesus.</p></div></div><div class="flow-step"><b>02</b><div><strong>Elige apps y define el tiempo</strong><p>Cada aplicación elegida puede tener un límite diario propio.</p></div></div><div class="flow-step"><b>03</b><div><strong>Apple muestra el Shield</strong><p>Al llegar al límite, iOS presenta el bloqueo nativo de la aplicación.</p></div></div></article></div>
+      </div>
+    </section>
+
     <section class="numbers" id="evidencia">
       <div class="shell">
         <div class="numbers-head reveal">
@@ -146,10 +174,14 @@
       </div>
     </section>
 
+    <section class="faq section" id="preguntas">
+      <div class="shell"><div class="section-title reveal"><div><div class="eyebrow">Preguntas frecuentes</div><h2>Antes de solicitar acceso.</h2></div><p>Preferimos que sepas exactamente qué esperar de la beta y de tu dispositivo.</p></div><div class="faq-list reveal"><article class="faq-item"><h3>¿Puedo descargar la app ya?</h3><p>Estamos trabajando con una beta cerrada y el acceso es limitado. No publicamos enlaces de tienda hasta que la versión correspondiente esté lista y verificada.</p></article><article class="faq-item"><h3>¿Android e iPhone protegen igual?</h3><p>No. Android usa permisos nativos para protección de navegación y apps compatibles. iPhone usa los límites por app de Screen Time y Family Controls de Apple.</p></article><article class="faq-item"><h3>¿Qué pasa con mis datos?</h3><p>Las elecciones de límites permanecen en el dispositivo cuando la plataforma lo permite. Para cuenta y Comunidad tratamos los datos necesarios para prestar el servicio y moderar reportes.</p></article><article class="faq-item"><h3>¿La Comunidad es un canal de emergencia?</h3><p>No. Es un espacio para compartir, pedir oración y reportar contenido conforme a las normas de Clean4Jesus.</p></article></div></div>
+    </section>
+
     <section class="beta" id="beta">
       <div class="shell beta-grid">
-        <div class="reveal"><div class="eyebrow" style="color:var(--gold)">Beta cerrada</div><h2>Estamos construyendo una protección que merezca tu confianza.</h2><p>Android está en pruebas internas e iOS en preparación. No publicaremos enlaces de tienda ni códigos QR hasta que sean reales y verificables.</p></div>
-        <a class="button gold" href="mailto:soporte@clean4jesus.com?subject=Quiero%20acceso%20a%20la%20beta">Quiero acceso a la beta →</a>
+        <div class="reveal"><div class="eyebrow" style="color:var(--gold)">Beta cerrada</div><h2>Tu dispositivo merece una protección que entiendas.</h2><p>Solicita acceso para tu plataforma. Te escribiremos si hay cupo para tu dispositivo; el correo de soporte no sustituye atención de emergencia.</p></div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px"><a class="button gold" href="https://tally.so/r/Y5BAzv" target="_blank" rel="noopener">Solicitar para Android →</a><a class="button" href="https://tally.so/r/Y5BAzv" target="_blank" rel="noopener">Solicitar para iPhone →</a></div>
       </div>
     </section>
   </main>
