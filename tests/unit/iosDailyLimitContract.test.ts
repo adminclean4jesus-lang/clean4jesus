@@ -24,10 +24,18 @@ describe("iOS per-app limits and Shield contracts", () => {
 
     expect(moduleSource).toContain("startPerAppLimitMonitoring");
     expect(moduleSource).toContain("for rule in enabledRules");
-    expect(moduleSource).toContain("applications: [rule.token]");
+    expect(moduleSource).toContain("makePerAppLimitEvent(token: rule.token, minutes: rule.minutes)");
     expect(moduleSource).toContain("perAppLimitsConfiguredKey");
     expect(monitorSource).toContain("rules.first(where:");
     expect(monitorSource).toContain("shieldedApplications.insert(rule.token)");
+  });
+
+  it("counts a selected app's use from the start of today's active interval", () => {
+    const moduleSource = read("modules/clean4jesus-ios-protection/ios/Clean4JesusIosProtectionModule.swift");
+
+    expect(moduleSource).toContain("if #available(iOS 17.4, *)");
+    expect(moduleSource).toContain("includesPastActivity: true");
+    expect(moduleSource).toContain("iOS 16–17.3 do not expose includesPastActivity");
   });
 
   it("uses a branded shield icon and one honest close action", () => {
