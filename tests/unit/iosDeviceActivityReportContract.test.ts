@@ -18,6 +18,9 @@ describe("iOS DeviceActivityReport contract", () => {
     expect(pluginPatch).toContain("com.apple.deviceactivityui.report-extension");
     expect(source).toContain("DeviceActivityReportExtension");
     expect(source).toContain("DeviceActivityReportScene");
+    expect(source).toContain("import ManagedSettings");
+    expect(source).toContain("segment.categories");
+    expect(source).toContain("category.applications");
     expect(source).toContain("totalActivityDuration");
     expect(source).toContain("Te quedan");
   });

@@ -1,6 +1,7 @@
 import DeviceActivity
 import FamilyControls
 import Foundation
+import ManagedSettings
 import SwiftUI
 
 private let reportContext = DeviceActivityReport.Context(rawValue: "clean4jesus.daily-usage")
@@ -95,10 +96,12 @@ private struct DailyUsageReport: DeviceActivityReportScene {
         for await deviceData in data {
             updatedAt = deviceData.lastUpdatedDate
             for await segment in deviceData.activitySegments {
-                for await application in segment.applications {
-                    let identifier = application.application.bundleIdentifier ?? application.application.localizedDisplayName ?? UUID().uuidString
-                    let current = durations[identifier] ?? (application.application.localizedDisplayName ?? "App", 0)
-                    durations[identifier] = (current.name, current.used + application.totalActivityDuration)
+                for await category in segment.categories {
+                    for await application in category.applications {
+                        let identifier = application.application.bundleIdentifier ?? application.application.localizedDisplayName ?? UUID().uuidString
+                        let current = durations[identifier] ?? (application.application.localizedDisplayName ?? "App", 0)
+                        durations[identifier] = (current.name, current.used + application.totalActivityDuration)
+                    }
                 }
             }
         }
