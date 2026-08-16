@@ -498,16 +498,29 @@ public class Clean4JesusIosProtectionModule: Module {
     var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
     for rule in enabledRules {
       let eventName = DeviceActivityEvent.Name("clean4jesus.app-limit.\(rule.id.uuidString)")
-      events[eventName] = DeviceActivityEvent(
-        applications: [rule.token],
-        threshold: DateComponents(minute: max(1, rule.minutes)),
-        includesPastActivity: true
-      )
+      events[eventName] = makePerAppLimitEvent(token: rule.token, minutes: rule.minutes)
     }
     try self.activityCenter.startMonitoring(
       self.dailyActivityName,
       during: schedule,
       events: events
+    )
+  }
+
+  private func makePerAppLimitEvent(token: ApplicationToken, minutes: Int) -> DeviceActivityEvent {
+    let threshold = DateComponents(minute: max(1, minutes))
+    if #available(iOS 17.4, *) {
+      return DeviceActivityEvent(
+        applications: [token],
+        threshold: threshold,
+        includesPastActivity: true
+      )
+    }
+    // iOS 16–17.3 do not expose includesPastActivity. Apple starts this
+    // event's baseline when monitoring begins on those system versions.
+    return DeviceActivityEvent(
+      applications: [token],
+      threshold: threshold
     )
   }
 
