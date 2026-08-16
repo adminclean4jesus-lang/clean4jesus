@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Registrar target DeviceActivityReport
+        run: node scripts/patch-apple-targets.mjs
+
       - name: Confirmar versión de la IPA
         id: version
         shell: bash
