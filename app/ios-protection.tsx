@@ -11,6 +11,8 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
+import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { hasPin } from "@/features/pin/pinService";
 import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
@@ -49,6 +51,7 @@ export default function IosProtectionScreen() {
     editSelection?: string;
   }>();
   const { language } = useI18n();
+  const { colors } = useAppAppearance();
   const copy = getIosProtectionText(language);
   const [loading, setLoading] = useState(true);
   const [capabilities, setCapabilities] = useState<IosCapabilities | null>(null);
@@ -233,30 +236,38 @@ export default function IosProtectionScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.center}>
-        <ActivityIndicator color="#071F52" size="large" />
-        <Text style={styles.loadingText}>{copy.loading}</Text>
+        <ActivityIndicator color={colors.primary} size="large" />
+        <Text style={[styles.loadingText, { color: colors.muted }]}>{copy.loading}</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} testID="ios-protection-screen">
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} testID="ios-protection-screen">
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{copy.title}</Text>
-        <Text style={styles.subtitle}>{copy.subtitle}</Text>
+        <View style={styles.hero}>
+          <View style={styles.heroIcon}>
+            <MaterialCommunityIcons color="#FFFFFF" name="shield-cross" size={32} />
+          </View>
+          <View style={styles.heroCopy}>
+            <Text style={styles.heroEyebrow}>CLEAN4JESUS · iOS</Text>
+            <Text style={styles.heroTitle}>{copy.title}</Text>
+            <Text style={styles.heroSubtitle}>{copy.subtitle}</Text>
+          </View>
+        </View>
 
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Card.Content>
-            <Text style={styles.cardTitle}>{copy.stateTitle}</Text>
+            <Text style={[styles.cardTitle, { color: colors.primaryDark }]}>{copy.stateTitle}</Text>
             <View style={styles.row}>
-              <Text style={styles.label}>{copy.currentState}:</Text>
-              <Text style={styles.value}>{copy.status(statusInfo?.status)}</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>{copy.currentState}:</Text>
+              <Text style={[styles.value, { color: colors.text }]}>{copy.status(statusInfo?.status)}</Text>
             </View>
             <Divider style={styles.divider} />
             <View style={styles.row}>
               <Text style={styles.label}>{copy.active}:</Text>
               <Switch
-                color="#071F52"
+                color={colors.primary}
                 onValueChange={(value) => void handleToggleProtection(value)}
                 value={statusInfo?.isEnabled ?? false}
               />
@@ -264,15 +275,16 @@ export default function IosProtectionScreen() {
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Card.Content>
-            <Text style={styles.cardTitle}>{copy.limitTitle}</Text>
-            <Text style={styles.selectionHelp}>{copy.limitHelp}</Text>
-            <Text style={styles.selectionText}>
+            <Text style={[styles.cardTitle, { color: colors.primaryDark }]}>{copy.limitTitle}</Text>
+            <Text style={[styles.selectionHelp, { color: colors.muted }]}>{copy.limitHelp}</Text>
+            <Text style={[styles.selectionText, { color: colors.text }]}>
               {copy.configuredLimits(limitSummary.configuredApplications, limitSummary.applications)}
             </Text>
             <Button
-              buttonColor="#071F52"
+              buttonColor={colors.primary}
+              textColor={colors.onPrimary}
               disabled={!statusInfo?.isAuthorized || selection.applications === 0}
               mode="contained"
               onPress={() => void handleConfigurePerAppLimits()}
@@ -281,59 +293,68 @@ export default function IosProtectionScreen() {
             >
               {copy.configureLimits}
             </Button>
-            <Text style={styles.selectionHelp}>{copy.limitPrivacy}</Text>
+            <Text style={[styles.selectionHelp, { color: colors.muted }]}>{copy.limitPrivacy}</Text>
             <Button
-              buttonColor="#071F52"
+              buttonColor={colors.primary}
               disabled={!statusInfo?.isAuthorized || selection.applications === 0}
-              mode="outlined"
+              mode="contained"
               onPress={() => void handleViewUsage()}
               style={styles.selectButton}
               testID="ios-usage-report"
+              textColor={colors.onPrimary}
             >
               {language === "en" ? "View today's usage" : language === "fr" ? "Voir l’usage du jour" : language === "pt" ? "Ver uso de hoje" : "Ver uso de hoy"}
             </Button>
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Card.Content>
-            <Text style={styles.cardTitle}>{copy.selectionTitle}</Text>
-            <Text style={styles.selectionText}>{copy.selection(selection)}</Text>
-            <Text style={styles.selectionHelp}>{copy.selectionHelp}</Text>
+            <Text style={[styles.cardTitle, { color: colors.primaryDark }]}>{copy.selectionTitle}</Text>
+            <Text style={[styles.selectionText, { color: colors.text }]}>{copy.selection(selection)}</Text>
+            <Text style={[styles.selectionHelp, { color: colors.muted }]}>{copy.selectionHelp}</Text>
             <Button
-              buttonColor="#071F52"
+              buttonColor={colors.primary}
               disabled={!statusInfo?.isAuthorized}
               mode="contained"
               onPress={() => void handleChooseProtection()}
               style={styles.selectButton}
               testID="ios-family-selection"
+              textColor={colors.onPrimary}
             >
               {selectionCount > 0 ? copy.changeSelection : copy.chooseSelection}
             </Button>
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Card.Content>
-            <Text style={styles.cardTitle}>{copy.capabilities}</Text>
+            <Text style={[styles.cardTitle, { color: colors.primaryDark }]}>{copy.capabilities}</Text>
             <CapabilityRow
               label="Family Controls"
               value={capabilities?.supportsFamilyControls ? copy.supported : copy.unavailable}
+              labelColor={colors.muted}
+              valueColor={colors.text}
             />
             <CapabilityRow
               label={copy.managedSettings}
               value={capabilities?.supportsManagedSettings ? copy.supported : copy.unavailable}
+              labelColor={colors.muted}
+              valueColor={colors.text}
             />
             <CapabilityRow
               label={copy.appGroup}
               value={capabilities?.appGroupConfigured ? copy.configured : copy.pending}
+              labelColor={colors.muted}
+              valueColor={colors.text}
             />
           </Card.Content>
         </Card>
 
         {!statusInfo?.isAuthorized ? (
           <Button
-            buttonColor="#071F52"
+            buttonColor={colors.primary}
+            textColor={colors.onPrimary}
             mode="contained"
             onPress={() => void handleRequestAuth()}
             style={styles.button}
@@ -342,7 +363,7 @@ export default function IosProtectionScreen() {
           </Button>
         ) : null}
 
-        <Button mode="text" onPress={() => router.push("/ios-readiness")} style={styles.button}>
+        <Button mode="text" onPress={() => router.push("/ios-readiness")} style={styles.button} textColor={colors.primary}>
           {copy.readiness}
         </Button>
       </ScrollView>
@@ -350,31 +371,45 @@ export default function IosProtectionScreen() {
   );
 }
 
-function CapabilityRow({ label, value }: { label: string; value: string }) {
+function CapabilityRow({
+  label,
+  value,
+  labelColor,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  labelColor: string;
+  valueColor: string;
+}) {
   return (
     <View style={styles.row}>
-      <Text style={styles.label}>{label}:</Text>
-      <Text style={styles.value}>{value}</Text>
+      <Text style={[styles.label, { color: labelColor }]}>{label}:</Text>
+      <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   button: { marginTop: 8 },
-  card: { backgroundColor: "#FFFFFF", borderRadius: 12, marginBottom: 16 },
-  cardTitle: { color: "#071F52", fontSize: 16, fontWeight: "600", marginBottom: 12 },
+  card: { borderRadius: 20, borderWidth: 1, marginBottom: 16 },
+  cardTitle: { fontSize: 17, fontWeight: "700", marginBottom: 12 },
   center: { alignItems: "center", flex: 1, justifyContent: "center" },
   container: { backgroundColor: "#F5F7FA", flex: 1 },
   content: { padding: 16 },
   divider: { marginVertical: 8 },
-  label: { color: "#4A5568", flex: 1, fontSize: 14 },
-  loadingText: { color: "#4A5568", marginTop: 12 },
+  label: { flex: 1, fontSize: 14 },
+  loadingText: { marginTop: 12 },
   pendingNotice: { color: "#8A5A00", fontSize: 12, lineHeight: 18, marginTop: 10 },
   row: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 },
   selectButton: { marginTop: 12 },
-  selectionHelp: { color: "#667085", fontSize: 12, lineHeight: 18, marginTop: 6 },
-  selectionText: { color: "#1A202C", fontSize: 15, fontWeight: "600" },
-  subtitle: { color: "#4A5568", fontSize: 14, marginBottom: 16 },
-  title: { color: "#071F52", fontSize: 24, fontWeight: "bold", marginBottom: 6 },
-  value: { color: "#1A202C", fontSize: 14, fontWeight: "600" },
+  selectionHelp: { fontSize: 12, lineHeight: 18, marginTop: 6 },
+  selectionText: { fontSize: 15, fontWeight: "600" },
+  hero: { alignItems: "center", backgroundColor: "#071F52", borderRadius: 24, flexDirection: "row", marginBottom: 20, padding: 20 },
+  heroCopy: { flex: 1, marginLeft: 16 },
+  heroEyebrow: { color: "#F9A825", fontSize: 11, fontWeight: "700", letterSpacing: 1.2, marginBottom: 6 },
+  heroIcon: { alignItems: "center", backgroundColor: "#1A237E", borderColor: "rgba(255,255,255,0.2)", borderRadius: 18, borderWidth: 1, height: 64, justifyContent: "center", width: 64 },
+  heroSubtitle: { color: "#DCE3FF", fontSize: 13, lineHeight: 19, marginTop: 6 },
+  heroTitle: { color: "#FFFFFF", fontSize: 21, fontWeight: "700" },
+  value: { fontSize: 14, fontWeight: "700" },
 });

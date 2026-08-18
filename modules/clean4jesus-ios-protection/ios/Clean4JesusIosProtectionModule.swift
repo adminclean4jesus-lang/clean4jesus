@@ -156,6 +156,7 @@ private struct DailyUsageReportScreen: View {
   @Environment(\.dismiss) private var dismiss
   let selection: FamilyActivitySelection
   let language: String
+  @State private var reportRefreshID = UUID()
 
   private var copy: (title: String, close: String) {
     switch language {
@@ -168,20 +169,32 @@ private struct DailyUsageReportScreen: View {
 
   var body: some View {
     NavigationStack {
-      DeviceActivityReport(
-        DeviceActivityReport.Context(rawValue: "clean4jesus.daily-usage"),
-        filter: DeviceActivityFilter(
-          segment: .daily(during: Calendar.current.dateInterval(of: .day, for: .now) ?? DateInterval(start: .now, duration: 86400)),
-          applications: selection.applicationTokens,
-          categories: selection.categoryTokens,
-          webDomains: selection.webDomainTokens
+      ZStack {
+        Color(uiColor: .systemBackground).ignoresSafeArea()
+        DeviceActivityReport(
+          DeviceActivityReport.Context(rawValue: "clean4jesus.daily-usage"),
+          filter: DeviceActivityFilter(
+            segment: .daily(during: Calendar.current.dateInterval(of: .day, for: .now) ?? DateInterval(start: .now, duration: 86400)),
+            applications: selection.applicationTokens,
+            categories: selection.categoryTokens,
+            webDomains: selection.webDomainTokens
+          )
         )
-      )
+        .id(reportRefreshID)
+      }
       .navigationTitle(copy.title)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(copy.close) { dismiss() }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+          Button {
+            reportRefreshID = UUID()
+          } label: {
+            Image(systemName: "arrow.clockwise")
+          }
+          .accessibilityLabel(language == "en" ? "Refresh usage" : "Actualizar uso")
         }
       }
     }
