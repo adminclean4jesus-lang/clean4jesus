@@ -26,6 +26,7 @@ describe("iOS DeviceActivityReport contract", () => {
     expect(source).toContain("Aún no hay uso registrado");
     expect(source).toContain("$0.token == token");
     expect(source).toContain("clock.arrow.circlepath");
+    expect(source).toContain("Clean4JesusOfficialMark");
   });
 
   it("opens the native report without moving usage data through JavaScript", () => {
@@ -38,5 +39,6 @@ describe("iOS DeviceActivityReport contract", () => {
     expect(appSource).toContain("presentDailyUsageReport(language)");
     expect(appSource).toContain('mode="contained"');
     expect(appSource).toContain("textColor={colors.onPrimary}");
+    expect(appSource).toContain("android-icon-foreground.png");
   });
 });

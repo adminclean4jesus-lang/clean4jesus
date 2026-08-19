@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, View } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -247,7 +247,11 @@ export default function IosProtectionScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
-            <MaterialCommunityIcons color="#FFFFFF" name="shield-cross" size={32} />
+            <Image
+              accessibilityLabel="Logo Clean4Jesus"
+              source={require("../assets/android-icon-foreground.png")}
+              style={styles.heroLogo}
+            />
           </View>
           <View style={styles.heroCopy}>
             <Text style={styles.heroEyebrow}>CLEAN4JESUS · iOS</Text>
@@ -409,6 +413,7 @@ const styles = StyleSheet.create({
   heroCopy: { flex: 1, marginLeft: 16 },
   heroEyebrow: { color: "#F9A825", fontSize: 11, fontWeight: "700", letterSpacing: 1.2, marginBottom: 6 },
   heroIcon: { alignItems: "center", backgroundColor: "#1A237E", borderColor: "rgba(255,255,255,0.2)", borderRadius: 18, borderWidth: 1, height: 64, justifyContent: "center", width: 64 },
+  heroLogo: { height: 48, width: 48 },
   heroSubtitle: { color: "#DCE3FF", fontSize: 13, lineHeight: 19, marginTop: 6 },
   heroTitle: { color: "#FFFFFF", fontSize: 21, fontWeight: "700" },
   value: { fontSize: 14, fontWeight: "700" },
