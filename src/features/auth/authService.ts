@@ -32,6 +32,8 @@ export type AuthServiceErrorCode =
   | "sign_out_failed"
   | "weak_password";
 
+export type AuthCodeFlow = "oauth" | "recovery";
+
 export class AuthServiceError extends Error {
   constructor(public readonly code: AuthServiceErrorCode, legacyMessage: string = code) {
     super(legacyMessage);
@@ -116,7 +118,7 @@ export async function requestPasswordReset(email: string, captchaToken?: string)
   }
 }
 
-export async function exchangeAuthCode(code: string) {
+export async function exchangeAuthCode(code: string, flow: AuthCodeFlow = "recovery") {
   const supabase = getSupabaseClient();
   let recoveryUserId: string | null = null;
   const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
@@ -129,6 +131,9 @@ export async function exchangeAuthCode(code: string) {
   try {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error || !data.session || !data.user) {
+      if (flow === "oauth") {
+        throw new AuthServiceError("access_failed", "No pudimos completar el acceso con Google. Intenta nuevamente.");
+      }
       throw new AuthServiceError("password_recovery_invalid", "El enlace vencio o ya fue usado. Solicita uno nuevo.");
     }
 

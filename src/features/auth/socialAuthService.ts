@@ -43,7 +43,7 @@ export async function signInWithGoogle(language: SupportedLanguage) {
     throw new Error("Google no devolvió un código de acceso válido.");
   }
 
-  await exchangeAuthCode(code);
+  await exchangeAuthCode(code, "oauth");
   await recordLegalAcceptance(language, "google_oauth");
   return { cancelled: false };
 }
