@@ -46,9 +46,11 @@ private struct UsageReportView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 14)
                             .fill(Color(red: 0.10, green: 0.14, blue: 0.49))
-                        Image(systemName: "shield.lefthalf.filled")
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.white)
+                        Image("Clean4JesusOfficialMark")
+                            .resizable()
+                            .scaledToFit()
+                            .accessibilityLabel("Logo Clean4Jesus")
+                            .padding(9)
                     }
                     .frame(width: 48, height: 48)
                     VStack(alignment: .leading, spacing: 3) {
