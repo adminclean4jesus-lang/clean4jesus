@@ -16,6 +16,7 @@ import {
 } from "@/features/pin/pinValidation";
 import { disableShield } from "@/features/shield/shieldService";
 import { disableProtectionHealthMonitoring } from "@/features/accountability/accountabilityService";
+import { setWhatsAppProtectionEnabled } from "@/features/shield/whatsAppProtectionService";
 import { fonts, ThemeColors } from "@/theme";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { getPinText } from "@/features/i18n/pinText";
@@ -23,7 +24,7 @@ import { getPinText } from "@/features/i18n/pinText";
 export default function PinVerifyScreen() {
   const router = useRouter();
   const { colors } = useAppAppearance();
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const copy = getPinText(language);
   const styles = usePinVerifyStyles();
   const { action, minutes } = useLocalSearchParams<{
@@ -52,6 +53,19 @@ export default function PinVerifyScreen() {
     if (action === "disable-accompanied-mode") {
       await disableProtectionHealthMonitoring();
       router.replace("/trusted-person");
+      return;
+    }
+
+    if (action === "disable-whatsapp-protection") {
+      const disabled = await setWhatsAppProtectionEnabled(false);
+      if (!disabled) {
+        Alert.alert(
+          t(language, "settings.whatsapp.disableErrorTitle"),
+          t(language, "settings.whatsapp.disableErrorBody"),
+        );
+        return;
+      }
+      router.replace("/settings");
       return;
     }
 

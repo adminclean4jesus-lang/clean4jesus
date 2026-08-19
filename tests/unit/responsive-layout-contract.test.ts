@@ -28,7 +28,7 @@ describe("responsive mobile layout contract", () => {
 
   it("uses native-safe direct styles for the Hoy and Planes controls", () => {
     const source = readFileSync(resolve("app/(tabs)/devotional.tsx"), "utf8");
-    const modeChip = source.match(/function ModeChip[\s\S]*?\n}\n\nfunction ActivePlanRow/)?.[0] ?? "";
+    const modeChip = source.match(/function ModeChip[\s\S]*?\r?\n}\r?\n\r?\nfunction ActivePlanRow/)?.[0] ?? "";
 
     expect(modeChip).toContain("android_ripple");
     expect(modeChip).toContain('backgroundColor: active ? "#111B5C" : "#FFFFFF"');

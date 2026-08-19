@@ -79,6 +79,13 @@
 - No mezclar estilos claros anteriores con el sistema carbon/lima actual sin decision explicita.
 - Revisar que no haya textos mojibake como `Ãƒ`, `Ã¢â‚¬Å“`, `Ã¢â‚¬`, `Ã°Å¸`.
 
+## Exclusion Voluntaria De WhatsApp En Android
+
+- Decision Android del 18 de agosto de 2026: WhatsApp y WhatsApp Business permanecen declarados en el alcance tecnico de Accesibilidad, pero se excluyen del analisis de contenido y del conteo por defecto mediante una preferencia nativa local con fallback `false`.
+- Solo se incluyen despues de un consentimiento explicito en Ajustes con advertencia de falsos positivos; retirarlos posteriormente exige PIN.
+- No agregar WhatsApp al catalogo de limites por app ni enviar mensajes, texto visible o enlaces al backend.
+- Android se entrega mediante compilacion local y rotacion exclusiva de `artifacts/apk/current/Clean4Jesus-current.apk` y `artifacts/apk/previous/Clean4Jesus-previous.apk`. No crear PR ni ejecutar EAS/GitHub Actions para entregar APK Android.
+
 ## Escudo
 
 - El toggle actual persiste estado local con AsyncStorage.

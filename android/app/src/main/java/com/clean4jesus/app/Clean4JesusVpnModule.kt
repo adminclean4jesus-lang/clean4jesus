@@ -144,6 +144,31 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   }
 
   @ReactMethod
+  fun getWhatsAppProtectionEnabled(promise: Promise) {
+    try {
+      val prefs = reactContext.getSharedPreferences(Clean4JesusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
+      promise.resolve(prefs.getBoolean(Clean4JesusAccessibilityService.PREF_WHATSAPP_PROTECTION_ENABLED, false))
+    } catch (error: Exception) {
+      promise.reject("WHATSAPP_PROTECTION_READ_FAILED", error)
+    }
+  }
+
+  @ReactMethod
+  fun setWhatsAppProtectionEnabled(enabled: Boolean, promise: Promise) {
+    try {
+      val prefs = reactContext.getSharedPreferences(Clean4JesusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
+      prefs.edit()
+        .putBoolean(Clean4JesusAccessibilityService.PREF_WHATSAPP_PROTECTION_ENABLED, enabled)
+        .apply()
+      promise.resolve(
+        prefs.getBoolean(Clean4JesusAccessibilityService.PREF_WHATSAPP_PROTECTION_ENABLED, false) == enabled
+      )
+    } catch (error: Exception) {
+      promise.reject("WHATSAPP_PROTECTION_WRITE_FAILED", error)
+    }
+  }
+
+  @ReactMethod
   fun syncGuardianPin(pin: String, promise: Promise) {
     try {
       val prefs = reactContext.getSharedPreferences(Clean4JesusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)

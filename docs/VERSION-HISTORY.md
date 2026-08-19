@@ -1,5 +1,14 @@
 # Clean4Jesus Version History
 
+## Android 1.3.34 (52) - WhatsApp voluntario - 2026-08-18
+
+- WhatsApp y WhatsApp Business quedan fuera del análisis de contenido por defecto, tanto en instalaciones nuevas como al actualizar.
+- Ajustes Android incorpora `Protección en WhatsApp`; activarla exige aceptar una advertencia visible sobre falsos positivos causados por mensajes de terceros.
+- La preferencia se guarda únicamente en el dispositivo. Clean4Jesus no guarda ni envía mensajes, palabras o enlaces visibles.
+- Desactivar esta protección después de haberla activado exige el PIN de guardianía.
+- WhatsApp permanece declarado en el servicio de Accesibilidad para que la activación voluntaria funcione sin reinstalar; no se incorpora al catálogo de límites por app.
+- Esta versión conserva el modo acompañado agregado en `1.3.33`; sus correos requieren que Supabase, Resend, Vault y el cron operativo estén desplegados y configurados.
+
 ## Checkpoint Selector Hoy / Planes - 2026-07-26
 
 - El selector nativo `Hoy / Planes` queda aprobado y congelado tras validación en Pixel.
