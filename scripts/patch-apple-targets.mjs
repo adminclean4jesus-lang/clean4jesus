@@ -17,7 +17,12 @@ function patchFile(file, replacements) {
 
 patchFile("target.js", [[
   '    "device-activity-monitor": {\n        extensionPointIdentifier: "com.apple.deviceactivity.monitor-extension",\n        frameworks: ["DeviceActivity"],\n        displayName: "Device Activity Monitor",\n    },',
-  '    "device-activity-monitor": {\n        extensionPointIdentifier: "com.apple.deviceactivity.monitor-extension",\n        frameworks: ["DeviceActivity"],\n        displayName: "Device Activity Monitor",\n    },\n    "device-activity-report": {\n        extensionPointIdentifier: "com.apple.deviceactivityui.report-extension",\n        frameworks: ["DeviceActivity", "SwiftUI"],\n        displayName: "Device Activity Report",\n    },',
+  '    "device-activity-monitor": {\n        extensionPointIdentifier: "com.apple.deviceactivity.monitor-extension",\n        frameworks: ["DeviceActivity"],\n        displayName: "Device Activity Monitor",\n    },\n    "device-activity-report": {\n        extensionPointIdentifier: "com.apple.deviceactivityui.report-extension",\n        productType: "com.apple.product-type.extensionkit-extension",\n        frameworks: ["DeviceActivity", "SwiftUI"],\n        displayName: "Device Activity Report",\n    },',
+]]);
+
+patchFile("target.js", [[
+  '        case "device-activity-monitor":\n            return {\n                NSExtension: {\n                    NSExtensionPointIdentifier,\n                    NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).DeviceActivityMonitorExtension",\n                },\n            };',
+  '        case "device-activity-monitor":\n            return {\n                NSExtension: {\n                    NSExtensionPointIdentifier,\n                    NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).DeviceActivityMonitorExtension",\n                },\n            };\n        case "device-activity-report":\n            return {\n                EXAppExtensionAttributes: {\n                    EXExtensionPointIdentifier: NSExtensionPointIdentifier,\n                },\n            };',
 ]]);
 
 patchFile("configuration-list.js", [[
@@ -27,5 +32,5 @@ patchFile("configuration-list.js", [[
 
 patchFile("target.d.ts", [[
   '    readonly "device-activity-monitor": {\n        readonly extensionPointIdentifier: "com.apple.deviceactivity.monitor-extension";\n        readonly frameworks: readonly ["DeviceActivity"];\n        readonly displayName: "Device Activity Monitor";\n    };',
-  '    readonly "device-activity-monitor": {\n        readonly extensionPointIdentifier: "com.apple.deviceactivity.monitor-extension";\n        readonly frameworks: readonly ["DeviceActivity"];\n        readonly displayName: "Device Activity Monitor";\n    };\n    readonly "device-activity-report": {\n        readonly extensionPointIdentifier: "com.apple.deviceactivityui.report-extension";\n        readonly frameworks: readonly ["DeviceActivity", "SwiftUI"];\n        readonly displayName: "Device Activity Report";\n    };',
+  '    readonly "device-activity-monitor": {\n        readonly extensionPointIdentifier: "com.apple.deviceactivity.monitor-extension";\n        readonly frameworks: readonly ["DeviceActivity"];\n        readonly displayName: "Device Activity Monitor";\n    };\n    readonly "device-activity-report": {\n        readonly extensionPointIdentifier: "com.apple.deviceactivityui.report-extension";\n        readonly productType: "com.apple.product-type.extensionkit-extension";\n        readonly frameworks: readonly ["DeviceActivity", "SwiftUI"];\n        readonly displayName: "Device Activity Report";\n    };',
 ]]);
