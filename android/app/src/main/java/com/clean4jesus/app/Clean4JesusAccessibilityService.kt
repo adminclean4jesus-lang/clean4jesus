@@ -43,6 +43,7 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_APP_UNLOCK_PREFIX = "app_unlock_"
     private const val PREF_FALSE_POSITIVE_PREFIX = "false_positive_"
     const val PREF_ACCOUNTABILITY_ENDPOINT = "accountability_endpoint"
+    const val PREF_ACCOUNTABILITY_HEALTH_ENDPOINT = "accountability_health_endpoint"
     const val PREF_ACCOUNTABILITY_DEVICE_ID = "accountability_device_id"
     const val PREF_ACCOUNTABILITY_DEVICE_SECRET = "accountability_device_secret"
     const val PREF_ACCOUNTABILITY_PENDING_SIGNALS = "accountability_pending_signals"

@@ -15,6 +15,7 @@ import {
   pinLength,
 } from "@/features/pin/pinValidation";
 import { disableShield } from "@/features/shield/shieldService";
+import { disableProtectionHealthMonitoring } from "@/features/accountability/accountabilityService";
 import { fonts, ThemeColors } from "@/theme";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { getPinText } from "@/features/i18n/pinText";
@@ -46,6 +47,12 @@ export default function PinVerifyScreen() {
 
     if (action === "disable-shield") {
       await disableShield();
+    }
+
+    if (action === "disable-accompanied-mode") {
+      await disableProtectionHealthMonitoring();
+      router.replace("/trusted-person");
+      return;
     }
 
     if (action === "activate-ios-refuge") {

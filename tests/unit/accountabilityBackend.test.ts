@@ -12,12 +12,28 @@ const reliabilityMigration = readFileSync(
   path.join(root, "supabase/migrations/20260716235500_accountability_delivery_reliability.sql"),
   "utf8",
 );
+const healthMigration = readFileSync(
+  path.join(root, "supabase/migrations/20260818120000_accountability_protection_health_v1.sql"),
+  "utf8",
+);
 const accountabilityFunction = readFileSync(
   path.join(root, "supabase/functions/accountability/index.ts"),
   "utf8",
 );
 const signalFunction = readFileSync(
   path.join(root, "supabase/functions/accountability-signal/index.ts"),
+  "utf8",
+);
+const healthFunction = readFileSync(
+  path.join(root, "supabase/functions/accountability-health/index.ts"),
+  "utf8",
+);
+const healthWorker = readFileSync(
+  path.join(root, "android/app/src/main/java/com/clean4jesus/app/ProtectionHealthWorker.kt"),
+  "utf8",
+);
+const vpnModule = readFileSync(
+  path.join(root, "android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt"),
   "utf8",
 );
 
@@ -95,5 +111,32 @@ describe("Phase 1 accountability backend contract", () => {
     expect(signalFunction).toContain('https://exp.host/--/api/v2/push/send');
     expect(signalFunction).not.toMatch(/value\.(package|url|term|reason|content)/i);
     expect(migration).not.toMatch(/\b(package|url|term|reason|content)\w*\s+(text|jsonb?)/i);
+  });
+
+  it("requires fresh bilateral consent before accepting minimal protection health checks", () => {
+    expect(healthMigration).toContain("protection_health_owner_consented_at");
+    expect(healthMigration).toContain("protection_health_guardian_consented_at");
+    expect(healthMigration).toContain("configure_accountability_protection_health");
+    expect(healthMigration).toContain("accept_accountability_protection_health");
+    expect(healthMigration).toContain("protection_health_grace_minutes between 60 and 1440");
+    expect(healthMigration).toContain("record_accountability_protection_health_checkin");
+  });
+
+  it("keeps health check-ins content-free and schedules them independently of Accessibility", () => {
+    expect(healthFunction).toContain('keys !== "accessibilityEnabled,deviceId,idempotencyKey,secret,vpnEnabled"');
+    expect(healthFunction).not.toMatch(/(url|term|package|content|screenText)\s*:/i);
+    expect(vpnModule).toContain("PeriodicWorkRequestBuilder<ProtectionHealthWorker>(15, TimeUnit.MINUTES)");
+    expect(healthWorker).toContain("isClean4JesusAccessibilityEnabled()");
+    expect(healthWorker).not.toMatch(/rootInActiveWindow|collectText|AccessibilityEvent/);
+  });
+
+  it("only lets the scheduled server process dispatch health-alert email", () => {
+    expect(healthFunction).toContain("x-accountability-scheduler-secret");
+    expect(healthFunction).toContain("ACCOUNTABILITY_SCHEDULER_SECRET");
+    expect(healthFunction).toContain("RESEND_API_KEY");
+    expect(healthFunction).toContain("queue_accountability_protection_health_alerts");
+    expect(healthMigration).toContain("clean4jesus-accountability-health-dispatch");
+    expect(healthMigration).toContain("clean4jesus_accountability_scheduler_secret");
+    expect(healthMigration).toContain("complete_accountability_protection_health_alert");
   });
 });

@@ -97,6 +97,35 @@ Deno.serve(async (request) => {
     return json({ configured: data === true }, 200);
   }
 
+  if (body.operation === "configureProtectionHealth") {
+    if (
+      !hasOnlyKeys(body, ["operation", "relationshipId", "enabled", "graceMinutes"])
+      || typeof body.relationshipId !== "string"
+      || !uuidPattern.test(body.relationshipId)
+      || typeof body.enabled !== "boolean"
+      || typeof body.graceMinutes !== "number"
+      || !Number.isInteger(body.graceMinutes)
+      || body.graceMinutes < 60
+      || body.graceMinutes > 1440
+    ) return json({ error: "invalid_protection_health_configuration" }, 400);
+    const { data, error } = await client.rpc("configure_accountability_protection_health", {
+      p_enabled: body.enabled,
+      p_grace_minutes: body.graceMinutes,
+      p_relationship_id: body.relationshipId,
+    });
+    if (error) return databaseError(error);
+    return json({ status: data }, 200);
+  }
+
+  if (body.operation === "acceptProtectionHealth") {
+    if (!validUuidOperation(body, "relationshipId")) return json({ error: "invalid_protection_health_acceptance" }, 400);
+    const { data, error } = await client.rpc("accept_accountability_protection_health", {
+      p_relationship_id: body.relationshipId,
+    });
+    if (error) return databaseError(error);
+    return json({ status: data }, 200);
+  }
+
   if (body.operation === "registerPushToken") {
     if (
       !hasOnlyKeys(body, ["operation", "relationshipId", "expoPushToken"])

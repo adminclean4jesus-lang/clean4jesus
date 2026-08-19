@@ -10,6 +10,13 @@ import android.provider.Settings
 import android.text.TextUtils
 import android.content.Context
 import android.net.Uri
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -17,6 +24,7 @@ import com.facebook.react.bridge.ReactMethod
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
   companion object {
@@ -203,17 +211,37 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   }
 
   @ReactMethod
-  fun configureAccountabilityDevice(endpoint: String, deviceId: String, secret: String, promise: Promise) {
+  fun configureAccountabilityDevice(endpoint: String, healthEndpoint: String, healthMonitoringEnabled: Boolean, deviceId: String, secret: String, promise: Promise) {
     try {
-      if (!endpoint.startsWith("https://") || deviceId.isBlank() || secret.length < 32) {
+      if (!endpoint.startsWith("https://") || !healthEndpoint.startsWith("https://") || deviceId.isBlank() || secret.length < 32) {
         throw IllegalArgumentException("INVALID_ACCOUNTABILITY_CONFIGURATION")
       }
       reactContext.getSharedPreferences(Clean4JesusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
         .edit()
         .putString(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_ENDPOINT, endpoint)
+        .putString(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_HEALTH_ENDPOINT, healthEndpoint)
         .putString(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_DEVICE_ID, deviceId)
         .putString(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_DEVICE_SECRET, secret)
         .apply()
+      if (healthMonitoringEnabled) {
+        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        val periodic = PeriodicWorkRequestBuilder<ProtectionHealthWorker>(15, TimeUnit.MINUTES)
+          .setConstraints(constraints)
+          .build()
+        WorkManager.getInstance(reactContext).enqueueUniquePeriodicWork(
+          "clean4jesus-protection-health",
+          ExistingPeriodicWorkPolicy.UPDATE,
+          periodic,
+        )
+        WorkManager.getInstance(reactContext).enqueueUniqueWork(
+          "clean4jesus-protection-health-now",
+          ExistingWorkPolicy.REPLACE,
+          OneTimeWorkRequestBuilder<ProtectionHealthWorker>().setConstraints(constraints).build(),
+        )
+      } else {
+        WorkManager.getInstance(reactContext).cancelUniqueWork("clean4jesus-protection-health")
+        WorkManager.getInstance(reactContext).cancelUniqueWork("clean4jesus-protection-health-now")
+      }
       Clean4JesusAccessibilityService.flushRiskSignalsIfRunning()
       promise.resolve(true)
     } catch (error: Exception) {
@@ -244,10 +272,13 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
       reactContext.getSharedPreferences(Clean4JesusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
         .edit()
         .remove(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_ENDPOINT)
+        .remove(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_HEALTH_ENDPOINT)
         .remove(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_DEVICE_ID)
         .remove(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_DEVICE_SECRET)
         .remove(Clean4JesusAccessibilityService.PREF_ACCOUNTABILITY_PENDING_SIGNALS)
         .apply()
+      WorkManager.getInstance(reactContext).cancelUniqueWork("clean4jesus-protection-health")
+      WorkManager.getInstance(reactContext).cancelUniqueWork("clean4jesus-protection-health-now")
       promise.resolve(true)
     } catch (error: Exception) {
       promise.reject("ACCOUNTABILITY_CLEAR_FAILED", error)

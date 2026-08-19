@@ -392,6 +392,9 @@ verify_jwt = false
 [functions.accountability-signal]
 verify_jwt = false
 
+[functions.accountability-health]
+verify_jwt = false
+
 [functions.report-false-positive]
 verify_jwt = false
 
