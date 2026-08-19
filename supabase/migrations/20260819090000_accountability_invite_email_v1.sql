@@ -9,6 +9,11 @@ alter table private.accountability_relationships
   add constraint accountability_relationships_protection_health_grace_minutes_check
     check (protection_health_grace_minutes between 30 and 1440);
 
+update private.accountability_relationships
+set protection_health_grace_minutes = 30,
+    updated_at = now()
+where protection_health_grace_minutes > 30;
+
 alter table private.accountability_relationships
   add column guardian_email text
     check (guardian_email is null or (char_length(guardian_email) between 3 and 320 and guardian_email ~* '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'));
