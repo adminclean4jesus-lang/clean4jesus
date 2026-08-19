@@ -5,7 +5,7 @@ Este modo es voluntario y requiere una relación de persona de confianza aceptad
 ## Qué hace
 
 - El teléfono comprueba cada cierto tiempo solamente si Accesibilidad y la protección DNS local están activas.
-- Si Clean4Jesus no puede confirmar la protección durante el periodo configurado (por defecto, dos horas), el servidor envía un correo genérico a la persona de confianza.
+- Si Clean4Jesus no puede confirmar la protección durante el periodo configurado (30 minutos en el checkpoint actual), el servidor envía un correo genérico a la persona de confianza. El cron puede entregar el aviso con cierta variación.
 - La misma ausencia puede ocurrir tras una desinstalación. Android no permite interceptar ni bloquear la desinstalación, por lo que el producto no debe prometer un PIN en el diálogo del sistema.
 - No se envían búsquedas, URLs, texto visible, nombres de apps ni contenido.
 

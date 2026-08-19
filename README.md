@@ -6,14 +6,14 @@ Clean4Jesus es una aplicación móvil de acompañamiento para vivir con mayor li
 
 | Componente | Estado actual |
 | --- | --- |
-| Versión de la app | `1.3.30` |
-| Android | `versionCode 50`; beta técnica con protección nativa mediante VPN local, Accesibilidad e interrupción |
-| iOS | `build 21`; PIN de guardianía, límites independientes y Shield con logo oficial Clean4Jesus |
+| Versión de la app | `1.3.35` |
+| Android | `versionCode 53`; APK local arm64 con VPN local, Accesibilidad, interrupción y WhatsApp opcional |
+| iOS | `build 25`; IPA firmada enviada a TestFlight, Family Controls, límites por app y reporte de uso |
 | Backend | Supabase para autenticación, comunidad, contenido y moderación |
 | Idiomas | Español, inglés, francés y portugués brasileño; el idioma inicial sigue al dispositivo |
 | Distribución iOS | IPA firmada generada manualmente en GitHub Actions después del merge |
 
-La versión `1.3.30 (build 21)` parte del checkpoint estable `1.3.25 (build 16)`. En iOS la app abre sin PIN; el PIN de guardianía se configura después del primer límite y protege cualquier cambio posterior de apps o tiempos. Detecta el idioma nativo del dispositivo, asigna un límite independiente a cada app seleccionada y aplica el Shield únicamente a la app que alcanza su propio umbral. En iOS 17.4 o posterior, cada límite incorpora el uso de esa app desde el inicio del día, incluso si la regla se configura después; iOS 16–17.3 solo permite iniciar el conteo cuando comienza el monitoreo. El Shield carga la marca oficial de Clean4Jesus desde su propio bundle, usa azul marino, blanco y dorado de acento, y conserva una sola acción honesta de cierre; el rescate guiado se mantiene exclusivamente en Android. El contador exacto usado/restante queda pendiente de una cuarta extensión `DeviceActivityReport` con perfil de firma propio de Apple; esta build no inventa ni expone esos datos privados.
+La versión `1.3.35` es el checkpoint operativo actual. En iOS la app abre sin PIN; el PIN de guardianía se configura al establecer límites y protege los cambios posteriores. Cada app seleccionada tiene su propio umbral y el Shield se aplica únicamente a la app que lo alcanza. La extensión `DeviceActivityReport` muestra el uso diario con la latencia propia de iOS. En Android, WhatsApp y WhatsApp Business están excluidos por defecto para evitar falsos positivos por mensajes de terceros; la persona puede activar voluntariamente esa protección desde Ajustes después de leer el aviso.
 
 ## Funcionalidades
 
@@ -21,7 +21,7 @@ La versión `1.3.30 (build 21)` parte del checkpoint estable `1.3.25 (build 16)`
 - **Palabra**: devocional diario, catálogo de planes, detalle por día, progreso local y recordatorios.
 - **Comunidad**: autenticación, perfiles, publicaciones, testimonios, pedidos de oración, respuestas y reportes.
 - **Mi perfil y Ajustes**: identidad, idioma, tema, aplicaciones protegidas, persona de confianza, personalización y opciones avanzadas.
-- **Rescate**: recorrido guiado de 60 segundos para interrumpir una situación de riesgo.
+- **Rescate**: recorrido guiado de 60 segundos para interrumpir una situación de riesgo en Android.
 - **Moderación interna**: revisión humana de reportes con roles, MFA y auditoría.
 
 ## Protección en Android
@@ -35,6 +35,7 @@ Android usa componentes Kotlin incluidos en la aplicación nativa:
 - El usuario puede personalizar el mensaje, la referencia y la imagen de la interrupción.
 - La aplicación sincroniza el idioma seleccionado con las superficies nativas.
 - Los falsos positivos pueden reportarse sin enviar PIN, historial, mensajes, capturas, texto completo ni URL completa.
+- WhatsApp y WhatsApp Business quedan fuera del análisis por defecto. El opt-in se activa desde **Ajustes → Protección en WhatsApp**, exige PIN para habilitarlo y muestra una advertencia de falsos positivos. La preferencia es local y no envía mensajes ni texto a Supabase.
 
 Para activar toda la protección, el usuario debe autorizar la VPN local y Accesibilidad desde los ajustes de Android. Expo Go no puede ejecutar estos servicios: se necesita una APK o development build de Clean4Jesus.
 
@@ -56,9 +57,10 @@ iOS usa las tecnologías oficiales de Screen Time de Apple y no utiliza VPN ni A
 - `ManagedSettings` aplica los Shields a la selección guardada.
 - `DeviceActivity` y la extensión de monitor permiten mantener la protección programada.
 - Las extensiones `ShieldConfiguration` y `ShieldAction` presentan y gestionan la interrupción nativa.
+- `DeviceActivityReportExtension` presenta el uso diario por app; el sistema puede tardar en actualizar el informe y no debe interpretarse como un cronómetro en tiempo real.
 - El App Group `group.com.clean4jesus.app` comparte de forma controlada el estado, la selección y el hash del PIN con las extensiones.
 - El estado nativo de Family Controls gobierna el acceso a Palabra, Comunidad, Perfil y Ajustes.
-- La primera instalación pide crear y confirmar el PIN; las siguientes aperturas solicitan verificarlo.
+- La app no usa el PIN como inicio de sesión. El PIN de guardianía se solicita al cambiar límites, selección o protección después de la configuración inicial.
 
 El selector de Apple devuelve únicamente cantidades de aplicaciones, categorías y sitios. Esta limitación de privacidad es deliberada: la app puede confirmar que existe una selección, pero no mostrar los nombres elegidos.
 
@@ -109,7 +111,7 @@ clean4jesus/
 
 ### Requisitos
 
-- Node.js 20 o superior y npm 10 o superior.
+- Node.js 22 o superior y npm 10 o superior (las dependencias actuales de Supabase exigen Node 22).
 - JDK 17, Android SDK y Android Studio para Android.
 - macOS y Xcode para una compilación local de iOS.
 - Dispositivo físico para validar la protección nativa de cada plataforma.
@@ -134,7 +136,7 @@ npm run dev-client:tunnel
 
 El QR de `dev-client` requiere una development build instalada. Una APK o IPA Release no depende de Metro ni de un QR.
 
-### Builds Android
+### Builds Android (APK local current/previous)
 
 ```bash
 npm run build:android:dev
@@ -144,6 +146,15 @@ npm run build:android:preview
 - `development`: APK con development client para probar módulos nativos.
 - `preview`: APK instalable y autónoma para QA.
 - `production`: AAB configurado en `eas.json` para una futura publicación.
+
+La APK de QA se genera en Windows, fuera de GitHub Actions, y se rota manualmente para conservar una comparación:
+
+```powershell
+cd C:\c4j
+.\android\gradlew.bat :app:assembleDebug --no-daemon --max-workers=1
+```
+
+La candidata actual es `1.3.35 (versionCode 53)`, arm64 y firmada con el certificado de QA del repositorio. Se conserva en `artifacts/apk/current/Clean4Jesus-current.apk`; la anterior queda en `artifacts/apk/previous/Clean4Jesus-previous.apk`.
 
 ### Build iOS desde GitHub
 
@@ -156,7 +167,9 @@ La IPA se genera únicamente después de fusionar el pull request aprobado:
 5. Pulsa **Run workflow** sobre `main`.
 6. Descarga el artifact `clean4jesus-ios-ipa-vX.Y.Z-build-N`.
 
-El artifact contiene solamente `Clean4Jesus.ipa`. Para la versión actual, el nombre esperado es `clean4jesus-ios-ipa-v1.3.30-build-21`. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
+El artifact contiene solamente `Clean4Jesus.ipa`. La candidata actual es `1.3.35 (build 25)` y se envió a TestFlight desde App Store Connect. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
+
+Para un equipo nuevo: clona el repositorio, usa Node 22, ejecuta `npm ci`, copia `.env.example` a `.env.local` sin subirlo y ejecuta únicamente el build de la plataforma necesaria. La extensión iOS `DeviceActivityReport` requiere los perfiles de Apple y el entitlement Family Controls de cada target.
 
 ## Validación
 
@@ -203,6 +216,7 @@ Repositorio privado oficial: `adminclean4jesus-lang/clean4jesus`.
 - [Handoff de Apple](./docs/IOS-APPLE-HANDOFF.md)
 - [Contrato de permisos iOS](./docs/IOS-NATIVE-PERMISSIONS-CONTRACT.md)
 - [Operación del control de versiones](./docs/VERSION-GATE-OPERATIONS.md)
+- [Backlog operativo Scrum](./docs/BACKLOG-SCRUM.md)
 
 ## Antes de una beta pública
 
