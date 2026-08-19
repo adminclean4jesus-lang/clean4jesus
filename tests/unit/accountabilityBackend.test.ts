@@ -118,7 +118,7 @@ describe("Phase 1 accountability backend contract", () => {
     expect(healthMigration).toContain("protection_health_guardian_consented_at");
     expect(healthMigration).toContain("configure_accountability_protection_health");
     expect(healthMigration).toContain("accept_accountability_protection_health");
-    expect(healthMigration).toContain("protection_health_grace_minutes between 60 and 1440");
+    expect(healthMigration).toContain("protection_health_grace_minutes between 30 and 1440");
     expect(healthMigration).toContain("record_accountability_protection_health_checkin");
   });
 

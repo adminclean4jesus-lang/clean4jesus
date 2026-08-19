@@ -53,7 +53,7 @@ export async function createTrustedPersonInvite() {
     inviteExpiresAt: result.expiresAt,
     role: "owner" as const,
     riskThreshold: 3,
-    protectionHealthGraceMinutes: 120,
+    protectionHealthGraceMinutes: 30,
     protectionHealthStatus: "disabled" as const,
     status: "pending" as const,
   };
@@ -67,6 +67,19 @@ export async function acceptTrustedPersonInvite(code: string) {
   await clearPendingInviteCache();
   await registerGuardianPushToken(result.relationshipId);
   return getAccountabilityStatus();
+}
+
+export async function sendTrustedPersonInviteEmail(relationshipId: string, email: string, shareCode: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!relationshipId || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || !/^[A-Fa-f0-9]{20}$/.test(shareCode.trim())) {
+    throw new Error("invalid_invite_email");
+  }
+  await invoke("sendInviteEmail", {
+    relationshipId,
+    email: normalizedEmail,
+    shareCode: shareCode.trim().toUpperCase(),
+  });
+  return true;
 }
 
 export async function revokeTrustedConnection() {
@@ -87,7 +100,7 @@ export async function configureTrustedAlerts(alertsEnabled: boolean, riskThresho
   return getAccountabilityStatus();
 }
 
-export async function requestProtectionHealthMonitoring(graceMinutes = 120) {
+export async function requestProtectionHealthMonitoring(graceMinutes = 30) {
   const status = await getAccountabilityStatus();
   if (status.role !== "owner" || status.status !== "accepted" || !status.connectionId) {
     throw new Error("Solo quien recibe acompañamiento puede solicitar este modo.");
@@ -201,7 +214,7 @@ type Relationship = {
 async function mapStatus(relationship?: Relationship): Promise<AccountabilityStatus> {
   if (!relationship || relationship.status === "revoked") {
     await clearPendingInviteCache();
-    return { alertsEnabled: false, connectionId: null, guardianName: null, inviteCode: null, inviteExpiresAt: null, role: null, riskThreshold: 3, protectionHealthGraceMinutes: 120, protectionHealthStatus: "disabled", status: "none" };
+    return { alertsEnabled: false, connectionId: null, guardianName: null, inviteCode: null, inviteExpiresAt: null, role: null, riskThreshold: 3, protectionHealthGraceMinutes: 30, protectionHealthStatus: "disabled", status: "none" };
   }
   const [inviteCode, inviteExpiresAt, guardianName] = await Promise.all([
     relationship.role === "owner" && relationship.status === "pending" ? getSecureItem(INVITE_CODE_KEY) : Promise.resolve(null),
@@ -221,7 +234,7 @@ async function mapStatus(relationship?: Relationship): Promise<AccountabilitySta
     inviteExpiresAt,
     role: relationship.role,
     riskThreshold: relationship.riskThreshold ?? 3,
-    protectionHealthGraceMinutes: relationship.protectionHealthGraceMinutes ?? 120,
+    protectionHealthGraceMinutes: relationship.protectionHealthGraceMinutes ?? 30,
     protectionHealthStatus: relationship.protectionHealthStatus ?? "disabled",
     status: relationship.status,
   };

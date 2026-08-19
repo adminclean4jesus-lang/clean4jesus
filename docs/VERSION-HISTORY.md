@@ -823,3 +823,8 @@ Primera version estable que consolida el MVP actual.
 - El formulario del PIN activa proteccion de pantalla mientras contiene informacion sensible.
 - Se agrego una advertencia de privacidad para imagenes personalizadas.
 - APK `current` regenerado y validado con 154 pruebas unitarias.
+## Android 1.3.35 (53) - Alertas de protección y correo de invitación - 2026-08-19
+
+- El periodo de gracia de salud de protección queda en 30 minutos, con revisión aproximada según las restricciones de Android y el programador del backend.
+- Persona de confianza puede recibir una invitación por correo; el vínculo sigue requiriendo cuenta y consentimiento explícito.
+- El correo no contiene contenido, búsquedas, aplicaciones ni mensajes; solo el código de vinculación.

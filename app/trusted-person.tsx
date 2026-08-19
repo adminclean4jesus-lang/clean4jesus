@@ -19,6 +19,7 @@ import {
   registerGuardianPushToken,
   registerOwnerDevice,
   revokeTrustedConnection,
+  sendTrustedPersonInviteEmail,
 } from "@/features/accountability/accountabilityService";
 import { getAccompaniedModeText } from "@/features/i18n/accompaniedModeText";
 import { hasPin } from "@/features/pin/pinService";
@@ -38,6 +39,7 @@ export default function TrustedPersonScreen() {
   const { status: authStatus } = useAuth();
   const [status, setStatus] = useState<AccountabilityStatus | null>(null);
   const [code, setCode] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -190,6 +192,30 @@ export default function TrustedPersonScreen() {
           {status.inviteCode ? <Text accessibilityLabel={formatTrustedPersonText(copy.inviteCodeA11y, { code: status.inviteCode })} selectable style={styles.code}>{status.inviteCode}</Text> : null}
           {status.inviteExpiresAt ? <Text style={styles.expiry}>{formatTrustedPersonText(copy.expires, { date: new Date(status.inviteExpiresAt).toLocaleString(languageLocale(language)) })}</Text> : null}
           {status.inviteCode ? <PrimaryButton label={copy.copyCode} onPress={() => { void Clipboard.setStringAsync(status.inviteCode!); Alert.alert(copy.copied, copy.copiedBody); }} /> : null}
+          {status.inviteCode && status.connectionId ? (
+            <>
+              <Text style={styles.body}>{copy.emailInviteBody}</Text>
+              <TextInput
+                accessibilityLabel={copy.emailInvite}
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                onChangeText={setInviteEmail}
+                placeholder={copy.emailInvite}
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                value={inviteEmail}
+              />
+              <PrimaryButton
+                disabled={busy || !inviteEmail.trim()}
+                label={copy.sendEmailInvite}
+                onPress={() => void run(
+                  () => sendTrustedPersonInviteEmail(status.connectionId!, inviteEmail, status.inviteCode!),
+                  copy.emailInviteSent,
+                )}
+              />
+            </>
+          ) : null}
           <PrimaryButton disabled={busy} label={copy.newCode} onPress={() => void run(createTrustedPersonInvite, copy.newCodeBody)} />
           <PrimaryButton disabled={busy} label={copy.cancelInvite} onPress={() => Alert.alert(copy.cancelInvite, copy.cancelInviteBody, [{ text: copy.back, style: "cancel" }, { text: copy.cancelInvite, style: "destructive", onPress: () => void run(revokeTrustedConnection, copy.inviteCancelled) }])} variant="ghost" />
         </InfoCard>

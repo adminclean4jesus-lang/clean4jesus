@@ -5,8 +5,8 @@ alter table private.accountability_relationships
   add column protection_health_owner_consented_at timestamptz,
   add column protection_health_guardian_consented_at timestamptz,
   add column protection_health_activated_at timestamptz,
-  add column protection_health_grace_minutes integer not null default 120
-    check (protection_health_grace_minutes between 60 and 1440);
+  add column protection_health_grace_minutes integer not null default 30
+    check (protection_health_grace_minutes between 30 and 1440);
 
 alter table private.accountability_owner_devices
   add column last_health_check_at timestamptz,
@@ -133,7 +133,7 @@ grant execute on function public.record_accountability_protection_health_checkin
 create or replace function public.configure_accountability_protection_health(
   p_relationship_id uuid,
   p_enabled boolean,
-  p_grace_minutes integer default 120
+  p_grace_minutes integer default 30
 )
 returns text
 language plpgsql
@@ -143,7 +143,7 @@ as $$
 declare
   caller_id uuid := private.require_current_accountability_user();
 begin
-  if p_grace_minutes not between 60 and 1440 then
+  if p_grace_minutes not between 30 and 1440 then
     raise exception using errcode = '22023', message = 'invalid_protection_health_grace';
   end if;
   if p_enabled then
