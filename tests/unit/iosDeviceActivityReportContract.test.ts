@@ -23,6 +23,9 @@ describe("iOS DeviceActivityReport contract", () => {
     expect(source).toContain("category.applications");
     expect(source).toContain("totalActivityDuration");
     expect(source).toContain("Te quedan");
+    expect(source).toContain("Aún no hay uso registrado");
+    expect(source).toContain("$0.token == token");
+    expect(source).toContain("clock.arrow.circlepath");
   });
 
   it("opens the native report without moving usage data through JavaScript", () => {
@@ -33,5 +36,7 @@ describe("iOS DeviceActivityReport contract", () => {
     expect(moduleSource).toContain("DeviceActivityReport(");
     expect(appSource).toContain('testID="ios-usage-report"');
     expect(appSource).toContain("presentDailyUsageReport(language)");
+    expect(appSource).toContain('mode="contained"');
+    expect(appSource).toContain("textColor={colors.onPrimary}");
   });
 });
