@@ -107,6 +107,17 @@ describe("comportamiento de authService", () => {
     expect(unsubscribe).toHaveBeenCalledTimes(2);
   });
 
+  it("no presenta un fallo de Google como enlace de recuperacion", async () => {
+    exchangeCodeForSession.mockResolvedValueOnce({
+      data: { session: null, user: null },
+      error: { message: "PKCE code verifier not found" },
+    });
+
+    await expect(exchangeAuthCode("google-code", "oauth")).rejects.toThrow(
+      "No pudimos completar el acceso con Google. Intenta nuevamente.",
+    );
+  });
+
   it("conserva la autorizacion si falla y la limpia solo tras cambiar la contrasena", async () => {
     getSession.mockResolvedValue({ data: { session: { user: { id: "user-1" } } } });
     hasPasswordRecoveryAuthorization.mockResolvedValue(true);

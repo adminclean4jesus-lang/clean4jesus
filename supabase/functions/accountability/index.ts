@@ -61,6 +61,42 @@ Deno.serve(async (request) => {
     return json({ relationshipId: data }, 200);
   }
 
+  if (body.operation === "sendInviteEmail") {
+    if (
+      !hasOnlyKeys(body, ["operation", "relationshipId", "email", "shareCode"])
+      || typeof body.relationshipId !== "string"
+      || !uuidPattern.test(body.relationshipId)
+      || typeof body.email !== "string"
+      || body.email.trim().length > 320
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())
+      || typeof body.shareCode !== "string"
+      || !/^[A-Fa-f0-9]{20}$/.test(body.shareCode.trim())
+    ) return json({ error: "invalid_invite_email" }, 400);
+
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    const from = Deno.env.get("ACCOUNTABILITY_FROM_EMAIL");
+    if (!resendKey || !from) return json({ error: "email_delivery_not_configured" }, 503);
+
+    const { error: saveError } = await client.rpc("set_accountability_invite_email", {
+      p_relationship_id: body.relationshipId,
+      p_email: body.email.trim(),
+    });
+    if (saveError) return databaseError(saveError);
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from,
+        to: [body.email.trim().toLowerCase()],
+        subject: "Invitación para acompañar en Clean4Jesus",
+        text: `Te invitaron a ser persona de confianza en Clean4Jesus. Crea o inicia sesión en la aplicación y usa este código de una sola vez: ${body.shareCode.trim().toUpperCase()}. El código expira en 24 horas.`,
+      }),
+    });
+    if (!response.ok) return json({ error: "email_delivery_failed" }, 502);
+    return json({ sent: true }, 202);
+  }
+
   if (body.operation === "list") {
     if (!hasOnlyKeys(body, ["operation"])) return json({ error: "invalid_request" }, 400);
     const { data, error } = await client.rpc("list_my_accountability_relationships");
@@ -95,6 +131,35 @@ Deno.serve(async (request) => {
     });
     if (error) return databaseError(error);
     return json({ configured: data === true }, 200);
+  }
+
+  if (body.operation === "configureProtectionHealth") {
+    if (
+      !hasOnlyKeys(body, ["operation", "relationshipId", "enabled", "graceMinutes"])
+      || typeof body.relationshipId !== "string"
+      || !uuidPattern.test(body.relationshipId)
+      || typeof body.enabled !== "boolean"
+      || typeof body.graceMinutes !== "number"
+      || !Number.isInteger(body.graceMinutes)
+      || body.graceMinutes < 30
+      || body.graceMinutes > 1440
+    ) return json({ error: "invalid_protection_health_configuration" }, 400);
+    const { data, error } = await client.rpc("configure_accountability_protection_health", {
+      p_enabled: body.enabled,
+      p_grace_minutes: body.graceMinutes,
+      p_relationship_id: body.relationshipId,
+    });
+    if (error) return databaseError(error);
+    return json({ status: data }, 200);
+  }
+
+  if (body.operation === "acceptProtectionHealth") {
+    if (!validUuidOperation(body, "relationshipId")) return json({ error: "invalid_protection_health_acceptance" }, 400);
+    const { data, error } = await client.rpc("accept_accountability_protection_health", {
+      p_relationship_id: body.relationshipId,
+    });
+    if (error) return databaseError(error);
+    return json({ status: data }, 200);
   }
 
   if (body.operation === "registerPushToken") {

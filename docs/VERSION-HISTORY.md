@@ -1,5 +1,22 @@
 # Clean4Jesus Version History
 
+## iOS 1.3.35 (25) - Reporte de uso en TestFlight - 2026-08-19
+
+- Se corrige el empaquetado de `DeviceActivityReportExtension` como extensión ExtensionKit, requerido por App Store Connect.
+- La IPA firmada incorpora Family Controls, límites independientes, Shield de Clean4Jesus y el reporte privado de uso diario.
+- Build enviada a App Store Connect/TestFlight para procesamiento y pruebas internas.
+- El uso diario depende de la actualización de iOS; no es un cronómetro segundo a segundo.
+
+## Android 1.3.35 (53) - WhatsApp voluntario y modo acompañado - 2026-08-19
+
+- WhatsApp y WhatsApp Business quedan fuera del análisis de contenido por defecto, tanto en instalaciones nuevas como al actualizar.
+- Ajustes Android incorpora `Protección en WhatsApp`; activarla exige aceptar una advertencia visible sobre falsos positivos causados por mensajes de terceros.
+- La preferencia se guarda únicamente en el dispositivo. Clean4Jesus no guarda ni envía mensajes, palabras o enlaces visibles.
+- Desactivar esta protección después de haberla activado exige el PIN de guardianía.
+- WhatsApp permanece declarado en el servicio de Accesibilidad para que la activación voluntaria funcione sin reinstalar; no se incorpora al catálogo de límites por app.
+- El periodo de gracia de salud de protección queda en 30 minutos; el aviso depende del cron de Supabase y las restricciones del sistema.
+- La plantilla de correo de salud usa la identidad visual de Clean4Jesus y no incluye contenido, aplicaciones ni actividad.
+
 ## Checkpoint Selector Hoy / Planes - 2026-07-26
 
 - El selector nativo `Hoy / Planes` queda aprobado y congelado tras validación en Pixel.
@@ -814,3 +831,8 @@ Primera version estable que consolida el MVP actual.
 - El formulario del PIN activa proteccion de pantalla mientras contiene informacion sensible.
 - Se agrego una advertencia de privacidad para imagenes personalizadas.
 - APK `current` regenerado y validado con 154 pruebas unitarias.
+## Android 1.3.35 (53) - Alertas de protección y correo de invitación - 2026-08-19
+
+- El periodo de gracia de salud de protección queda en 30 minutos, con revisión aproximada según las restricciones de Android y el programador del backend.
+- Persona de confianza puede recibir una invitación por correo; el vínculo sigue requiriendo cuenta y consentimiento explícito.
+- El correo no contiene contenido, búsquedas, aplicaciones ni mensajes; solo el código de vinculación.

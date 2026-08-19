@@ -34,6 +34,7 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_APP_RULES = "app_protection_rules_json"
     const val PREF_GUARDIAN_PIN = "guardian_pin"
     const val PREF_APP_LANGUAGE = "app_language"
+    const val PREF_WHATSAPP_PROTECTION_ENABLED = "whatsapp_protection_enabled"
     private const val PREF_APP_USAGE_PREFIX = "app_usage_"
     private const val MAX_TRACKED_EVENT_GAP_MS = 15_000L
     private const val FULL_TREE_SCAN_INTERVAL_MS = 800L
@@ -43,6 +44,7 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_APP_UNLOCK_PREFIX = "app_unlock_"
     private const val PREF_FALSE_POSITIVE_PREFIX = "false_positive_"
     const val PREF_ACCOUNTABILITY_ENDPOINT = "accountability_endpoint"
+    const val PREF_ACCOUNTABILITY_HEALTH_ENDPOINT = "accountability_health_endpoint"
     const val PREF_ACCOUNTABILITY_DEVICE_ID = "accountability_device_id"
     const val PREF_ACCOUNTABILITY_DEVICE_SECRET = "accountability_device_secret"
     const val PREF_ACCOUNTABILITY_PENDING_SIGNALS = "accountability_pending_signals"
@@ -122,6 +124,11 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
   )
 
   private val watchedPackages = browserPackages + socialPackages
+
+  private val whatsAppPackages = setOf(
+    "com.whatsapp",
+    "com.whatsapp.w4b"
+  )
 
   private val ignoredPackages = setOf(
     "com.google.android.youtube",
@@ -251,8 +258,11 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     if (event == null) return
     val packageName = event.packageName?.toString() ?: return
     val now = System.currentTimeMillis()
+    if (shouldIgnorePackage(packageName)) {
+      stopForegroundTracking(now)
+      return
+    }
     trackForegroundPackage(packageName, now)
-    if (shouldIgnorePackage(packageName)) return
     if (!watchedPackages.contains(packageName)) return
     if (isTemporarilyUnlocked(packageName, now)) return
     if (now - lastInterruptionAt < 6000) return
@@ -403,7 +413,18 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
   }
 
   private fun shouldIgnorePackage(packageName: String): Boolean {
+    if (
+      isWhatsAppPackage(packageName) &&
+      !getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .getBoolean(PREF_WHATSAPP_PROTECTION_ENABLED, false)
+    ) {
+      return true
+    }
     return isTrustedPackage(packageName)
+  }
+
+  private fun isWhatsAppPackage(packageName: String): Boolean {
+    return whatsAppPackages.contains(packageName)
   }
 
   private fun isTrustedPackage(packageName: String): Boolean {
@@ -577,8 +598,19 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     foregroundStartedAt = 0L
   }
 
+  private fun stopForegroundTracking(now: Long) {
+    persistForegroundUsage(now)
+    foregroundPackage = null
+    foregroundStartedAt = 0L
+  }
+
   private fun persistForegroundUsage(now: Long) {
     val packageName = foregroundPackage ?: return
+    if (shouldIgnorePackage(packageName)) {
+      foregroundPackage = null
+      foregroundStartedAt = 0L
+      return
+    }
     if (foregroundStartedAt <= 0L) return
     val elapsed = now - foregroundStartedAt
     if (elapsed <= 0L) {

@@ -10,14 +10,19 @@ import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import {
   acceptTrustedPersonInvite,
+  acceptProtectionHealthMonitoring,
   AccountabilityStatus,
+  requestProtectionHealthMonitoring,
   configureTrustedAlerts,
   createTrustedPersonInvite,
   getAccountabilityStatus,
   registerGuardianPushToken,
   registerOwnerDevice,
   revokeTrustedConnection,
+  sendTrustedPersonInviteEmail,
 } from "@/features/accountability/accountabilityService";
+import { getAccompaniedModeText } from "@/features/i18n/accompaniedModeText";
+import { hasPin } from "@/features/pin/pinService";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { formatTrustedPersonText, getTrustedPersonText } from "@/features/i18n/trustedPersonText";
@@ -30,9 +35,11 @@ export default function TrustedPersonScreen() {
   const { colors } = useAppAppearance();
   const { language } = useI18n();
   const copy = getTrustedPersonText(language);
+  const accompaniedCopy = getAccompaniedModeText(language);
   const { status: authStatus } = useAuth();
   const [status, setStatus] = useState<AccountabilityStatus | null>(null);
   const [code, setCode] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -164,6 +171,13 @@ export default function TrustedPersonScreen() {
               />
             </View>
           ) : null}
+          <View style={styles.modeCard}>
+            <Text style={styles.label}>{status.protectionHealthStatus === "active" ? accompaniedCopy.active : status.protectionHealthStatus === "pending" ? (status.role === "guardian" ? accompaniedCopy.pendingOwner : accompaniedCopy.pendingGuardian) : accompaniedCopy.disabled}</Text>
+            <Text style={styles.body}>{status.protectionHealthStatus === "active" ? accompaniedCopy.activeBody : status.protectionHealthStatus === "pending" ? (status.role === "guardian" ? accompaniedCopy.pendingOwnerBody : accompaniedCopy.pendingGuardianBody) : accompaniedCopy.disabledBody}</Text>
+            {status.role === "owner" && status.protectionHealthStatus === "disabled" ? <PrimaryButton disabled={busy} label={accompaniedCopy.enable} onPress={() => void run(() => requestProtectionHealthMonitoring(), accompaniedCopy.pendingGuardian)} /> : null}
+            {status.role === "guardian" && status.protectionHealthStatus === "pending" ? <PrimaryButton disabled={busy} label={accompaniedCopy.accept} onPress={() => void run(acceptProtectionHealthMonitoring, accompaniedCopy.active)} /> : null}
+            {status.role === "owner" && status.protectionHealthStatus === "active" ? <PrimaryButton disabled={busy} label={accompaniedCopy.disable} onPress={() => void hasPin().then((ready) => ready ? router.push("/pin-verify?action=disable-accompanied-mode") : Alert.alert(copy.phoneFailed, "Crea el PIN del guardián antes de cambiar este modo."))} variant="ghost" /> : null}
+          </View>
           {status.role === "owner" ? <PrimaryButton disabled={busy} label={copy.preparePhone} onPress={() => void registerOwnerDevice().then((ok) => {
             setConnectionReady(ok);
             Alert.alert(ok ? copy.phoneReady : copy.phoneFailed, ok ? copy.phoneReadyBody : copy.phoneFailedBody);
@@ -178,6 +192,30 @@ export default function TrustedPersonScreen() {
           {status.inviteCode ? <Text accessibilityLabel={formatTrustedPersonText(copy.inviteCodeA11y, { code: status.inviteCode })} selectable style={styles.code}>{status.inviteCode}</Text> : null}
           {status.inviteExpiresAt ? <Text style={styles.expiry}>{formatTrustedPersonText(copy.expires, { date: new Date(status.inviteExpiresAt).toLocaleString(languageLocale(language)) })}</Text> : null}
           {status.inviteCode ? <PrimaryButton label={copy.copyCode} onPress={() => { void Clipboard.setStringAsync(status.inviteCode!); Alert.alert(copy.copied, copy.copiedBody); }} /> : null}
+          {status.inviteCode && status.connectionId ? (
+            <>
+              <Text style={styles.body}>{copy.emailInviteBody}</Text>
+              <TextInput
+                accessibilityLabel={copy.emailInvite}
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                onChangeText={setInviteEmail}
+                placeholder={copy.emailInvite}
+                placeholderTextColor={colors.muted}
+                style={styles.input}
+                value={inviteEmail}
+              />
+              <PrimaryButton
+                disabled={busy || !inviteEmail.trim()}
+                label={copy.sendEmailInvite}
+                onPress={() => void run(
+                  () => sendTrustedPersonInviteEmail(status.connectionId!, inviteEmail, status.inviteCode!),
+                  copy.emailInviteSent,
+                )}
+              />
+            </>
+          ) : null}
           <PrimaryButton disabled={busy} label={copy.newCode} onPress={() => void run(createTrustedPersonInvite, copy.newCodeBody)} />
           <PrimaryButton disabled={busy} label={copy.cancelInvite} onPress={() => Alert.alert(copy.cancelInvite, copy.cancelInviteBody, [{ text: copy.back, style: "cancel" }, { text: copy.cancelInvite, style: "destructive", onPress: () => void run(revokeTrustedConnection, copy.inviteCancelled) }])} variant="ghost" />
         </InfoCard>
@@ -226,6 +264,7 @@ function createStyles(colors: ThemeColors) {
   expiry: { color: colors.muted, fontFamily: "Inter_400Regular", fontSize: 11.5, lineHeight: 16, textAlign: "center" },
   input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 16, borderWidth: 1, color: colors.text, fontFamily: fonts.heading, fontSize: 18, minHeight: 52, paddingHorizontal: 16, textAlign: "center" },
   alertRules: { gap: 10 },
+  modeCard: { backgroundColor: colors.accentSoft, borderColor: colors.border, borderRadius: 14, borderWidth: 1, gap: 9, padding: 12 },
   centerCard: { alignItems: "center", gap: 12 },
   ready: { color: colors.success, fontFamily: fonts.heading, fontSize: 12 },
   warning: { backgroundColor: colors.accentSoft, borderRadius: 14, gap: 8, padding: 12 },

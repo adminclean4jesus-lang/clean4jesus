@@ -24,6 +24,10 @@ import { useShieldGate } from "@/features/shield/useShieldGate";
 import { fonts, ThemeColors } from "@/theme";
 import { getLegalAccessText } from "@/features/legal/legalAccessText";
 import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
+import {
+  isWhatsAppProtectionEnabled,
+  setWhatsAppProtectionEnabled,
+} from "@/features/shield/whatsAppProtectionService";
 
 type SettingsRowProps = {
   accessory?: React.ReactNode;
@@ -36,6 +40,7 @@ type SettingsRowProps = {
 
 export default function SettingsScreen() {
   const isIos = Platform.OS === "ios";
+  const isAndroid = Platform.OS === "android";
   const router = useRouter();
   const { checked } = useShieldGate();
   const { colors, isDark, preference, setPreference } = useAppAppearance();
@@ -45,6 +50,8 @@ export default function SettingsScreen() {
   const legalCopy = getLegalAccessText(language);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [whatsAppProtection, setWhatsAppProtection] = useState(false);
+  const [whatsAppProtectionBusy, setWhatsAppProtectionBusy] = useState(false);
   const [summary, setSummary] = useState({
     accessibility: false,
     pin: false,
@@ -55,13 +62,15 @@ export default function SettingsScreen() {
   const refresh = useCallback(async () => {
     if (isIos) {
       setSummary({ accessibility: false, pin: await hasPin(), shield: false, vpn: false });
+      setWhatsAppProtection(false);
       return;
     }
-    const [pin, shield, vpn, accessibility] = await Promise.all([
+    const [pin, shield, vpn, accessibility, whatsAppEnabled] = await Promise.all([
       hasPin(),
       getShieldState(),
       isLocalDnsVpnActive(),
       isAccessibilityInterventionActive(),
+      isWhatsAppProtectionEnabled(),
     ]);
     setSummary({
       accessibility,
@@ -69,7 +78,65 @@ export default function SettingsScreen() {
       shield: Boolean(shield.enabled),
       vpn,
     });
+    setWhatsAppProtection(whatsAppEnabled);
   }, [isIos]);
+
+  const activateWhatsAppProtection = useCallback(() => {
+    Alert.alert(
+      t(language, "settings.whatsapp.warningTitle"),
+      t(language, "settings.whatsapp.warningBody"),
+      [
+        {
+          style: "cancel",
+          text: t(language, "settings.whatsapp.keepOff"),
+        },
+        {
+          onPress: () => {
+            void (async () => {
+              setWhatsAppProtectionBusy(true);
+              const enabled = await setWhatsAppProtectionEnabled(true);
+              setWhatsAppProtectionBusy(false);
+              setWhatsAppProtection(enabled);
+              if (!enabled) {
+                Alert.alert(
+                  t(language, "settings.whatsapp.errorTitle"),
+                  t(language, "settings.whatsapp.errorBody"),
+                );
+              }
+            })();
+          },
+          text: t(language, "settings.whatsapp.activate"),
+        },
+      ],
+    );
+  }, [language, t]);
+
+  const requestWhatsAppProtectionChange = useCallback((enabled: boolean) => {
+    if (whatsAppProtectionBusy || enabled === whatsAppProtection) return;
+    if (enabled) {
+      if (!summary.pin) {
+        Alert.alert(
+          t(language, "settings.whatsapp.pinTitle"),
+          t(language, "settings.whatsapp.pinBody"),
+          [
+            { style: "cancel", text: t(language, "settings.whatsapp.keepOff") },
+            { onPress: () => router.push("/pin-setup"), text: t(language, "settings.row.createPin") },
+          ],
+        );
+        return;
+      }
+      activateWhatsAppProtection();
+      return;
+    }
+    if (!summary.pin) {
+      Alert.alert(
+        t(language, "settings.whatsapp.pinTitle"),
+        t(language, "settings.whatsapp.pinBody"),
+      );
+      return;
+    }
+    router.push("/pin-verify?action=disable-whatsapp-protection");
+  }, [activateWhatsAppProtection, language, router, summary.pin, t, whatsAppProtection, whatsAppProtectionBusy]);
 
   useEffect(() => {
     void refresh();
@@ -124,6 +191,26 @@ export default function SettingsScreen() {
           subtitle={t(language, "settings.row.trustedPersonHint")}
           title={t(language, "settings.row.trustedPerson")}
         />
+        {isAndroid ? (
+          <SettingsRow
+            accessory={
+              <Switch
+                accessibilityLabel={t(language, "settings.whatsapp.title")}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: whatsAppProtection, disabled: whatsAppProtectionBusy }}
+                disabled={whatsAppProtectionBusy}
+                onValueChange={requestWhatsAppProtectionChange}
+                testID="settings-whatsapp-protection-switch"
+                thumbColor="#FFFFFF"
+                trackColor={{ false: colors.border, true: colors.primary }}
+                value={whatsAppProtection}
+              />
+            }
+            testID="settings-whatsapp-protection"
+            subtitle={t(language, whatsAppProtection ? "settings.whatsapp.onHint" : "settings.whatsapp.offHint")}
+            title={t(language, "settings.whatsapp.title")}
+          />
+        ) : null}
         {!isIos ? (
           <SettingsRow
             onPress={() => router.push("/interruption-settings")}

@@ -16,6 +16,7 @@ Lee estos documentos antes de trabajar en el proyecto:
 - `SUPABASE-COMUNIDAD.md`, `MODERATION-CONSOLE.md`, `MODERATION-RUNBOOK.md`, `FALSE-POSITIVE-REPORTING.md` y `FALSE-POSITIVE-REVIEW-CONSOLE.md` — comunidad, moderación y soporte.
 - `PALABRA-CONTENT-ARCHITECTURE.md`, `DEVOTIONAL-CONTENT-PIPELINE.md`, `I18N-MIGRATION.md` e `I18N-EDITORIAL-REVIEW.md` — contenido e idiomas.
 - `RESEARCH-EVIDENCE-PROTOCOL.md` — uso responsable de investigación sensible.
+- `BACKLOG-SCRUM.md` — tablero versionado con estados, responsables, dependencias y stoppers.
 - `EQUIPO-VIRTUAL-CLEAN4JESUS.md` — cómo convocar el consejo experto.
 
 ## Archivo histórico

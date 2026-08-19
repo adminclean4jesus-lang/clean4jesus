@@ -19,12 +19,20 @@ export type AccountabilityStatus = {
   inviteExpiresAt: string | null;
   role: "owner" | "guardian" | null;
   riskThreshold: number;
+  protectionHealthGraceMinutes: number;
+  protectionHealthStatus: "disabled" | "pending" | "active";
   status: "none" | "pending" | "accepted";
 };
 
 type NativeAccountabilityModule = {
   clearAccountabilityDevice?: () => Promise<boolean>;
-  configureAccountabilityDevice?: (endpoint: string, deviceId: string, secret: string) => Promise<boolean>;
+  configureAccountabilityDevice?: (
+    signalEndpoint: string,
+    healthEndpoint: string,
+    healthMonitoringEnabled: boolean,
+    deviceId: string,
+    secret: string,
+  ) => Promise<boolean>;
 };
 
 const nativeModule = NativeModules.Clean4JesusVpn as NativeAccountabilityModule | undefined;
@@ -45,6 +53,8 @@ export async function createTrustedPersonInvite() {
     inviteExpiresAt: result.expiresAt,
     role: "owner" as const,
     riskThreshold: 3,
+    protectionHealthGraceMinutes: 30,
+    protectionHealthStatus: "disabled" as const,
     status: "pending" as const,
   };
 }
@@ -57,6 +67,19 @@ export async function acceptTrustedPersonInvite(code: string) {
   await clearPendingInviteCache();
   await registerGuardianPushToken(result.relationshipId);
   return getAccountabilityStatus();
+}
+
+export async function sendTrustedPersonInviteEmail(relationshipId: string, email: string, shareCode: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!relationshipId || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || !/^[A-Fa-f0-9]{20}$/.test(shareCode.trim())) {
+    throw new Error("invalid_invite_email");
+  }
+  await invoke("sendInviteEmail", {
+    relationshipId,
+    email: normalizedEmail,
+    shareCode: shareCode.trim().toUpperCase(),
+  });
+  return true;
 }
 
 export async function revokeTrustedConnection() {
@@ -77,6 +100,41 @@ export async function configureTrustedAlerts(alertsEnabled: boolean, riskThresho
   return getAccountabilityStatus();
 }
 
+export async function requestProtectionHealthMonitoring(graceMinutes = 30) {
+  const status = await getAccountabilityStatus();
+  if (status.role !== "owner" || status.status !== "accepted" || !status.connectionId) {
+    throw new Error("Solo quien recibe acompañamiento puede solicitar este modo.");
+  }
+  await invoke("configureProtectionHealth", {
+    enabled: true,
+    graceMinutes,
+    relationshipId: status.connectionId,
+  });
+  return getAccountabilityStatus();
+}
+
+export async function acceptProtectionHealthMonitoring() {
+  const status = await getAccountabilityStatus();
+  if (status.role !== "guardian" || status.status !== "accepted" || !status.connectionId) {
+    throw new Error("Solo la persona de confianza puede aceptar este modo.");
+  }
+  await invoke("acceptProtectionHealth", { relationshipId: status.connectionId });
+  return getAccountabilityStatus();
+}
+
+export async function disableProtectionHealthMonitoring() {
+  const status = await getAccountabilityStatus();
+  if (status.role !== "owner" || status.status !== "accepted" || !status.connectionId) {
+    throw new Error("Solo quien recibe acompañamiento puede desactivar este modo.");
+  }
+  await invoke("configureProtectionHealth", {
+    enabled: false,
+    graceMinutes: status.protectionHealthGraceMinutes,
+    relationshipId: status.connectionId,
+  });
+  return getAccountabilityStatus();
+}
+
 export async function registerOwnerDevice() {
   if (Platform.OS !== "android") return false;
   const status = await getAccountabilityStatus();
@@ -85,7 +143,13 @@ export async function registerOwnerDevice() {
   const existingSecret = await getSecureItem(DEVICE_SECRET_KEY);
   const existingRelationshipId = await getSecureItem(DEVICE_RELATIONSHIP_KEY);
   if (existingDeviceId && existingSecret && existingRelationshipId === status.connectionId) {
-    return nativeModule?.configureAccountabilityDevice?.(getSupabaseFunctionUrl("accountability-signal"), existingDeviceId, existingSecret) ?? false;
+    return nativeModule?.configureAccountabilityDevice?.(
+      getSupabaseFunctionUrl("accountability-signal"),
+      getSupabaseFunctionUrl("accountability-health"),
+      status.protectionHealthStatus === "active",
+      existingDeviceId,
+      existingSecret,
+    ) ?? false;
   }
   await clearAccountabilityDevice();
   const registration = await invoke<{ deviceId: string; deviceSecret: string }>("registerOwnerDevice", { relationshipId: status.connectionId });
@@ -96,6 +160,8 @@ export async function registerOwnerDevice() {
   await setSecureItem(DEVICE_RELATIONSHIP_KEY, status.connectionId);
   return nativeModule?.configureAccountabilityDevice?.(
     getSupabaseFunctionUrl("accountability-signal"),
+    getSupabaseFunctionUrl("accountability-health"),
+    status.protectionHealthStatus === "active",
     deviceId,
     secret,
   ) ?? false;
@@ -138,6 +204,8 @@ type Relationship = {
   alertsEnabled: boolean;
   id: string;
   otherUserId?: string | null;
+  protectionHealthGraceMinutes?: number;
+  protectionHealthStatus?: "disabled" | "pending" | "active";
   riskThreshold: number;
   role: "owner" | "guardian";
   status: "pending" | "accepted" | "revoked";
@@ -146,7 +214,7 @@ type Relationship = {
 async function mapStatus(relationship?: Relationship): Promise<AccountabilityStatus> {
   if (!relationship || relationship.status === "revoked") {
     await clearPendingInviteCache();
-    return { alertsEnabled: false, connectionId: null, guardianName: null, inviteCode: null, inviteExpiresAt: null, role: null, riskThreshold: 3, status: "none" };
+    return { alertsEnabled: false, connectionId: null, guardianName: null, inviteCode: null, inviteExpiresAt: null, role: null, riskThreshold: 3, protectionHealthGraceMinutes: 30, protectionHealthStatus: "disabled", status: "none" };
   }
   const [inviteCode, inviteExpiresAt, guardianName] = await Promise.all([
     relationship.role === "owner" && relationship.status === "pending" ? getSecureItem(INVITE_CODE_KEY) : Promise.resolve(null),
@@ -166,6 +234,8 @@ async function mapStatus(relationship?: Relationship): Promise<AccountabilitySta
     inviteExpiresAt,
     role: relationship.role,
     riskThreshold: relationship.riskThreshold ?? 3,
+    protectionHealthGraceMinutes: relationship.protectionHealthGraceMinutes ?? 30,
+    protectionHealthStatus: relationship.protectionHealthStatus ?? "disabled",
     status: relationship.status,
   };
 }

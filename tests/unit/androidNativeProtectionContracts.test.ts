@@ -32,6 +32,31 @@ describe("Android native protection contracts", () => {
     expect(source).not.toMatch(/text\.containsSignal\([^)]*\)\s*\) return null/);
   });
 
+  it("excludes WhatsApp by default and only scans it after explicit Android opt-in", () => {
+    const serviceSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+    const moduleSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt");
+    const bridgeSource = readProjectFile("src/features/shield/whatsAppProtectionService.ts");
+    const settingsSource = readProjectFile("app/settings.tsx");
+
+    expect(serviceSource).toContain("PREF_WHATSAPP_PROTECTION_ENABLED");
+    expect(serviceSource).toContain('"com.whatsapp"');
+    expect(serviceSource).toContain('"com.whatsapp.w4b"');
+    expect(serviceSource).toMatch(/isWhatsAppPackage\(packageName\)[\s\S]*getBoolean\(PREF_WHATSAPP_PROTECTION_ENABLED, false\)/);
+    expect(serviceSource).toMatch(/if \(shouldIgnorePackage\(packageName\)\) \{[\s\S]*stopForegroundTracking\(now\)[\s\S]*return/);
+    expect(moduleSource).toContain("getWhatsAppProtectionEnabled");
+    expect(moduleSource).toContain("setWhatsAppProtectionEnabled");
+    expect(bridgeSource).toContain("isWhatsAppProtectionEnabled");
+    expect(bridgeSource).toContain("setWhatsAppProtectionEnabled");
+    expect(settingsSource).toContain('testID="settings-whatsapp-protection-switch"');
+    expect(settingsSource).toContain('const isAndroid = Platform.OS === "android"');
+    expect(settingsSource).toContain("settings.whatsapp.warningTitle");
+    expect(settingsSource).toContain("settings.whatsapp.warningBody");
+    expect(settingsSource).toContain('router.push("/pin-setup")');
+    expect(settingsSource).toContain('router.push("/pin-verify?action=disable-whatsapp-protection")');
+    expect(readProjectFile("app/pin-verify.tsx")).toContain('action === "disable-whatsapp-protection"');
+    expect(readProjectFile("android/app/src/main/res/xml/clean4jesus_accessibility_service.xml")).toContain("com.whatsapp,com.whatsapp.w4b");
+  });
+
   it("uses the dedicated monochrome notification icon and honest on-device privacy copy", () => {
     const vpnSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnService.kt");
     const interruptionSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/InterruptionActivity.kt");

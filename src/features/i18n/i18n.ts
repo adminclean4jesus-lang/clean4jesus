@@ -26,6 +26,19 @@ export type TranslationKey =
   | "settings.row.trustedPersonHint"
   | "settings.row.interruption"
   | "settings.row.interruptionHint"
+  | "settings.whatsapp.title"
+  | "settings.whatsapp.onHint"
+  | "settings.whatsapp.offHint"
+  | "settings.whatsapp.warningTitle"
+  | "settings.whatsapp.warningBody"
+  | "settings.whatsapp.activate"
+  | "settings.whatsapp.keepOff"
+  | "settings.whatsapp.errorTitle"
+  | "settings.whatsapp.errorBody"
+  | "settings.whatsapp.pinTitle"
+  | "settings.whatsapp.pinBody"
+  | "settings.whatsapp.disableErrorTitle"
+  | "settings.whatsapp.disableErrorBody"
   | "settings.section.preferences"
   | "settings.section.preferencesHint"
   | "settings.row.language"
@@ -97,6 +110,19 @@ const es: TranslationTable = {
   "settings.row.trustedPersonHint": "Consentimiento, vínculo y alertas privadas",
   "settings.row.interruption": "Pantalla de interrupción",
   "settings.row.interruptionHint": "Tu frase e imagen para volver a lo importante",
+  "settings.whatsapp.title": "Protección en WhatsApp",
+  "settings.whatsapp.onHint": "Activa para WhatsApp y WhatsApp Business.",
+  "settings.whatsapp.offHint": "Desactivada para evitar bloqueos por mensajes que te envían otras personas.",
+  "settings.whatsapp.warningTitle": "¿Activar protección en WhatsApp?",
+  "settings.whatsapp.warningBody": "WhatsApp puede mostrar palabras o enlaces enviados por otras personas. Al activar esta opción, Clean4Jesus podría interrumpir WhatsApp por un falso positivo. La revisión ocurre en tu dispositivo: no guardamos ni enviamos tus mensajes.",
+  "settings.whatsapp.activate": "Activar de todos modos",
+  "settings.whatsapp.keepOff": "Mantener desactivada",
+  "settings.whatsapp.errorTitle": "No se pudo cambiar WhatsApp",
+  "settings.whatsapp.errorBody": "La protección quedó desactivada. Inténtalo nuevamente.",
+  "settings.whatsapp.pinTitle": "Primero crea tu PIN",
+  "settings.whatsapp.pinBody": "Crea el PIN de guardianía antes de activar esta opción. Lo necesitarás para retirarla después.",
+  "settings.whatsapp.disableErrorTitle": "No se pudo desactivar WhatsApp",
+  "settings.whatsapp.disableErrorBody": "La protección sigue activa. Inténtalo nuevamente.",
   "settings.section.preferences": "Preferencias",
   "settings.section.preferencesHint": "Elige cómo se ve y se expresa Clean4Jesus",
   "settings.row.language": "Idioma",
@@ -168,6 +194,19 @@ const en: TranslationTable = {
   "settings.row.trustedPersonHint": "Consent, connection, and private alerts",
   "settings.row.interruption": "Interruption screen",
   "settings.row.interruptionHint": "Your phrase and image to return to what matters",
+  "settings.whatsapp.title": "WhatsApp protection",
+  "settings.whatsapp.onHint": "On for WhatsApp and WhatsApp Business.",
+  "settings.whatsapp.offHint": "Off to prevent blocks caused by messages other people send you.",
+  "settings.whatsapp.warningTitle": "Turn on WhatsApp protection?",
+  "settings.whatsapp.warningBody": "WhatsApp may display words or links sent by other people. If you turn this on, Clean4Jesus could interrupt WhatsApp because of a false positive. Review happens on your device: we do not store or send your messages.",
+  "settings.whatsapp.activate": "Turn on anyway",
+  "settings.whatsapp.keepOff": "Keep it off",
+  "settings.whatsapp.errorTitle": "WhatsApp could not be changed",
+  "settings.whatsapp.errorBody": "Protection remains off. Please try again.",
+  "settings.whatsapp.pinTitle": "Create your PIN first",
+  "settings.whatsapp.pinBody": "Create your guardian PIN before turning this on. You will need it to turn the protection off later.",
+  "settings.whatsapp.disableErrorTitle": "WhatsApp could not be turned off",
+  "settings.whatsapp.disableErrorBody": "Protection is still on. Please try again.",
   "settings.section.preferences": "Preferences",
   "settings.section.preferencesHint": "Choose how Clean4Jesus looks and speaks",
   "settings.row.language": "Language",
@@ -239,6 +278,19 @@ const fr: TranslationTable = {
   "settings.row.trustedPersonHint": "Consentement, lien et alertes privées",
   "settings.row.interruption": "Écran d'interruption",
   "settings.row.interruptionHint": "Votre phrase et votre image pour revenir à l'essentiel",
+  "settings.whatsapp.title": "Protection dans WhatsApp",
+  "settings.whatsapp.onHint": "Activée pour WhatsApp et WhatsApp Business.",
+  "settings.whatsapp.offHint": "Désactivée pour éviter les blocages causés par les messages reçus.",
+  "settings.whatsapp.warningTitle": "Activer la protection dans WhatsApp ?",
+  "settings.whatsapp.warningBody": "WhatsApp peut afficher des mots ou des liens envoyés par d'autres personnes. En activant cette option, Clean4Jesus pourrait interrompre WhatsApp à cause d'un faux positif. L'analyse se fait sur votre appareil : nous ne stockons ni n'envoyons vos messages.",
+  "settings.whatsapp.activate": "Activer quand même",
+  "settings.whatsapp.keepOff": "Laisser désactivée",
+  "settings.whatsapp.errorTitle": "Impossible de modifier WhatsApp",
+  "settings.whatsapp.errorBody": "La protection reste désactivée. Réessayez.",
+  "settings.whatsapp.pinTitle": "Créez d'abord votre PIN",
+  "settings.whatsapp.pinBody": "Créez le PIN de protection avant l'activation. Il sera nécessaire pour désactiver cette protection ensuite.",
+  "settings.whatsapp.disableErrorTitle": "Impossible de désactiver WhatsApp",
+  "settings.whatsapp.disableErrorBody": "La protection reste active. Réessayez.",
   "settings.section.preferences": "Préférences",
   "settings.section.preferencesHint": "Choisissez l'apparence et le langage de Clean4Jesus",
   "settings.row.language": "Langue",
@@ -310,6 +362,19 @@ const pt: TranslationTable = {
   "settings.row.trustedPersonHint": "Consentimento, vínculo e alertas privados",
   "settings.row.interruption": "Tela de interrupção",
   "settings.row.interruptionHint": "Sua frase e imagem para voltar ao que importa",
+  "settings.whatsapp.title": "Proteção no WhatsApp",
+  "settings.whatsapp.onHint": "Ativa para WhatsApp e WhatsApp Business.",
+  "settings.whatsapp.offHint": "Desativada para evitar bloqueios por mensagens enviadas por outras pessoas.",
+  "settings.whatsapp.warningTitle": "Ativar proteção no WhatsApp?",
+  "settings.whatsapp.warningBody": "O WhatsApp pode mostrar palavras ou links enviados por outras pessoas. Ao ativar esta opção, o Clean4Jesus pode interromper o WhatsApp por um falso positivo. A análise acontece no seu dispositivo: não armazenamos nem enviamos suas mensagens.",
+  "settings.whatsapp.activate": "Ativar mesmo assim",
+  "settings.whatsapp.keepOff": "Manter desativada",
+  "settings.whatsapp.errorTitle": "Não foi possível alterar o WhatsApp",
+  "settings.whatsapp.errorBody": "A proteção continua desativada. Tente novamente.",
+  "settings.whatsapp.pinTitle": "Primeiro crie seu PIN",
+  "settings.whatsapp.pinBody": "Crie o PIN de proteção antes de ativar. Ele será necessário para desativar esta proteção depois.",
+  "settings.whatsapp.disableErrorTitle": "Não foi possível desativar o WhatsApp",
+  "settings.whatsapp.disableErrorBody": "A proteção continua ativa. Tente novamente.",
   "settings.section.preferences": "Preferências",
   "settings.section.preferencesHint": "Escolha como o Clean4Jesus aparece e fala",
   "settings.row.language": "Idioma",

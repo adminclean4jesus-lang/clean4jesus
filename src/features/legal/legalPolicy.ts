@@ -36,14 +36,30 @@ export async function recordLegalAcceptance(
   language: SupportedLanguage,
   source: LegalConsentSource,
 ) {
-  const { error } = await getSupabaseClient().rpc("record_legal_consent", {
-    requested_locale: language,
-    requested_source: source,
-  });
+  const supabase = getSupabaseClient();
+  let lastError: unknown = null;
 
-  if (error) {
-    throw new Error("No pudimos registrar el acuerdo legal. Intenta nuevamente.");
+  // On mobile, exchangeCodeForSession can resolve just before the persisted
+  // auth session is visible to the RPC client. Give the session a short,
+  // bounded retry window instead of turning a successful Google login into a
+  // misleading recovery-link error.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session) {
+      const { error } = await supabase.rpc("record_legal_consent", {
+        requested_locale: language,
+        requested_source: source,
+      });
+      if (!error) return;
+      lastError = error;
+    }
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
   }
+
+  void lastError;
+  throw new Error("No pudimos registrar el acuerdo legal. Intenta nuevamente.");
 }
 
 export async function hasCurrentLegalAcceptance() {
