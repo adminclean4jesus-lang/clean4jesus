@@ -135,8 +135,9 @@ private struct DailyUsageReport: DeviceActivityReportScene {
             for await segment in deviceData.activitySegments {
                 for await category in segment.categories {
                     for await application in category.applications {
+                        guard let token = application.application.token else { continue }
                         let identifier = application.application.localizedDisplayName ?? application.application.bundleIdentifier ?? UUID().uuidString
-                        let current = durations[identifier] ?? (application.application.token, application.application.localizedDisplayName ?? "App", 0)
+                        let current = durations[identifier] ?? (token, application.application.localizedDisplayName ?? "App", 0)
                         durations[identifier] = (current.token, current.name, current.used + application.totalActivityDuration)
                     }
                 }
