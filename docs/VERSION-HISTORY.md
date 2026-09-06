@@ -1,5 +1,13 @@
 # Clean4Jesus Version History
 
+## iOS 1.3.35 (26) - Cierre de bypass de PIN - 2026-09-05
+
+- Los enlaces profundos ya no pueden abrir el editor de límites ni el selector de aplicaciones mediante parámetros URL.
+- Después de validar el PIN, la acción sensible recibe una autorización local de un solo uso que vence en 60 segundos.
+- Se retiró la API nativa `clearProtection` que permitía intentar limpiar la protección con un PIN vacío.
+- Se estabilizó un contrato de QA Android para que no dependa de saltos de línea del sistema operativo.
+- Pendiente: validación física negativa del deep link y positiva tras introducir el PIN antes de promover la candidata.
+
 ## iOS 1.3.35 (25) - Reporte de uso en TestFlight - 2026-08-19
 
 - Se corrige el empaquetado de `DeviceActivityReportExtension` como extensión ExtensionKit, requerido por App Store Connect.

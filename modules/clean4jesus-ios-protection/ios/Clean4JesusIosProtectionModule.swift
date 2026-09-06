@@ -478,17 +478,6 @@ public class Clean4JesusIosProtectionModule: Module {
       return true
     }.runOnQueue(.main)
 
-    AsyncFunction("clearProtection") { (pinHash: String) -> Bool in
-      guard let defaults = self.userDefaults else { return false }
-      if let storedHash = defaults.string(forKey: "pinHash"), !pinHash.isEmpty, storedHash != pinHash {
-        return false
-      }
-      self.activityCenter.stopMonitoring([self.dailyActivityName])
-      self.settingsStore.clearAllSettings()
-      defaults.set(false, forKey: "shieldEnabled")
-      return true
-    }.runOnQueue(.main)
-
     AsyncFunction("setShieldCopy") { (title: String, message: String, primaryLabel: String, secondaryLabel: String) -> Bool in
       guard let defaults = self.userDefaults else { return false }
       defaults.set(title, forKey: "customShieldTitle")

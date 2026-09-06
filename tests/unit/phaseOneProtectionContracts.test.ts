@@ -18,7 +18,11 @@ describe("Phase 1 protection contracts", () => {
     expect(protectionSource).toContain("hasUserConfiguredLimits");
     expect(protectionSource).toContain('requireGuardianPin("edit-ios-limits")');
     expect(verifySource).toContain('action === "edit-ios-limits"');
-    expect(verifySource).toContain('router.replace("/ios-protection?editLimits=1")');
+    expect(verifySource).toContain('grantIosSensitiveAction("edit-ios-limits")');
+    expect(verifySource).not.toContain("editLimits=1");
+    expect(verifySource).not.toContain("editSelection=1");
+    expect(protectionSource).not.toContain("useLocalSearchParams");
+    expect(protectionSource).toContain("consumeIosSensitiveAction");
   });
 
   it("does not reuse an iOS Keychain PIN after a fresh installation", () => {
@@ -30,6 +34,20 @@ describe("Phase 1 protection contracts", () => {
     expect(pinSource).toContain(
       "AsyncStorage.setItem(storageKeys.pinConfiguredThisInstall",
     );
+  });
+
+  it("does not expose an unauthenticated native route that clears iOS protection", () => {
+    const contractSource = read("src/features/iosProtection/iosProtectionContract.ts");
+    const serviceSource = read("src/features/iosProtection/iosProtectionService.ios.ts");
+    const moduleSource = read("modules/clean4jesus-ios-protection/index.js");
+    const nativeSource = read(
+      "modules/clean4jesus-ios-protection/ios/Clean4JesusIosProtectionModule.swift",
+    );
+
+    expect(contractSource).not.toContain("clearRefuge");
+    expect(serviceSource).not.toContain("clearProtection");
+    expect(moduleSource).not.toContain("clearProtection");
+    expect(nativeSource).not.toContain('AsyncFunction("clearProtection")');
   });
 
   it("requires the current guardian PIN before replacing an existing PIN", () => {
