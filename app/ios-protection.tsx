@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, View } from "react-native";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Button,
@@ -15,6 +15,7 @@ import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { hasPin } from "@/features/pin/pinService";
+import { consumeIosSensitiveAction } from "@/features/pin/pinSession";
 import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
 import {
   getIosAuthorizationErrorMessage,
@@ -46,10 +47,6 @@ export default function IosProtectionScreen() {
   void iosProtectionNativeContract;
 
   const router = useRouter();
-  const { editLimits, editSelection } = useLocalSearchParams<{
-    editLimits?: string;
-    editSelection?: string;
-  }>();
   const { language } = useI18n();
   const { colors } = useAppAppearance();
   const copy = getIosProtectionText(language);
@@ -59,7 +56,6 @@ export default function IosProtectionScreen() {
   const [selection, setSelection] = useState<IosSelectionSummary>(emptySelection);
   const [limitSummary, setLimitSummary] = useState<IosPerAppLimitSummary>(emptyLimitSummary);
   const selectionCount = selection.applications + selection.categories + selection.webDomains;
-  const processedReturnAction = useRef<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
@@ -217,21 +213,15 @@ export default function IosProtectionScreen() {
   }
 
   useEffect(() => {
-    const action = editLimits === "1"
-      ? "limits"
-      : editSelection === "1"
-        ? "selection"
-        : null;
-    if (!action || loading || processedReturnAction.current === action) return;
-
-    processedReturnAction.current = action;
-    router.setParams(action === "limits" ? { editLimits: undefined } : { editSelection: undefined });
-    if (action === "limits") {
+    if (loading) return;
+    const action = consumeIosSensitiveAction();
+    if (action === "edit-ios-limits") {
       void openPerAppLimitEditor();
-    } else {
+    }
+    if (action === "edit-ios-selection") {
       void openFamilyActivityPicker();
     }
-  }, [editLimits, editSelection, loading]);
+  }, [loading]);
 
   if (loading) {
     return (

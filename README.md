@@ -8,7 +8,7 @@ Clean4Jesus es una aplicación móvil de acompañamiento para vivir con mayor li
 | --- | --- |
 | Versión de la app | `1.3.35` |
 | Android | `versionCode 53`; APK local arm64 con VPN local, Accesibilidad, interrupción y WhatsApp opcional |
-| iOS | `build 25`; IPA firmada enviada a TestFlight, Family Controls, límites por app y reporte de uso |
+| iOS | `build 26` candidata; Family Controls, límites por app y reporte de uso |
 | Backend | Supabase para autenticación, comunidad, contenido y moderación |
 | Idiomas | Español, inglés, francés y portugués brasileño; el idioma inicial sigue al dispositivo |
 | Distribución iOS | IPA firmada generada manualmente en GitHub Actions después del merge |
@@ -167,7 +167,7 @@ La IPA se genera únicamente después de fusionar el pull request aprobado:
 5. Pulsa **Run workflow** sobre `main`.
 6. Descarga el artifact `clean4jesus-ios-ipa-vX.Y.Z-build-N`.
 
-El artifact contiene solamente `Clean4Jesus.ipa`. La candidata actual es `1.3.35 (build 25)` y se envió a TestFlight desde App Store Connect. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
+El artifact contiene solamente `Clean4Jesus.ipa`. La próxima candidata es `1.3.35 (build 26)`; incorpora el cierre del bypass de PIN por deep link y debe validarse antes de enviarla a TestFlight. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
 
 Para un equipo nuevo: clona el repositorio, usa Node 22, ejecuta `npm ci`, copia `.env.example` a `.env.local` sin subirlo y ejecuta únicamente el build de la plataforma necesaria. La extensión iOS `DeviceActivityReport` requiere los perfiles de Apple y el entitlement Family Controls de cada target.
 

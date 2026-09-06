@@ -103,7 +103,9 @@ describe("Android native protection contracts", () => {
 
   it("reads persisted app usage with the same wall clock used by accessibility", () => {
     const moduleSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt");
-    const usageMethod = moduleSource.match(/fun getAppProtectionUsage[\s\S]*?\n  }\n/)?.[0] ?? "";
+    const usageMethodStart = moduleSource.indexOf("fun getAppProtectionUsage");
+    const nextMethodStart = moduleSource.indexOf("fun getTemporaryAppUnlocks");
+    const usageMethod = moduleSource.slice(usageMethodStart, nextMethodStart);
 
     expect(usageMethod).toContain("System.currentTimeMillis()");
     expect(usageMethod).not.toContain("SystemClock.elapsedRealtime()");

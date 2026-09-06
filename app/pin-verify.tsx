@@ -8,7 +8,10 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { getPinLockoutRemainingMs, verifyPin } from "@/features/pin/pinService";
-import { markIosPinSessionVerified } from "@/features/pin/pinSession";
+import {
+  grantIosSensitiveAction,
+  markIosPinSessionVerified,
+} from "@/features/pin/pinSession";
 import {
   isCompletePin,
   normalizePinInput,
@@ -87,12 +90,14 @@ export default function PinVerifyScreen() {
     }
 
     if (action === "edit-ios-limits") {
-      router.replace("/ios-protection?editLimits=1");
+      grantIosSensitiveAction("edit-ios-limits");
+      router.replace("/ios-protection");
       return;
     }
 
     if (action === "edit-ios-selection") {
-      router.replace("/ios-protection?editSelection=1");
+      grantIosSensitiveAction("edit-ios-selection");
+      router.replace("/ios-protection");
       return;
     }
 

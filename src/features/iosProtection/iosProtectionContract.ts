@@ -18,7 +18,6 @@ export function getIosReadinessItems(): IosReadinessItem[] {
 
 export const iosProtectionNativeContract = {
   configurePerAppLimits: async (language: string) => iosProtectionService.presentPerAppLimitEditor(language),
-  clearRefuge: async () => iosProtectionService.clearProtection(''),
 };
 
 export interface IIosProtectionContract {
@@ -33,7 +32,6 @@ export interface IIosProtectionContract {
   getPerAppLimitSummary(): Promise<IosPerAppLimitSummary>;
   presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary>;
   presentDailyUsageReport(language: string): Promise<boolean>;
-  clearProtection(pinHash: string): Promise<boolean>;
   setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
   refreshNativeState(): Promise<IosProtectionStatusInfo>;
 }

@@ -26,7 +26,6 @@ type NativeIosProtectionModule = {
   getPerAppLimitSummary(): Promise<IosPerAppLimitSummary>;
   presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary>;
   presentDailyUsageReport(language: string): Promise<boolean>;
-  clearProtection(pinHash: string): Promise<boolean>;
   setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
 };
 
@@ -183,16 +182,6 @@ class IosProtectionService implements IIosProtectionContract {
       );
     }
     return await requireIosProtectionModule().presentDailyUsageReport(language);
-  }
-
-  async clearProtection(_pinHash: string): Promise<boolean> {
-    if (Platform.OS !== "ios") return false;
-
-    const ok = await requireIosProtectionModule().clearProtection(_pinHash);
-    if (ok) {
-      this.currentStatus = { ...INITIAL_IOS_PROTECTION_STATE };
-    }
-    return ok;
   }
 
   async setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean> {

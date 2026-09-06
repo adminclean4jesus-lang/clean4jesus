@@ -49,10 +49,6 @@ export function presentDailyUsageReport(language) {
   return Clean4JesusIosProtectionModule.presentDailyUsageReport(language);
 }
 
-export function clearProtection(pinHash) {
-  return Clean4JesusIosProtectionModule.clearProtection(pinHash);
-}
-
 export function setShieldCopy(title, message, primaryLabel, secondaryLabel) {
   return Clean4JesusIosProtectionModule.setShieldCopy(title, message, primaryLabel, secondaryLabel);
 }

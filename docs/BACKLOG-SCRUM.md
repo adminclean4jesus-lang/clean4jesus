@@ -1,12 +1,11 @@
 # Backlog operativo Scrum
 
-Última actualización: 19 de agosto de 2026 · versión de referencia `1.3.35`.
+Última actualización: 5 de septiembre de 2026 · versión de referencia `1.3.35`.
 
 Este archivo es la copia versionada del tablero. Los estados son: **Por hacer**, **En curso**, **En revisión**, **Stopper** y **Hecho**. El tablero externo puede usarse para mover tarjetas, pero este documento conserva el contexto necesario para clonar el proyecto y continuar el trabajo.
 
 ## Por hacer
 
-- **Blindar cambios sensibles de iOS por deep link** — Samuel Ortega (Tech Lead), con Mateo Vidal (QA). Exigir PIN o ticket efímero antes de editar límites o selección desde cualquier URL.
 - **Cerrar seguridad del modo acompañado** — Irene Salazar (Trust & Safety), con Camila Duarte (Operaciones). Añadir rate limit durable al endpoint de falsos positivos, revisar secretos y publicar el cron de salud.
 - **Prueba física Android de desinstalación y Accesibilidad** — Mateo Vidal (QA), con Camila Duarte. Confirmar que la ausencia de check-in después de 30 minutos genera un aviso genérico, sin prometer bloqueo del sistema.
 - **Matriz de release Android** — Camila Duarte, con Mateo Vidal. Repetir la APK `1.3.35 (53)` en dos dispositivos y documentar firma, permisos, WhatsApp OFF/ON y regresiones.
@@ -19,6 +18,8 @@ Este archivo es la copia versionada del tablero. Los estados son: **Por hacer**,
 
 ## En revisión
 
+- **Blindar cambios sensibles de iOS por deep link** — Samuel Ortega (Tech Lead), con Mateo Vidal (QA). Implementado en la candidata `1.3.35 (26)`: la edición ya no viaja en parámetros URL; exige una autorización local de un solo uso, concedida solo después de validar el PIN y con vencimiento de 60 segundos. Falta prueba física negativa con deep link y prueba positiva posterior al PIN.
+- **Retirar limpieza nativa iOS sin PIN** — Samuel Ortega (Tech Lead), con Mateo Vidal (QA). Retirada la API `clearProtection` que aceptaba un PIN vacío. Falta validación de regresión en la IPA `1.3.35 (26)`.
 - **Reporte “Uso de hoy” iOS** — Sofía Beltrán (Diseño), con Mateo Vidal. La extensión funciona, pero el diseño y los estados vacíos deben revisarse en hardware; iOS puede entregar datos con retraso.
 - **Claims de landing y privacidad** — Nicolás Vega (Growth), con Irene Salazar. Mantener diferencias Android/iOS y no prometer bloqueo absoluto, contador en tiempo real o protección contra desinstalación.
 
