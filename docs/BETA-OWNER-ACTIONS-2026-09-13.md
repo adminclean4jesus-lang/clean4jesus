@@ -2,7 +2,7 @@
 
 Fecha: 13 de septiembre de 2026. Esta es una hoja operativa; marcar cada casilla solo con evidencia. `1.3.35` es la última versión distribuida y `1.3.36` sigue en QA.
 
-La APK `1.3.36 (54)` de `artifacts/apk/current` ya se compiló y verificó como debug universal. SHA-256: `8E40C5A4139E4740EDC3412E592F989E87756870F0558B182621D08B7FAE41A8`. `previous` conserva `1.3.35 (53)`; solo hay dos APK locales.
+La APK `1.3.36 (54)` de `artifacts/apk/current` ya se compiló, pasó lint nativo y se verificó como debug universal. SHA-256: `C52E9015D2544CED48AF864ABE903056746D0FD472202569C52642380F7EC81A`. `previous` conserva `1.3.35 (53)`; solo hay dos APK locales.
 
 ## 1. Android real y matriz de protección
 

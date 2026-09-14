@@ -243,7 +243,12 @@ class Clean4JesusVpnService : VpnService() {
       else -> "Protección DNS base activa"
     }
 
-    return Notification.Builder(this, CHANNEL_ID)
+    val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      Notification.Builder(this, CHANNEL_ID)
+    } else {
+      Notification.Builder(this)
+    }
+    return builder
       .setSmallIcon(R.drawable.notification_icon)
       .setContentTitle("Clean4Jesus")
       .setContentText(status)

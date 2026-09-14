@@ -29,7 +29,7 @@ Este archivo es la copia versionada del tablero. Los estados son: **Por hacer**,
 
 - **Checkpoint iOS `1.3.35 (25)`** — Family Controls, límites independientes, Shield de marca y `DeviceActivityReport` empaquetado como ExtensionKit.
 - **Checkpoint Android `1.3.35 (53)`** — WhatsApp/WhatsApp Business excluidos por defecto; opt-in con disclaimer y retirada protegida por PIN. El repositorio clonado no incluía los artefactos `current/previous`, que son locales y están ignorados por Git.
-- **APK candidata Android `1.3.36 (54)`** — Compilada con Gradle local, universal y firmada solo para QA debug; guardada en `artifacts/apk/current`, con `1.3.35 (53)` en `previous`. No implica QA físico ni permiso de beta externa.
+- **APK candidata Android `1.3.36 (54)`** — Compilada con Gradle local, lint nativo aprobado, universal y firmada solo para QA debug; guardada en `artifacts/apk/current`, con `1.3.35 (53)` en `previous`. No implica QA físico ni permiso de beta externa.
 - **Identidad del Shield y reporte** — logo oficial navy/blanco de Clean4Jesus, sin reloj de arena ni copy de respiración.
 - **Documentación de versión y operación** — README, historial y comandos de build alineados con los artefactos actuales.
 

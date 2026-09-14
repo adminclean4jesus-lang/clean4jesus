@@ -36,6 +36,7 @@ El repositorio de OneDrive sigue siendo la fuente de verdad; esta copia corta se
 
 La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Antes de entregar una nueva `current`, verifica versión, firma, pruebas y rotación con `previous`.
 `android/build.gradle` evita en Windows que Gradle intente tomar snapshots de enlaces `libc++_shared.so` generados por el NDK; la compilación en macOS/Linux conserva el seguimiento incremental normal.
+Antes de promover una APK de QA, ejecuta también `cd android; .\gradlew.bat :app:lintDebug --no-daemon --max-workers=1` desde la copia corta. No confundas `assembleDebug` con lint aprobado.
 
 ## Instalar En Pixel 9
 
