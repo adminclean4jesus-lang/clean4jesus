@@ -4,10 +4,20 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 function readProjectFile(path: string): string {
-  return readFileSync(join(process.cwd(), path), "utf8");
+  return readFileSync(join(process.cwd(), path), "utf8").replace(/\r\n/g, "\n");
 }
 
 describe("Android native protection contracts", () => {
+  it("continues scanning visible content during a guardian's temporary app unlock", () => {
+    const source = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+    const eventHandler = source.split("override fun onAccessibilityEvent(event: AccessibilityEvent?) {")[1]
+      ?.split("override fun onServiceConnected()")[0];
+
+    expect(eventHandler).toBeTruthy();
+    expect(eventHandler).not.toContain("if (isTemporarilyUnlocked(packageName, now)) return");
+    expect(source).toContain("if (isTemporarilyUnlocked(packageName, now)) return null");
+    expect(eventHandler).toContain("val reason = getBlockReason(packageName, visibleText)");
+  });
   it("resolves VPN start only after Android reports an active tunnel", () => {
     const moduleSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt");
     const permissionSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnPermissionActivity.kt");

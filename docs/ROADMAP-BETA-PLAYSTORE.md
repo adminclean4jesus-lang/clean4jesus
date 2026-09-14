@@ -1,5 +1,7 @@
 # Clean4Jesus - Plan Maestro Hacia Play Store
 
+> Estado vigente, 2026-09-13: la candidata local es `1.3.36 (54)`; `1.3.35 (53)` es la última APK de QA anterior. Este documento conserva hitos históricos, pero sus estimaciones y puertas de julio/agosto no sustituyen `BACKLOG-SCRUM.md` ni `BETA-OWNER-ACTIONS-2026-09-13.md`. Sigue **NO-GO para beta externa**: faltan despliegue Supabase y pruebas remotas, QA físico Android/iPhone, firma release, revisión legal, auditoría de dependencias y operación de moderación. Android se compila con Gradle local; EAS no es requisito de Android.
+
 Fecha de corte: 2026-07-21  
 Version interna: `1.3.16`
 Meta: publicar Clean4Jesus en Google Play para Android, sin QR, sin Metro y sin depender de un computador.

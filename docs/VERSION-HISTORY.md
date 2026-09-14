@@ -1,5 +1,13 @@
 # Clean4Jesus Version History
 
+## Candidata local 1.3.36 — Android 54 / iOS 26 — 2026-09-13
+
+- Android: el desbloqueo supervisado de 15 minutos omite solo la regla deliberada de la app; el análisis de contenido visible sigue activo. Se retira `RECORD_AUDIO` de la configuración Expo porque la app no usa micrófono.
+- iOS: PIN de edición con ticket efímero de una acción y un uso; cambiar la selección activa reinicia límites y Shields; el estado comprueba autorización, eventos de Device Activity y ajustes aplicados en lugar de confiar solo en `shieldEnabled`.
+- Backend: rate limit atómico para reportes de falsos positivos y reparación de la retención diaria de reportes/eventos; la invitación por correo valida propiedad/código sin guardar el correo del tercero antes de enviarlo; aviso de salud añade la plantilla HTML.
+- Esta entrada describe fuente candidata. No acredita migraciones desplegadas, IPA `26` compilada/TestFlight, correo entregado, firma release ni QA físico.
+- APK debug universal `1.3.36 (54)` compilada localmente con Gradle el 13 de septiembre. SHA-256: `8E40C5A4139E4740EDC3412E592F989E87756870F0558B182621D08B7FAE41A8`. Certificado de QA SHA-256: `3B8E9BCA44BD9E013D66E36A8B1BF0E44E932191DDA0580EE70D734C22C5DBB5`. Solo QA interna con Metro; no es una build release ni una beta aprobada.
+
 ## iOS 1.3.35 (25) - Reporte de uso en TestFlight - 2026-08-19
 
 - Se corrige el empaquetado de `DeviceActivityReportExtension` como extensión ExtensionKit, requerido por App Store Connect.

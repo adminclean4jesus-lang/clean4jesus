@@ -8,7 +8,6 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { hasPin, savePin, verifyPin } from "@/features/pin/pinService";
-import { markIosPinSessionVerified } from "@/features/pin/pinSession";
 import {
   isCompletePin,
   normalizePinInput,
@@ -61,7 +60,6 @@ export default function PinSetupScreen() {
       await savePin(pin);
 
       if (after === "shield-setup") {
-        markIosPinSessionVerified();
         router.replace("/?setup=1");
         return;
       }

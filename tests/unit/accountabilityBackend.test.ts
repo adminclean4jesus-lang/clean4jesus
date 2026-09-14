@@ -16,6 +16,10 @@ const healthMigration = readFileSync(
   path.join(root, "supabase/migrations/20260818120000_accountability_protection_health_v1.sql"),
   "utf8",
 );
+const invitePrivacyMigration = readFileSync(
+  path.join(root, "supabase/migrations/20260913120000_accountability_invite_privacy_v2.sql"),
+  "utf8",
+);
 const accountabilityFunction = readFileSync(
   path.join(root, "supabase/functions/accountability/index.ts"),
   "utf8",
@@ -138,5 +142,15 @@ describe("Phase 1 accountability backend contract", () => {
     expect(healthMigration).toContain("clean4jesus-accountability-health-dispatch");
     expect(healthMigration).toContain("clean4jesus_accountability_scheduler_secret");
     expect(healthMigration).toContain("complete_accountability_protection_health_alert");
+    expect(healthFunction).toContain("html: healthAlertHtml()");
+  });
+
+  it("validates invitation ownership and code before email without retaining an unsent address", () => {
+    expect(invitePrivacyMigration).toContain("validate_accountability_invite_delivery");
+    expect(invitePrivacyMigration).toContain("relationship.owner_user_id = caller_id");
+    expect(invitePrivacyMigration).toContain("relationship.share_code_expires_at > now()");
+    expect(invitePrivacyMigration).toContain("relationship.share_code_hash = extensions.digest(");
+    expect(accountabilityFunction).toContain('client.rpc("validate_accountability_invite_delivery"');
+    expect(accountabilityFunction).not.toContain('client.rpc("set_accountability_invite_email"');
   });
 });

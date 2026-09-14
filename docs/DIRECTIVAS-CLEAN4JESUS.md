@@ -420,3 +420,23 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - El flujo “Pausa antes de decidir” y su rescate guiado pertenecen exclusivamente a Android. iOS no debe exponer ruta, ajustes, estado o API de rescate; `pauseProtection(pinHash)` sí se conserva porque es la suspensión administrativa protegida por PIN.
 - El contador real usado/restante por app requiere una `DeviceActivityReportExtension`, cuarto App ID, perfil de aprovisionamiento y Family Controls Distribution propios. No aproximar minutos con eventos repetidos ni exportar duración o identidad de apps a React Native, App Group, backend, logs o analítica.
 - En iOS, el idioma inicial se obtiene con `expo-localization/getLocales` y se declaran ES/EN/FR/PT mediante el config plugin. Una preferencia manual explícita puede prevalecer; sin ella, una instalación nueva debe seguir el idioma del dispositivo.
+
+## Diagrama De Arquitectura (13 De Septiembre De 2026)
+
+- La arquitectura completa de Clean4Jesus se documenta en el repositorio local hermano `archify/`, usando la especificación `archify/archify/examples/clean4jesus.architecture.json` y el artefacto entregado `archify/generated/clean4jesus.architecture.html`.
+- El diagrama es evidencia fijada al commit `692a6afc461b2691b3192bec81657dcc6eba1922` y contiene 22 referencias verificadas. Si cambia la arquitectura o el commit, regenerar y validar el artefacto; no presentarlo como actualizado sin cambiar su revisión.
+- El diagrama debe conservar la frontera local del dispositivo, la separación Android/iOS, Supabase/RLS, Edge Functions, moderación/MFA, Turnstile, correo y las cadenas de entrega Gradle local y GitHub/TestFlight.
+- El contenido del diagrama se redacta en español; la interfaz fija de Archify puede permanecer en inglés porque el renderer solo admite `meta.locale` `en` o `zh-CN`.
+
+## Lecciones De Candidata Beta 1.3.36 (13 De Septiembre De 2026)
+
+- Distinguir siempre versión distribuida y fuente candidata: `1.3.35` es el último checkpoint registrado; `1.3.36` no queda aprobada por compilar o pasar pruebas estáticas. TestFlight, migraciones, correo y QA físico requieren evidencia independiente.
+- En Android, el desbloqueo con PIN de 15 minutos omite solo la regla deliberada de la app. El escaneo de contenido visible continúa y cualquier señal distinta vuelve a interrumpir; conservar prueba de regresión antes de entregar APK.
+- En iOS, un deep link de edición requiere ticket emitido tras PIN correcto, vinculado a la acción, de un solo uso y con caducidad. Cambiar selección con protección activa debe reiniciar eventos y Shields. El indicador activo debe contrastar autorización, selección, monitoreo y ajustes aplicados; un booleano persistido no basta.
+- Las invitaciones por correo deben comprobar la relación y el código antes de llamar al proveedor; no persistir el correo de una persona no aceptada como efecto de un envío fallido. Las alertas de salud deben enviar texto y HTML si se declara plantilla de marca.
+- Las guías Android vigentes usan Gradle local. EAS no es un camino de entrega Android. El flujo iOS firmado sí puede usar GitHub/macOS y los recursos Apple aprobados.
+- Una prueba E2E de idioma manual debe establecer también la marca de preferencia explícita; guardar solo el código de idioma simula una instalación nueva y puede ser reemplazado legítimamente por el idioma del sistema.
+- Cuando una tabla cambia de esquema, revisar funciones `SECURITY DEFINER`, cron y retención que aún la referencian. El job de privacidad debe purgar `public.false_positive_reports` y los eventos técnicos de rate limit; nunca dejar huellas de instalación indefinidamente por depender solo de limpiezas por dispositivo.
+- Un `npm audit --omit=dev` de la candidata encontró alertas altas en el árbol Expo/React Native. No ocultarlas ni usar `npm audit fix --force` sobre el checkpoint: planificar actualización SDK/dependencias con compilación y QA nativos separados antes de beta externa.
+- Para compilar Android fuera de OneDrive en una copia corta, no reutilizar `node_modules` con artefactos Gradle copiados: una instalación limpia `npm ci` evitó bloqueos de `classpath-snapshot`. Conservar el repo principal como fuente de verdad y no modificar la copia vieja `C:\c4j\clean4jesus`.
+- Gradle 8 en Windows puede rechazar como “not a regular file” el `libc++_shared.so` hard-linked que produce el NDK, aunque Kotlin/CMake hayan compilado. Tras CMake, reemplazar ese enlace solo dentro de los outputs generados por una copia regular y dejar sin seguimiento de estado las tareas nativas/JNI solo en Windows; no alterar el NDK original ni desactivar incremental en macOS/Linux.

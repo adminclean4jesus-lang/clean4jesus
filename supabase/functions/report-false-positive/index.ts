@@ -31,14 +31,12 @@ Deno.serve(async (request) => {
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count, error: countError } = await admin
-    .from("false_positive_reports")
-    .select("id", { count: "exact", head: true })
-    .eq("device_id_hash", body.device_id_hash)
-    .gte("created_at", cutoff);
-  if (countError) return json({ error: "report_unavailable" }, 503);
-  if ((count ?? 0) >= 10) return json({ error: "rate_limited" }, 429);
+  const { data: allowed, error: rateLimitError } = await admin.rpc(
+    "consume_false_positive_rate_limit",
+    { p_device_id_hash: body.device_id_hash, p_limit: 10, p_window_minutes: 60 },
+  );
+  if (rateLimitError) return json({ error: "report_unavailable" }, 503);
+  if (allowed !== true) return json({ error: "rate_limited" }, 429);
 
   const { error } = await admin.from("false_positive_reports").insert(body);
   if (error) return json({ error: "report_rejected" }, 400);

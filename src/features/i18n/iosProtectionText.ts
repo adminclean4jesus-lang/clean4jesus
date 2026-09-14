@@ -2,10 +2,10 @@ import type { IosSelectionSummary } from "@/features/iosProtection/iosProtection
 import type { SupportedLanguage } from "./i18n";
 
 const statusLabels = {
-  es: { incompatible: "No compatible", not_configured: "Sin configurar", permission_denied: "Permiso rechazado", permission_granted: "Autorizado", protection_active: "Protección activa", protection_paused: "Protección en pausa", unknown: "Desconocido", unverified: "Sin verificar" },
-  en: { incompatible: "Not supported", not_configured: "Not configured", permission_denied: "Permission denied", permission_granted: "Authorized", protection_active: "Protection active", protection_paused: "Protection paused", unknown: "Unknown", unverified: "Unverified" },
-  fr: { incompatible: "Non compatible", not_configured: "Non configuré", permission_denied: "Autorisation refusée", permission_granted: "Autorisé", protection_active: "Protection active", protection_paused: "Protection en pause", unknown: "Inconnu", unverified: "Non vérifié" },
-  pt: { incompatible: "Não compatível", not_configured: "Não configurado", permission_denied: "Permissão negada", permission_granted: "Autorizado", protection_active: "Proteção ativa", protection_paused: "Proteção pausada", unknown: "Desconhecido", unverified: "Não verificado" },
+  es: { incompatible: "No compatible", not_configured: "Sin configurar", permission_denied: "Permiso rechazado", permission_granted: "Autorizado", protection_active: "Protección activa", protection_limited: "Protección incompleta", protection_paused: "Protección en pausa", unknown: "Desconocido", unverified: "Sin verificar" },
+  en: { incompatible: "Not supported", not_configured: "Not configured", permission_denied: "Permission denied", permission_granted: "Authorized", protection_active: "Protection active", protection_limited: "Protection incomplete", protection_paused: "Protection paused", unknown: "Unknown", unverified: "Unverified" },
+  fr: { incompatible: "Non compatible", not_configured: "Non configuré", permission_denied: "Autorisation refusée", permission_granted: "Autorisé", protection_active: "Protection active", protection_limited: "Protection incomplète", protection_paused: "Protection en pause", unknown: "Inconnu", unverified: "Non vérifié" },
+  pt: { incompatible: "Não compatível", not_configured: "Não configurado", permission_denied: "Permissão negada", permission_granted: "Autorizado", protection_active: "Proteção ativa", protection_limited: "Proteção incompleta", protection_paused: "Proteção pausada", unknown: "Desconhecido", unverified: "Não verificado" },
 } as const;
 
 const tables = {

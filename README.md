@@ -6,14 +6,14 @@ Clean4Jesus es una aplicación móvil de acompañamiento para vivir con mayor li
 
 | Componente | Estado actual |
 | --- | --- |
-| Versión de la app | `1.3.35` |
-| Android | `versionCode 53`; APK local arm64 con VPN local, Accesibilidad, interrupción y WhatsApp opcional |
-| iOS | `build 25`; IPA firmada enviada a TestFlight, Family Controls, límites por app y reporte de uso |
+| Versión de la candidata local | `1.3.36` |
+| Android | `versionCode 54`; Gradle local, VPN DNS, Accesibilidad, interrupción y WhatsApp opcional |
+| iOS | `buildNumber 26` en fuente; la última IPA enviada a TestFlight es `1.3.35 (25)` |
 | Backend | Supabase para autenticación, comunidad, contenido y moderación |
 | Idiomas | Español, inglés, francés y portugués brasileño; el idioma inicial sigue al dispositivo |
 | Distribución iOS | IPA firmada generada manualmente en GitHub Actions después del merge |
 
-La versión `1.3.35` es el checkpoint operativo actual. En iOS la app abre sin PIN; el PIN de guardianía se configura al establecer límites y protege los cambios posteriores. Cada app seleccionada tiene su propio umbral y el Shield se aplica únicamente a la app que lo alcanza. La extensión `DeviceActivityReport` muestra el uso diario con la latencia propia de iOS. En Android, WhatsApp y WhatsApp Business están excluidos por defecto para evitar falsos positivos por mensajes de terceros; la persona puede activar voluntariamente esa protección desde Ajustes después de leer el aviso.
+`1.3.35` sigue siendo el último checkpoint distribuido; `1.3.36` incorpora correcciones candidatas pendientes de pruebas físicas y despliegue backend. En iOS la app abre sin PIN; el PIN de guardianía se configura al establecer límites y protege los cambios posteriores. Cada app seleccionada tiene su propio umbral y el Shield se aplica únicamente a la app que lo alcanza. La extensión `DeviceActivityReport` muestra el uso diario con la latencia propia de iOS. En Android, WhatsApp y WhatsApp Business están excluidos por defecto para evitar falsos positivos por mensajes de terceros; la persona puede activar voluntariamente esa protección desde Ajustes después de leer el aviso.
 
 ## Funcionalidades
 
@@ -35,13 +35,13 @@ Android usa componentes Kotlin incluidos en la aplicación nativa:
 - El usuario puede personalizar el mensaje, la referencia y la imagen de la interrupción.
 - La aplicación sincroniza el idioma seleccionado con las superficies nativas.
 - Los falsos positivos pueden reportarse sin enviar PIN, historial, mensajes, capturas, texto completo ni URL completa.
-- WhatsApp y WhatsApp Business quedan fuera del análisis por defecto. El opt-in se activa desde **Ajustes → Protección en WhatsApp**, exige PIN para habilitarlo y muestra una advertencia de falsos positivos. La preferencia es local y no envía mensajes ni texto a Supabase.
+- WhatsApp y WhatsApp Business quedan fuera del análisis por defecto. El opt-in se activa desde **Ajustes → Protección en WhatsApp** tras aceptar una advertencia de falsos positivos; desactivarlo posteriormente exige PIN. La preferencia es local y no envía mensajes ni texto a Supabase.
 
 Para activar toda la protección, el usuario debe autorizar la VPN local y Accesibilidad desde los ajustes de Android. Expo Go no puede ejecutar estos servicios: se necesita una APK o development build de Clean4Jesus.
 
 ### Límites de Android
 
-- La VPN filtra dominios; no interpreta imágenes ni inserta contenido dentro de páginas HTTPS.
+- La VPN dirige el DNS configurado hacia un filtro familiar; no cubre el tráfico completo ni DNS cifrado propio de otras apps, y no interpreta imágenes ni páginas HTTPS.
 - Accesibilidad solo puede analizar la información que Android y cada aplicación exponen.
 - Clean4Jesus no puede terminar procesos de terceros como una aplicación con root; la acción estable es sacar la aplicación del frente y mostrar la interrupción.
 - El usuario conserva la posibilidad de revocar VPN o Accesibilidad desde Ajustes.
@@ -138,23 +138,16 @@ El QR de `dev-client` requiere una development build instalada. Una APK o IPA Re
 
 ### Builds Android (APK local current/previous)
 
-```bash
-npm run build:android:dev
-npm run build:android:preview
-```
-
-- `development`: APK con development client para probar módulos nativos.
-- `preview`: APK instalable y autónoma para QA.
-- `production`: AAB configurado en `eas.json` para una futura publicación.
+El build de prueba se hace con Gradle local. `npm run build:android:local` genera una APK debug con development client y requiere Metro; se recomienda ejecutarlo desde una copia física corta del repo para evitar fallos de ruta de CMake. Un AAB para Play requiere una clave release local y Play App Signing; no se genera con EAS.
 
 La APK de QA se genera en Windows, fuera de GitHub Actions, y se rota manualmente para conservar una comparación:
 
 ```powershell
-cd C:\c4j
+cd C:\c4j\beta-1.3.36
 .\android\gradlew.bat :app:assembleDebug --no-daemon --max-workers=1
 ```
 
-La candidata actual es `1.3.35 (versionCode 53)`, arm64 y firmada con el certificado de QA del repositorio. Se conserva en `artifacts/apk/current/Clean4Jesus-current.apk`; la anterior queda en `artifacts/apk/previous/Clean4Jesus-previous.apk`.
+La APK debug candidata `1.3.36 (versionCode 54)` ya se compiló y verificó en `artifacts/apk/current/Clean4Jesus-current.apk`; `1.3.35 (53)` queda en `artifacts/apk/previous/Clean4Jesus-previous.apk`. Ambas rutas son locales e ignoradas por Git. La nueva APK requiere Metro y todavía no acredita QA físico ni firma release.
 
 ### Build iOS desde GitHub
 
@@ -167,7 +160,7 @@ La IPA se genera únicamente después de fusionar el pull request aprobado:
 5. Pulsa **Run workflow** sobre `main`.
 6. Descarga el artifact `clean4jesus-ios-ipa-vX.Y.Z-build-N`.
 
-El artifact contiene solamente `Clean4Jesus.ipa`. La candidata actual es `1.3.35 (build 25)` y se envió a TestFlight desde App Store Connect. Cada IPA nueva debe incrementar `expo.ios.buildNumber`; cambiar únicamente el código sin aumentar el build puede hacer que se vuelva a instalar una versión anterior o indistinguible.
+El artifact contiene solamente `Clean4Jesus.ipa`. La última build enviada a TestFlight fue `1.3.35 (25)`; la fuente actual está numerada `1.3.36 (26)` y aún necesita compile, firma y prueba en iPhone. Cada IPA nueva debe incrementar `expo.ios.buildNumber`.
 
 Para un equipo nuevo: clona el repositorio, usa Node 22, ejecuta `npm ci`, copia `.env.example` a `.env.local` sin subirlo y ejecuta únicamente el build de la plataforma necesaria. La extensión iOS `DeviceActivityReport` requiere los perfiles de Apple y el entitlement Family Controls de cada target.
 

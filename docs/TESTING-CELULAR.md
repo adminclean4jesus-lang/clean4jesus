@@ -16,7 +16,7 @@ Usar Expo Go sirve para probar UI, navegacion, habitos, devocional, login mock o
 6. Ejecuta:
 
 ```bash
-cd C:\Users\maite\OneDrive\Escritorio\BlockerXChrist\clean4jesus
+cd C:\Users\millo\OneDrive\Escritorio\Clean4Jesus
 npm run phone
 ```
 
@@ -63,14 +63,15 @@ Nota: para builds nativas iOS reales en dispositivo fisico normalmente se necesi
 El escudo DNS/VPN y Accessibility Service no se pueden validar en Expo Go. Para eso se necesita:
 
 1. `expo-dev-client`
-2. Development build Android con EAS
+2. APK Android compilada con Gradle local
 3. Modulo nativo Android en `/android`
 4. Pruebas en APK instalado
 
-Comandos aproximados para esa fase:
+Comandos vigentes desde la copia física corta de esta candidata (`C:\c4j\beta-1.3.36`):
 
 ```bash
-npm run build:android:dev
+cd C:\c4j\beta-1.3.36
+npm run build:android:local
 npm run dev-client
 ```
 
@@ -78,52 +79,41 @@ npm run dev-client
 
 Usar este camino para probar Clean4Jesus como app propia en tu Google Pixel 9.
 
-1. Crea o inicia sesion en Expo/EAS:
+1. Genera la APK de desarrollo en el PC, desde una copia física corta que incluya `node_modules` y `android/`:
 
 ```bash
-npm run eas:login
+cd C:\c4j\beta-1.3.36
+npm run build:android:local
 ```
 
-2. Genera un APK de desarrollo:
-
-```bash
-npm run build:android:dev
-```
-
-3. Cuando EAS termine, abre el enlace que te muestra la terminal desde tu Pixel 9 y descarga el APK.
-4. Android puede pedir permiso para instalar apps desconocidas. Acepta solo para esta instalacion.
-5. Abre **Clean4Jesus** instalada, no Expo Go.
-6. En el PC, inicia Metro para development build:
+2. La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Verifica versión y firma antes de copiarla a `artifacts/apk/current`; conserva la anterior en `previous`.
+3. Instálala desde el PC con `adb install -r android/app/build/outputs/apk/debug/app-debug.apk` cuando `adb devices -l` muestre el teléfono como `device`, o transfiere el archivo al teléfono e instálalo allí.
+4. Abre **Clean4Jesus** instalada, no Expo Go.
+5. En el PC, inicia Metro para development build:
 
 ```bash
 npm run dev-client
 ```
 
-7. Si la app no conecta al PC, usa el menu de desarrollo y cambia la URL al servidor que muestra Metro, o prueba con la misma red Wi-Fi.
-8. Si la red local falla, usa:
+6. Si la app no conecta al PC, usa el menú de desarrollo y la URL que muestra Metro; confirma que ambos estén en la misma red Wi-Fi.
+7. Si la red local falla, usa:
 
 ```bash
 npm run dev-client:tunnel
 ```
 
-9. Si estas por USB, usa:
+8. Si estás por USB, usa:
 
 ```bash
 adb reverse tcp:8081 tcp:8081
 ```
 
-Para un APK sin herramientas de desarrollo internas:
-
-```bash
-npm run build:android:preview
-```
-
-Ese APK sirve para probar una version mas cercana a usuario final.
+Un APK/AAB release sin Metro exige clave de firma release y preflight específico. No uses firma debug para Play Console.
 
 ## Checklist De Prueba Manual
 
 - La app abre sin quedarse en spinner.
-- Tabs: Escudo, Devocional, Habitos cargan.
+- Tabs: Refugio, Palabra, Camino y Perfil cargan.
 - Activar escudo pide PIN si no existe.
 - Crear PIN funciona.
 - Activar escudo cambia el estado visual.
@@ -131,6 +121,9 @@ Ese APK sirve para probar una version mas cercana a usuario final.
 - Habitos permiten marcar/desmarcar.
 - La app no muestra caracteres raros.
 - El diseno se ve bien en pantalla pequena.
+- En Android, un desbloqueo de 15 minutos libera solo la regla deliberada de esa app; el contenido adulto distinto aún debe provocar interrupción.
+- WhatsApp y Business comienzan OFF; el opt-in exige advertencia y la desactivación posterior exige PIN.
+- Si el modo acompañado está aceptado, desactivar VPN o Accesibilidad durante más de 30 minutos produce un aviso genérico por correo; la desinstalación se prueba solo en un dispositivo de QA.
 
 ## Si No Conecta
 

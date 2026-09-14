@@ -20,6 +20,8 @@ export default defineConfig({
     command: "npx expo start --web --port 8084",
     env: {
       EXPO_PUBLIC_E2E: "true",
+      EXPO_PUBLIC_AUTH_CAPTCHA_ENABLED: "true",
+      EXPO_PUBLIC_TURNSTILE_SITE_KEY: "e2e-public-placeholder",
     },
     url: "http://127.0.0.1:8084",
     reuseExistingServer: true,

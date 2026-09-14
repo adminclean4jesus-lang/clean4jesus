@@ -18,6 +18,8 @@ Lee estos documentos antes de trabajar en el proyecto:
 - `RESEARCH-EVIDENCE-PROTOCOL.md` — uso responsable de investigación sensible.
 - `BACKLOG-SCRUM.md` — tablero versionado con estados, responsables, dependencias y stoppers.
 - `EQUIPO-VIRTUAL-CLEAN4JESUS.md` — cómo convocar el consejo experto.
+- `BETA-OWNER-ACTIONS-2026-09-13.md` — tareas concretas del titular para desplegar, probar en dispositivos y cerrar la beta.
+- `IOS-APP-STORE-PREPARATION.md` — ficha, privacidad y TestFlight de la candidata vigente.
 
 ## Archivo histórico
 

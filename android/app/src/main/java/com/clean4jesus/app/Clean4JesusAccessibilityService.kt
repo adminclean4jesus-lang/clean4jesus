@@ -264,7 +264,6 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     }
     trackForegroundPackage(packageName, now)
     if (!watchedPackages.contains(packageName)) return
-    if (isTemporarilyUnlocked(packageName, now)) return
     if (now - lastInterruptionAt < 6000) return
 
     getAppProtectionBlockReason(packageName, now)?.let { reason ->
