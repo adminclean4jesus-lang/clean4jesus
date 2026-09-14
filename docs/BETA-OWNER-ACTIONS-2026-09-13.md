@@ -26,6 +26,7 @@ No se aplicó ninguna migración ni se hizo un envío real desde este PC: la CLI
 
 ## 3. iPhone y TestFlight
 
+- [ ] Revisar la rama local `beta/1.3.36-readiness` y sus commits; cuando apruebes los cambios, ejecutar `git push -u origin beta/1.3.36-readiness` y abrir un PR contra `main`. Esperar el workflow `ios-release-smoke` y revisar cualquier error Swift antes de fusionar. No se hizo push ni PR desde este PC.
 - [ ] En App Store Connect, comprobar estado de procesamiento, fecha y testers internos de `1.3.35 (25)`; aceptar invitaciones pendientes. Registrar el resultado.
 - [ ] Después de aprobar el PR de `1.3.36 (26)`, ejecutar el workflow iOS de GitHub/macOS, comprobar firma/entitlements de la app y cuatro extensiones y subir la IPA nueva a TestFlight.
 - [ ] En iPhone real, ejecutar `IOS-DEVICE-QA-MATRIX.md`, especialmente PIN ante deep links, cambio de selección con protección activa, límites independientes, Shield efectivo, permiso revocado y estados de “Uso de hoy”. La IPA `25` no valida correcciones de `26`.
