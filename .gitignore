@@ -56,3 +56,6 @@ android/app/debug.keystore
 
 # local AI / editor metadata
 .claude/
+
+# Separately cloned architecture tool; keep its own Git history and artifacts local.
+/archify/

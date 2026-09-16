@@ -1,7 +1,7 @@
 # Clean4Jesus: Handoff de Recursos Apple y App Store Connect
 
-- **Fecha**: 2026-08-09
-- **Estado**: Preparación y Auditoría de Recursos de Plataforma
+- **Actualizado**: 2026-09-13
+- **Estado**: `1.3.35 (25)` enviada a TestFlight; `1.3.36 (26)` pendiente de compilar y probar
 
 ## Identificadores y Grupos Registrados
 
@@ -11,6 +11,7 @@
 | Extension 1 | `com.clean4jesus.app.DeviceActivityMonitor` | Extensión para supervisión de actividad |
 | Extension 2 | `com.clean4jesus.app.ShieldConfiguration` | Extensión para UI de interrupción nativa |
 | Extension 3 | `com.clean4jesus.app.ShieldAction` | Extensión para acciones en la pantalla Shield |
+| Extension 4 | `com.clean4jesus.app.DeviceActivityReport` | Reporte privado “Uso de hoy” (ExtensionKit) |
 | App Group | `group.com.clean4jesus.app` | Almacenamiento seguro compartido entre app y extensiones |
 
 ## Entitlements Requeridos
@@ -39,7 +40,8 @@
 ## Pasos para Publicación TestFlight / App Store
 
 1. Asegurar la aprobación del entitlement `Family Controls (Distribution)` en el portal de Apple Developer.
-2. Sincronizar los Provisioning Profiles de producción y extensiones.
-3. Compilar mediante EAS (`eas build --platform ios --profile production`).
-4. Verificar apertura e interrupción en un dispositivo iPhone real.
-5. Completar la declaración de privacidad en App Store Connect sin prometer bloqueo clínico ni vigilancia invasiva.
+2. Sincronizar los Provisioning Profiles de producción de la app y las cuatro extensiones.
+3. Verificar primero el procesamiento y testers de `1.3.35 (25)` en TestFlight.
+4. Para `1.3.36 (26)`, usar el PR y workflow iOS de GitHub descritos en `README.md`; conservar la firma y los perfiles de los cinco targets.
+5. Verificar apertura, cambio de selección/límites, Shield y “Uso de hoy” en un iPhone real con `IOS-DEVICE-QA-MATRIX.md`.
+6. Completar la declaración de privacidad en App Store Connect sin prometer bloqueo clínico ni vigilancia invasiva.

@@ -1,0 +1,6 @@
+-- Historical production migration.
+--
+-- The original migration rotated a deployment-specific value in Supabase
+-- Vault. The value is intentionally omitted from source control. Secret
+-- rotation is an operational action and must use the documented deployment
+-- procedure instead of a committed SQL literal.

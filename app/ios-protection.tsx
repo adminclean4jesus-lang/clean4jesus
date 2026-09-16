@@ -15,6 +15,7 @@ import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { hasPin } from "@/features/pin/pinService";
+import { consumeIosPinSessionVerified } from "@/features/pin/pinSession";
 import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
 import {
   getIosAuthorizationErrorMessage,
@@ -104,6 +105,7 @@ export default function IosProtectionScreen() {
         },
       ]);
     } catch (error) {
+      await loadStatus();
       const message = getIosAuthorizationErrorMessage(error);
       if (!message.toLowerCase().includes("cancel")) {
         Alert.alert(copy.limitErrorTitle, message);
@@ -134,8 +136,10 @@ export default function IosProtectionScreen() {
       const summary = await iosProtectionService.presentFamilyActivityPicker(language);
       setSelection(summary);
       setLimitSummary(await iosProtectionService.getPerAppLimitSummary());
+      await loadStatus();
       Alert.alert(copy.selectionSaved, copy.selectionSavedBody);
     } catch {
+      await loadStatus();
       Alert.alert(copy.pickerErrorTitle, copy.pickerErrorBody);
     }
   }
@@ -222,10 +226,18 @@ export default function IosProtectionScreen() {
       : editSelection === "1"
         ? "selection"
         : null;
-    if (!action || loading || processedReturnAction.current === action) return;
+    if (!action) {
+      processedReturnAction.current = null;
+      return;
+    }
+    if (loading || processedReturnAction.current === action) return;
 
     processedReturnAction.current = action;
     router.setParams(action === "limits" ? { editLimits: undefined } : { editSelection: undefined });
+    if (!consumeIosPinSessionVerified(action === "limits" ? "edit-ios-limits" : "edit-ios-selection")) {
+      router.replace(`/pin-verify?action=${action === "limits" ? "edit-ios-limits" : "edit-ios-selection"}`);
+      return;
+    }
     if (action === "limits") {
       void openPerAppLimitEditor();
     } else {

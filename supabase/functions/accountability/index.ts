@@ -77,24 +77,29 @@ Deno.serve(async (request) => {
     const from = Deno.env.get("ACCOUNTABILITY_FROM_EMAIL");
     if (!resendKey || !from) return json({ error: "email_delivery_not_configured" }, 503);
 
-    const { error: saveError } = await client.rpc("set_accountability_invite_email", {
+    const { data: canSend, error: validationError } = await client.rpc("validate_accountability_invite_delivery", {
       p_relationship_id: body.relationshipId,
-      p_email: body.email.trim(),
+      p_share_code: body.shareCode.trim().toUpperCase(),
     });
-    if (saveError) return databaseError(saveError);
+    if (validationError) return databaseError(validationError);
+    if (canSend !== true) return json({ error: "invite_not_available" }, 403);
 
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from,
-        to: [body.email.trim().toLowerCase()],
-        subject: "Invitación para acompañar en Clean4Jesus",
-        text: `Te invitaron a ser persona de confianza en Clean4Jesus. Crea o inicia sesión en la aplicación y usa este código de una sola vez: ${body.shareCode.trim().toUpperCase()}. El código expira en 24 horas.`,
-      }),
-    });
-    if (!response.ok) return json({ error: "email_delivery_failed" }, 502);
-    return json({ sent: true }, 202);
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from,
+          to: [body.email.trim().toLowerCase()],
+          subject: "Invitación para acompañar en Clean4Jesus",
+          text: `Te invitaron a ser persona de confianza en Clean4Jesus. Crea o inicia sesión en la aplicación y usa este código de una sola vez: ${body.shareCode.trim().toUpperCase()}. El código expira en 24 horas.`,
+        }),
+      });
+      if (!response.ok) return json({ error: "email_delivery_failed" }, 502);
+      return json({ sent: true }, 202);
+    } catch {
+      return json({ error: "email_delivery_failed" }, 502);
+    }
   }
 
   if (body.operation === "list") {

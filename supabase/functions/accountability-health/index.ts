@@ -80,6 +80,7 @@ async function sendHealthEmail(to) {
         to: [to],
         subject: "Clean4Jesus: la protección necesita atención",
         text: "La persona que te eligió activó el modo acompañado. Clean4Jesus no ha podido confirmar que su protección siga activa durante el periodo acordado. No se comparte contenido, aplicaciones ni actividad. Entra a Clean4Jesus cuando puedas para acompañarla con respeto.",
+        html: healthAlertHtml(),
       }),
     });
     return response.ok;

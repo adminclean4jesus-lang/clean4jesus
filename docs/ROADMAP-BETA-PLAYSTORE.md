@@ -1,5 +1,7 @@
 # Clean4Jesus - Plan Maestro Hacia Play Store
 
+> Estado vigente, 2026-09-16: la candidata local es `1.3.37 (55)` y `1.3.35 (53)` sigue siendo el último checkpoint aprobado en dispositivo. Supabase de producción, Edge Functions y pruebas remotas ya están cerrados. Sigue **NO-GO para beta externa** por QA físico Android/iPhone, correo y cron reales, eliminación con CAPTCHA real, firma release, revisión legal, actualización de dependencias y operación de moderación. Android se compila con Gradle local; EAS no es requisito de Android.
+
 Fecha de corte: 2026-07-21  
 Version interna: `1.3.16`
 Meta: publicar Clean4Jesus en Google Play para Android, sin QR, sin Metro y sin depender de un computador.
@@ -64,7 +66,7 @@ Estado ejecutivo: **GO para alpha interna supervisada; NO-GO para beta publica**
 - El AAB release optimizado de medicion ARM64 pesa `34.07 MB` (`32.49 MiB`). El APK debug universal de aproximadamente `216 MB` no representa la descarga desde Google Play.
 - El AAB actual usa firma de depuracion y sirve exclusivamente para medir. Antes de subir a Play se debe crear la clave release definitiva y habilitar Play App Signing.
 - El proyecto ya compila con `targetSdk 36`, pero faltan cerrar legal/Data Safety, disclosure y declaraciones de Accesibilidad/VPN, consentimiento versionado, seguridad del PIN, operacion de crisis y QA multidispositivo.
-- La VPN local usa DNS upstream por UDP/53. Antes de beta publica se debe migrar a DoH/DoT o validar formalmente el cumplimiento exacto de la politica de `VpnService`.
+- La candidata incorpora DNS-over-TLS hacia Cloudflare Family. Antes de beta publica debe compilarse y validarse en Android físico (red Wi-Fi y celular, fallo de upstream y bloqueo real) antes de cerrar este gate.
 - No se recomienda abrir IA local, widget o iOS antes de completar estas puertas. La prioridad es lograr una beta Android confiable y admitida por Google Play.
 
 Artefacto de medicion: `artifacts/aab/measurement/Clean4Jesus-1.3.13-arm64-measurement.aab`.

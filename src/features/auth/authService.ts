@@ -166,14 +166,18 @@ export async function updatePassword(password: string) {
   await clearPasswordRecovery();
 }
 
-export async function deleteMyAccount(userId: string, password: string) {
+export async function deleteMyAccount(userId: string, password: string, captchaToken?: string) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.functions.invoke("delete-account", {
-    body: { password, userId },
+    body: { captchaToken, password, userId },
   });
   if (error) {
-    if (await readFunctionErrorCode(error) === "reauthentication_failed") {
+    const errorCode = await readFunctionErrorCode(error);
+    if (errorCode === "reauthentication_failed") {
       throw new AuthServiceError("reauthentication_failed", "La contraseña no coincide. No se elimino nada.");
+    }
+    if (errorCode === "captcha_failed") {
+      throw new AuthServiceError("captcha_failed", "No pudimos completar la verificación humana. Intenta nuevamente.");
     }
     throw new AuthServiceError("delete_failed", "No pudimos eliminar la cuenta. Intenta nuevamente o contacta soporte.");
   }

@@ -87,17 +87,18 @@ export default function PinVerifyScreen() {
     }
 
     if (action === "edit-ios-limits") {
+      markIosPinSessionVerified(action);
       router.replace("/ios-protection?editLimits=1");
       return;
     }
 
     if (action === "edit-ios-selection") {
+      markIosPinSessionVerified(action);
       router.replace("/ios-protection?editSelection=1");
       return;
     }
 
     if (action === "enter-ios-refuge") {
-      markIosPinSessionVerified();
       router.replace("/");
       return;
     }

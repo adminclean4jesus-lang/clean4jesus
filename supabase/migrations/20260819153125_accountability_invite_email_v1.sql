@@ -50,3 +50,4 @@ $$;
 
 revoke all on function public.set_accountability_invite_email(uuid, text) from public, anon, authenticated;
 grant execute on function public.set_accountability_invite_email(uuid, text) to authenticated;
+;

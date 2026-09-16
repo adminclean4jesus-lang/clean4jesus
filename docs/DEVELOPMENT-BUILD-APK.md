@@ -1,5 +1,7 @@
 # Development Build / APK Clean4Jesus
 
+La guía operativa completa y vigente está en `TESTING-CELULAR.md`. Android se compila localmente con Gradle; EAS se reserva para iOS.
+
 Esta guia es para probar Clean4Jesus como app instalada en tu Google Pixel 9, fuera de Expo Go.
 
 ## Por Que Lo Necesitamos
@@ -19,29 +21,26 @@ Para eso usamos una **development build**: una app Clean4Jesus propia con herram
 - `expo-dev-client` instalado.
 - Android package: `com.clean4jesus.app`.
 - Carpeta nativa `android/` generada y debe permanecer versionada.
-- Perfiles EAS configurados en `eas.json`.
+- La candidata local es `1.3.37 (versionCode 55)`; una APK debug necesita Metro.
 
 ## Primer APK De Desarrollo
 
 En una terminal normal de Windows:
 
 ```bash
-cd C:\Users\maite\OneDrive\Escritorio\BlockerXChrist\clean4jesus
-npm run eas:login
-npm run build:android:dev
+cd C:\c4j\beta-1.3.37
+npm run build:android:local
 ```
 
-Si quieres confirmar la sesion:
+El repositorio de OneDrive sigue siendo la fuente de verdad; esta copia corta se creó para compilar `1.3.37` sin tocar la carpeta antigua `C:\c4j\clean4jesus`. Sincroniza los cambios de fuente antes de compilar nuevas versiones. No copies `.gradle` ni carpetas `build/` entre rutas absolutas; ejecuta `npm ci` y deja que Gradle regenere sus metadatos. Antes de usar Metro, crea `.env.local` desde `.env.example` con la URL y clave **publicable** del proyecto Supabase y la configuración pública de CAPTCHA; nunca pongas allí una service role key.
 
-```bash
-npm run eas:whoami
-```
-
-Cuando EAS termine, la terminal muestra un enlace. Abre ese enlace desde tu Pixel 9 y descarga el APK.
+La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Antes de entregar una nueva `current`, verifica versión, firma, pruebas y rotación con `previous`.
+`android/build.gradle` evita en Windows que Gradle intente tomar snapshots de enlaces `libc++_shared.so` generados por el NDK; la compilación en macOS/Linux conserva el seguimiento incremental normal.
+Antes de promover una APK de QA, ejecuta también `cd android; .\gradlew.bat :app:lintDebug --no-daemon --max-workers=1` desde la copia corta. No confundas `assembleDebug` con lint aprobado.
 
 ## Instalar En Pixel 9
 
-1. Abre el APK descargado.
+1. Abre la APK local transferida al teléfono o instala por USB con `adb install -r android/app/build/outputs/apk/debug/app-debug.apk`.
 2. Si Android bloquea la instalacion, toca **Ajustes**.
 3. Activa **Permitir desde esta fuente** solo para el navegador o app desde donde descargaste.
 4. Vuelve atras y toca **Instalar**.
@@ -67,6 +66,14 @@ Abre Clean4Jesus en el Pixel 9. Si no conecta:
 npm run dev-client:tunnel
 ```
 
+En Windows, Expo requiere que `@expo/ngrok` esté instalado globalmente para usar `--tunnel`:
+
+```bash
+npm install -g @expo/ngrok
+```
+
+Si aparece `Cannot read properties of undefined (reading 'body')`, confirma primero que `@expo/ngrok` esté instalado y que `https://status.ngrok.com/` esté operativo. El túnel publica temporalmente Metro mediante una URL externa; ciérralo con `Ctrl+C` al terminar la prueba y no compartas el QR fuera del equipo autorizado.
+
 - Si vas por USB, usa:
 
 ```bash
@@ -74,32 +81,20 @@ npm run dev-client:localhost
 adb reverse tcp:8081 tcp:8081
 ```
 
-## APK Preview
+## APK o AAB release
 
-Cuando quieras probar una app mas parecida a usuario final:
+La publicación en Play requiere una clave release local, Play App Signing y las declaraciones aprobadas. No uses el certificado debug. El build release se hace con Gradle local y no depende de Metro.
 
-```bash
-npm run build:android:preview
-```
+## Siguiente prueba nativa
 
-Este APK no depende de Metro para abrir.
-
-## Siguiente Paso Nativo
-
-Despues del primer development build funcionando:
-
-1. Crear pantalla de permisos en React Native.
-2. Implementar `VpnService` Kotlin.
-3. Conectar el toggle del escudo con el modulo nativo.
-4. Implementar Accessibility Service para apps bloqueadas.
-5. Probar permisos en Pixel 9.
+En Pixel 9 y un segundo Android, valida VPN, Accesibilidad, pantalla de interrupción, PIN, WhatsApp OFF/ON, bancos/YouTube, reinicio, pérdida de red y aviso genérico del modo acompañado. Registra la versión y firma de la APK usada.
 
 ## Despues De Instalar Dependencias Nativas
 
 Si se instala una dependencia nativa nueva, por ejemplo `expo-intent-launcher`, la app instalada debe reconstruirse:
 
 ```bash
-npm run build:android:dev
+npm run build:android:local
 ```
 
 Los cambios solo JavaScript cargan con `npm run dev-client`; las dependencias nativas requieren APK nuevo.

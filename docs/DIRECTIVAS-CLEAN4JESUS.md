@@ -1,7 +1,37 @@
 # Directivas Clean4Jesus
 
+## Checkpoint De Validacion Temprana De Demanda - 2026-09-15
+
+- La lista de espera alcanzó ocho personas interesadas tras la campaña pública. Esto valida interés inicial y debe tratarse como una señal de demanda, no como autorización para abrir la beta externa.
+- Mantener a las personas registradas en una lista de espera con consentimiento, fuente de registro y dispositivo/plataforma declarados; no pedir ni almacenar detalles sobre recaídas, historial de navegación, contenido sensible o información espiritual innecesaria.
+- Responder con expectativa honesta: beta cerrada en preparación, sin prometer fecha, cupos, disponibilidad pública ni bloqueo perfecto. Antes de invitar a probar la app deben cerrarse los gates de firma release, QA Android en dispositivos reales, build iOS/TestFlight, correo/CAPTCHA, privacidad/legal, soporte y protocolo de incidentes.
+- La primera cohorte debe ser pequeña y escalonada. Producto, Ingeniería/QA, Seguridad/Privacidad, Trust & Safety, Legal y Growth deben aprobar el paso de waitlist a invitación; cualquier disenso de Seguridad, Legal o QA mantiene el NO-GO.
+
+## Checkpoint De Correos De Beta Y Marca - 2026-09-15
+
+- Todo correo externo de Clean4Jesus debe incluir el activo oficial `assets/icon.png` como imagen real del escudo abierto con cruz blanca sobre azul marino. Nunca sustituirlo por un emoji, un símbolo genérico, un círculo dibujado ni una reconstrucción del logo.
+- Los correos de beta deben conservar azul marino, blanco y dorado, usar el nombre `Clean4Jesus` en texto y mantener copy cristocéntrico, cálido y honesto.
+- El remitente solicitado `admin@clean4jesus.com` solo puede usarse cuando esté configurado y verificado en Gmail como dirección autorizada de “Enviar como” para `adminclean4jesus@gmail.com`; si no, informar que el mensaje saldrá desde la cuenta primaria.
+- Las automatizaciones de Tally deben enviar solo a personas con consentimiento explícito para contacto beta, procesar cada envío de forma idempotente y evitar duplicados.
+
+## Checkpoint De Contenido UGC Con IA - 2026-09-14
+
+- Las campañas UGC sobre pornografía, masturbación o recaídas se dirigen a adultos y
+  deben reconocer el tropiezo sin convertirlo en identidad, diagnóstico o motivo de
+  vergüenza. El arco aprobado es empatía → agencia → barreras concretas → producto
+  verificable → invitación esperanzadora.
+- Un presentador generado por IA debe ser ficticio, no imitar a una persona real y
+  declararse conforme a las reglas de la plataforma. No usar clon de rostro o voz sin
+  consentimiento documentado.
+- Toda pieza de beta debe decir `beta cerrada` o `solicitar acceso`, mostrar solo
+  capturas reales, explicar las diferencias Android/iPhone cuando sean relevantes y
+  evitar promesas de cura, bloqueo perfecto, disponibilidad pública o resultados
+  clínicos.
+
 
 ## Checkpoint Legal Y Privacidad - 2026-07-23
+
+- Checkpoint de medición pública - 2026-09-14: GTM-KN36ZCP2 queda integrado solo en clean4jesus.com y legal.clean4jesus.com con consentimiento inicial denegado. Las preferencias se guardan únicamente en localStorage; no usar GTM para la app, Refugio, Comunidad, contenido visible, URL, historial ni otros datos sensibles. La Política de Privacidad se actualizó a 1.2 para describir el proveedor y la elección. Mantener ad_storage, ad_user_data y ad_personalization denegados. El iframe noscript de GTM es un respaldo técnico y no puede consultar el consentimiento local.
 
 - El sitio `legal.clean4jesus.com` usa el look and feel oficial de Clean4Jesus: logo `icon.png`, Lexend para titulares, Inter para lectura, azul marino/dorado y footer con copyright y `soporte@clean4jesus.com`. No volver a mostrar el nombre personal del responsable en el footer público.
 - La única marca oficial vigente es el escudo abierto con cruz blanca sobre azul marino (`assets/icon.png`). No construir ni declarar un wordmark, lockup o variante final hasta contar con un archivo maestro aprobado.
@@ -420,3 +450,58 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - El flujo “Pausa antes de decidir” y su rescate guiado pertenecen exclusivamente a Android. iOS no debe exponer ruta, ajustes, estado o API de rescate; `pauseProtection(pinHash)` sí se conserva porque es la suspensión administrativa protegida por PIN.
 - El contador real usado/restante por app requiere una `DeviceActivityReportExtension`, cuarto App ID, perfil de aprovisionamiento y Family Controls Distribution propios. No aproximar minutos con eventos repetidos ni exportar duración o identidad de apps a React Native, App Group, backend, logs o analítica.
 - En iOS, el idioma inicial se obtiene con `expo-localization/getLocales` y se declaran ES/EN/FR/PT mediante el config plugin. Una preferencia manual explícita puede prevalecer; sin ella, una instalación nueva debe seguir el idioma del dispositivo.
+
+## Diagrama De Arquitectura (13 De Septiembre De 2026)
+
+- La arquitectura completa de Clean4Jesus se documenta en el repositorio local hermano `archify/`, usando la especificación `archify/archify/examples/clean4jesus.architecture.json` y el artefacto entregado `archify/generated/clean4jesus.architecture.html`.
+- El diagrama es evidencia fijada al commit `692a6afc461b2691b3192bec81657dcc6eba1922` y contiene 22 referencias verificadas. Si cambia la arquitectura o el commit, regenerar y validar el artefacto; no presentarlo como actualizado sin cambiar su revisión.
+- El diagrama debe conservar la frontera local del dispositivo, la separación Android/iOS, Supabase/RLS, Edge Functions, moderación/MFA, Turnstile, correo y las cadenas de entrega Gradle local y GitHub/TestFlight.
+- El contenido del diagrama se redacta en español; la interfaz fija de Archify puede permanecer en inglés porque el renderer solo admite `meta.locale` `en` o `zh-CN`.
+
+## Lecciones De Candidata Beta 1.3.36 (13 De Septiembre De 2026)
+
+- Distinguir siempre versión distribuida y fuente candidata: `1.3.35` es el último checkpoint registrado; `1.3.36` no queda aprobada por compilar o pasar pruebas estáticas. TestFlight, migraciones, correo y QA físico requieren evidencia independiente.
+- En Android, el desbloqueo con PIN de 15 minutos omite solo la regla deliberada de la app. El escaneo de contenido visible continúa y cualquier señal distinta vuelve a interrumpir; conservar prueba de regresión antes de entregar APK.
+- En iOS, un deep link de edición requiere ticket emitido tras PIN correcto, vinculado a la acción, de un solo uso y con caducidad. Cambiar selección con protección activa debe reiniciar eventos y Shields. El indicador activo debe contrastar autorización, selección, monitoreo y ajustes aplicados; un booleano persistido no basta.
+- Las invitaciones por correo deben comprobar la relación y el código antes de llamar al proveedor; no persistir el correo de una persona no aceptada como efecto de un envío fallido. Las alertas de salud deben enviar texto y HTML si se declara plantilla de marca.
+- Las guías Android vigentes usan Gradle local. EAS no es un camino de entrega Android. El flujo iOS firmado sí puede usar GitHub/macOS y los recursos Apple aprobados.
+- Una prueba E2E de idioma manual debe establecer también la marca de preferencia explícita; guardar solo el código de idioma simula una instalación nueva y puede ser reemplazado legítimamente por el idioma del sistema.
+- Cuando una tabla cambia de esquema, revisar funciones `SECURITY DEFINER`, cron y retención que aún la referencian. El job de privacidad debe purgar `public.false_positive_reports` y los eventos técnicos de rate limit; nunca dejar huellas de instalación indefinidamente por depender solo de limpiezas por dispositivo.
+- Un `npm audit --omit=dev` de la candidata encontró alertas altas en el árbol Expo/React Native. No ocultarlas ni usar `npm audit fix --force` sobre el checkpoint: planificar actualización SDK/dependencias con compilación y QA nativos separados antes de beta externa.
+- Para compilar Android fuera de OneDrive en una copia corta, no reutilizar `node_modules` con artefactos Gradle copiados: una instalación limpia `npm ci` evitó bloqueos de `classpath-snapshot`. Conservar el repo principal como fuente de verdad y no modificar la copia vieja `C:\c4j\clean4jesus`.
+- Gradle 8 en Windows puede rechazar como “not a regular file” el `libc++_shared.so` hard-linked que produce el NDK, aunque Kotlin/CMake hayan compilado. Tras CMake, reemplazar ese enlace solo dentro de los outputs generados por una copia regular y dejar sin seguimiento de estado las tareas nativas/JNI solo en Windows; no alterar el NDK original ni desactivar incremental en macOS/Linux.
+- Lint nativo debe correr además de `assembleDebug`: con `minSdk 24`, la notificación VPN necesita `Notification.Builder` sin canal antes de API 26, el atributo SplashScreen de API 33 debe estar marcado, el nombre de marca no se traduce y `android/local.properties` local escapa la unidad `C\:`. No convertir problemas de código en supresiones globales.
+
+## Lecciones De Producción UGC (15 De Septiembre De 2026)
+
+- Un generador de video con IA no puede interpretar ni reconstruir la identidad visual de Clean4Jesus a partir de un prompt. Logo, tipografías, colores y pantallas de producto deben provenir de archivos oficiales y capturas reales adjuntas a la composición.
+- Si el generador externo no garantiza fidelidad de marca, usarlo únicamente para producir al presentador y la voz; terminar rótulos, subtítulos, pantallas, CTA y cierre de marca en postproducción local con los activos oficiales.
+- Antes de aprobar un video social, revisar escena por escena que no haya interfaces, funciones, wordmarks, iconos o promesas inventadas. La verificación mínima incluye formato 9:16, zona segura para Reels/TikTok, logo oficial, Lexend/Inter locales, capturas reales de Refugio/Palabra/Comunidad y voz natural acorde al público.
+- Cuando una voz en off sostenga el inicio, usar una secuencia visual coherente con el arco narrativo —recaída, reflexión y decisión concreta— en vez de mantener un avatar estático. Conservar el mismo personaje ficticio, cambiar en puntos semánticos del guion y pasar a capturas reales cuando se mencione el producto.
+- Los carruseles de captación usan formato vertical `1080x1350`, una sola idea por slide y un arco breve: identificación sin vergüenza → barreras concretas → producto verificable → promesa honesta → solicitud de acceso. La portada puede ser emocional, pero conserva el logo oficial, Lexend Deca/Inter y el dominio visual navy/blanco/dorado; cualquier pantalla mostrada debe ser una captura real completa y sin deformación.
+
+## Cierre De Brechas Beta — Transporte DNS (15 De Septiembre De 2026)
+
+- La candidata Android enruta DNS mediante DNS-over-TLS a Cloudflare Family (`family.cloudflare-dns.com:853`), con SNI y verificación del hostname; los sockets de salida se protegen antes de conectar para que el túnel no se recapture a sí mismo. No reintroducir UDP/53 como upstream sin una revisión explícita de seguridad y cumplimiento.
+- Este cambio solo elimina la brecha de implementación en código. El gate de beta externa sigue abierto hasta obtener evidencia de compilación y pruebas en dos Android físicos: Wi-Fi, red celular, fallo de upstream, bloqueo de dominio adulto y retorno seguro a estado inactivo tras fallos consecutivos.
+- Un bloqueo DNS no equivale a una promesa de protección absoluta. Legal, Data Safety, disclosure de VPN/Accesibilidad, firma release/Play App Signing, validación de backend y protocolo de crisis continúan como requisitos independientes de salida.
+- El inventario de producción del 15 de septiembre de 2026 reporta 34 vulnerabilidades transitivas (`16` altas, `18` moderadas). No ejecutar `npm audit fix --force`: las rutas automáticas proponen saltos incompatibles de Expo. Resolverlas en una actualización versionada de Expo/React Native, con compilación nativa y QA separados antes de una beta externa.
+
+## Operación De Lista De Espera (16 De Septiembre De 2026)
+
+- Antes de enviar confirmaciones desde Tally, comparar el correo de cada respuesta con Gmail enviado y deduplicar por dirección, no por nombre ni por número de formulario. Los registros de beta autorizan únicamente el correo de confirmación y seguimiento de esa beta.
+- Todo correo externo de Clean4Jesus debe usar el logo oficial publicado `https://clean4jesus.com/brand-mark.png` o el activo `assets/icon.png`; queda prohibido sustituirlo por emojis, cruces Unicode o marcas reconstruidas. La plantilla de espera conserva azul marino, blanco y dorado, copy cristocéntrico y aviso de por qué recibe el mensaje.
+- Enviar desde `admin@clean4jesus.com` solo cuando sea un alias verificado de Gmail. Si el proveedor lo sustituye o rechaza, reportar el header efectivo y no afirmar que la identidad remitente quedó resuelta.
+
+## Integridad De Historial Supabase (16 De Septiembre De 2026)
+
+- Antes de cualquier `supabase db push --linked`, comparar el historial local y remoto. Si hay versiones locales ausentes en remoto o versiones remotas sin archivo local, detener el despliegue: un `dry-run` o push sobre esa deriva no cierra el gate de beta y puede duplicar cambios o ocultar una migración aplicada manualmente.
+- La reconciliación exige identificar el contenido y la procedencia de cada versión divergente, preservar el esquema remoto con evidencia y decidir explícitamente si se incorpora un snapshot, se restaura el archivo histórico o se repara únicamente el historial. Nunca usar `migration repair` como atajo ni marcar una versión como aplicada sin corroborar el esquema.
+
+## Cierre Técnico De Candidata 1.3.37 (16 De Septiembre De 2026)
+
+- Con CAPTCHA de Supabase activo, toda reautenticación destructiva debe obtener un token Turnstile nuevo en el cliente y enviarlo al backend. Un script administrativo no puede fabricar ese token ni reutilizarlo; la eliminación satisfactoria conserva una prueba manual en la app con cuenta desechable, aunque los contratos negativos se automaticen.
+- Las migraciones `20260830120000`, `20260913120000` y `20260913130000` están aplicadas en producción; `report-false-positive`, `accountability`, `accountability-health` y `delete-account` están desplegadas. Las suites remotas positiva y negativa del 16 de septiembre aprobaron. No volver a describir este despliegue como pendiente sin evidencia nueva de deriva.
+- En copias cortas de compilación Windows no copiar `.gradle`, `android/.gradle` ni carpetas `build/` desde otra ruta absoluta: esos metadatos conservan rutas anteriores y rompen la resolución. Regenerarlos en la copia física; el repositorio OneDrive continúa como fuente de verdad.
+- La APK `1.3.37 (55)` acredita compilación, lint nativo, firma debug v2, TypeScript y 191 pruebas unitarias; no acredita QA físico ni beta externa. DNS-over-TLS requiere todavía pruebas en Wi-Fi, datos móviles, dominio bloqueado y fallo de upstream en dos fabricantes.
+- En Windows, `expo start --tunnel` requiere `@expo/ngrok` instalado globalmente aunque exista `~/.expo/ngrok.yml`. El error `Cannot read properties of undefined (reading 'body')` puede aparecer antes de Metro cuando falta ese paquete. Confirmar estado oficial de ngrok, instalar el paquete y cerrar el túnel con `Ctrl+C` al terminar; una URL de túnel expone temporalmente Metro y su QR solo se comparte con testers autorizados.

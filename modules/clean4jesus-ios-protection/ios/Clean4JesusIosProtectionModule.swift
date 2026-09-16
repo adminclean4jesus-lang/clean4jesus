@@ -272,13 +272,34 @@ public class Clean4JesusIosProtectionModule: Module {
 
     AsyncFunction("getStatus") { () -> [String: Any] in
       let defaults = self.userDefaults
-      let isEnabled = defaults?.bool(forKey: "shieldEnabled") ?? false
-      
+      let configured = defaults?.bool(forKey: "shieldEnabled") ?? false
+      var isAuthorized = false
+      var isEnabled = false
       var statusString = "not_configured"
       if #available(iOS 16.0, *) {
         let authStatus = AuthorizationCenter.shared.authorizationStatus
         if authStatus == .approved {
-          statusString = isEnabled ? "protection_active" : "permission_granted"
+          isAuthorized = true
+          let selection = self.loadSelection()
+          let selected = !selection.applicationTokens.isEmpty ||
+            !selection.categoryTokens.isEmpty || !selection.webDomainTokens.isEmpty
+          var expectedEvents: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
+          for rule in self.synchronizedPerAppLimits(for: selection) where rule.enabled && rule.minutes > 0 {
+            let name = DeviceActivityEvent.Name("clean4jesus.app-limit.\(rule.id.uuidString)")
+            expectedEvents[name] = self.makePerAppLimitEvent(token: rule.token, minutes: rule.minutes)
+          }
+          let monitoringReady = expectedEvents.isEmpty
+            ? !self.activityCenter.activities.contains(self.dailyActivityName)
+            : self.activityCenter.activities.contains(self.dailyActivityName) &&
+              self.activityCenter.events(for: self.dailyActivityName) == expectedEvents
+          let categoriesReady = selection.categoryTokens.isEmpty
+            ? self.settingsStore.shield.applicationCategories == nil
+            : self.settingsStore.shield.applicationCategories == .specific(selection.categoryTokens)
+          let domainsReady = self.settingsStore.shield.webDomains ==
+            (selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens)
+          let filterReady = self.settingsStore.webContent.blockedByFilter == .auto()
+          isEnabled = configured && selected && monitoringReady && categoriesReady && domainsReady && filterReady
+          statusString = isEnabled ? "protection_active" : configured ? "protection_limited" : "permission_granted"
         } else if authStatus == .denied {
           statusString = "permission_denied"
         }
@@ -287,10 +308,10 @@ public class Clean4JesusIosProtectionModule: Module {
       return [
         "status": statusString,
         "isEnabled": isEnabled,
-        "isAuthorized": statusString == "protection_active" || statusString == "permission_granted",
+        "isAuthorized": isAuthorized,
         "appGroupSynced": defaults != nil,
         "dailyLimitMinutes": defaults?.integer(forKey: "dailyLimitMinutes") ?? 0,
-        "lastSyncTimestamp": Date().timeIntervalSince1970
+        "lastSyncTimestamp": defaults?.double(forKey: "lastConfigTimestamp") ?? 0
       ]
     }.runOnQueue(.main)
 
@@ -336,12 +357,14 @@ public class Clean4JesusIosProtectionModule: Module {
           webDomainCount: selection.webDomainTokens.count,
           onCancel: { promise.reject("ERR_LIMIT_EDITOR_CANCELLED", "Configuración cancelada.") },
           onSave: { rules in
+            let wasEnabled = self.userDefaults?.bool(forKey: "shieldEnabled") == true
             do {
               try self.savePerAppLimits(rules)
               self.userDefaults?.set(true, forKey: self.perAppLimitsConfiguredKey)
               if self.userDefaults?.bool(forKey: "shieldEnabled") == true {
                 try self.startPerAppLimitMonitoring(rules: rules)
                 self.settingsStore.shield.applications = nil
+                self.userDefaults?.set(Date().timeIntervalSince1970, forKey: "lastConfigTimestamp")
               }
               promise.resolve([
                 "applications": selection.applicationTokens.count,
@@ -349,6 +372,11 @@ public class Clean4JesusIosProtectionModule: Module {
                 "hasUserConfiguredLimits": true
               ])
             } catch {
+              if wasEnabled {
+                self.activityCenter.stopMonitoring([self.dailyActivityName])
+                self.settingsStore.clearAllSettings()
+                self.userDefaults?.set(false, forKey: "shieldEnabled")
+              }
               promise.reject("ERR_LIMIT_SAVE", error.localizedDescription)
             }
           }
@@ -402,10 +430,31 @@ public class Clean4JesusIosProtectionModule: Module {
           language: language,
           onCancel: { promise.reject("ERR_PICKER_CANCELLED", "Selección cancelada.") },
           onSave: { selection in
+            let wasEnabled = self.userDefaults?.bool(forKey: "shieldEnabled") == true
+            if wasEnabled && selection.applicationTokens.isEmpty &&
+                selection.categoryTokens.isEmpty && selection.webDomainTokens.isEmpty {
+              promise.reject("ERR_EMPTY_SELECTION", "Pausa la protección antes de vaciar la selección.")
+              return
+            }
             do {
+              if wasEnabled {
+                let rules = self.synchronizedPerAppLimits(for: selection)
+                try self.savePerAppLimits(rules)
+                try self.startPerAppLimitMonitoring(rules: rules)
+                self.settingsStore.clearAllSettings()
+                self.applyNonApplicationShield(selection)
+              }
               try self.saveSelection(selection)
+              if wasEnabled {
+                self.userDefaults?.set(Date().timeIntervalSince1970, forKey: "lastConfigTimestamp")
+              }
               promise.resolve(self.selectionSummary(selection))
             } catch {
+              if wasEnabled {
+                self.activityCenter.stopMonitoring([self.dailyActivityName])
+                self.settingsStore.clearAllSettings()
+                self.userDefaults?.set(false, forKey: "shieldEnabled")
+              }
               promise.reject("ERR_SELECTION_SAVE", error.localizedDescription)
             }
           }
@@ -434,6 +483,9 @@ public class Clean4JesusIosProtectionModule: Module {
         self.settingsStore.clearAllSettings()
         self.applyNonApplicationShield(selection)
       } catch {
+        self.activityCenter.stopMonitoring([self.dailyActivityName])
+        self.settingsStore.clearAllSettings()
+        defaults.set(false, forKey: "shieldEnabled")
         return false
       }
       defaults.set(true, forKey: "shieldEnabled")
@@ -472,9 +524,13 @@ public class Clean4JesusIosProtectionModule: Module {
         self.settingsStore.clearAllSettings()
         self.applyNonApplicationShield(selection)
       } catch {
+        self.activityCenter.stopMonitoring([self.dailyActivityName])
+        self.settingsStore.clearAllSettings()
+        defaults.set(false, forKey: "shieldEnabled")
         return false
       }
       defaults.set(true, forKey: "shieldEnabled")
+      defaults.set(Date().timeIntervalSince1970, forKey: "lastConfigTimestamp")
       return true
     }.runOnQueue(.main)
 

@@ -1,6 +1,6 @@
 # Matriz de Pruebas de Calidad (QA) para iOS
 
-- **Fecha**: 2026-08-09
+- **Actualizada**: 2026-09-13
 - **Objetivo**: Asegurar la estabilidad, accesibilidad y rendimiento en dispositivos iOS reales y simuladores.
 
 ## Matriz de Dispositivos y Versiones
@@ -13,20 +13,11 @@
 
 ## Batería de Pruebas Funcionales
 
-## Checkpoint 2026-08-09 — build física
+## Checkpoint y candidata
 
-**Estado:** la aplicación abre en un iPhone real y la Comunidad ya carga el proyecto Supabase. El flujo Android ya no se muestra en la navegación principal de iOS.
+La última IPA enviada a TestFlight es `1.3.35 (25)`: Family Controls, límites independientes, Shield de marca y `DeviceActivityReport` empaquetado como ExtensionKit. Su procesamiento y los testers internos aún requieren confirmación en App Store Connect. La fuente `1.3.36 (26)` contiene correcciones de PIN y coherencia de selección/estado, pero todavía no está compilada ni validada en iPhone. Una build `25` no prueba esas correcciones.
 
-**Bloqueador actual (P0):** el refugio iOS todavía no está operativo. La pantalla muestra `unverified`, Family Controls/Managed Settings no quedan autorizados y el botón termina en “Permission denied”. Tener Tiempo en pantalla activo no concede automáticamente Family Controls.
-
-**Pendiente para la próxima sesión:**
-
-- Confirmar por qué el módulo `Clean4JesusIosProtectionModule` devuelve capacidades no disponibles en el build físico.
-- Obtener y registrar el resultado/error real de `AuthorizationCenter.shared.requestAuthorization(for: .individual)`.
-- Hacer que la autorización sea verificable antes de mostrar el refugio como listo.
-- Probar `FamilyActivityPicker`, selección de apps/categorías y aplicación de `ManagedSettingsStore`.
-- Probar la pantalla ShieldConfiguration y el rescate de 60 segundos en un dispositivo real.
-- Sustituir los textos temporales en inglés por el flujo completo en español.
+Registrar por cada prueba: dispositivo, versión iOS, build instalada, fecha, pasos, resultado y evidencia sin exponer nombres de apps seleccionadas ni PIN.
 
 1. **Estabilidad de Arranque**:
    - 20 aperturas continuas en frío (cold start).
@@ -37,8 +28,12 @@
    - Solicitud de permiso de Family Controls.
    - Selección de aplicaciones con `FamilyActivityPicker`.
    - Visualización de la pantalla de interrupción (Shield Configuration).
-   - Ejecución del rescate guiado de 60 segundos.
-   - Verificación de hash de PIN local.
+   - Límite de una app sin consumir el tiempo de otra; Shield solo en la app que alcanzó el umbral.
+   - Cambiar selección con protección activa: la app retirada deja de tener Shield y la nueva recibe su límite; verificar estado visible después de guardar.
+   - Abrir `clean4jesus://ios-protection?editLimits=1` y `?editSelection=1` sin PIN: debe pedirlo. Tras PIN correcto, se abre únicamente el editor autorizado; repetir el enlace debe volver a pedir PIN.
+   - Revocar Family Controls en Ajustes: el estado no debe seguir diciendo protección activa; al restaurarlo se necesita verificar aplicación efectiva.
+   - “Uso de hoy”: comprobar datos, estado vacío, actualización manual y la latencia que impone iOS.
+   - Verificación del PIN local sin capturar ni compartir su valor.
 
 3. **Pruebas de Resiliencia y Cierre**:
    - Comportamiento tras reinicio del dispositivo.

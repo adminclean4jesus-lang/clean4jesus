@@ -22,3 +22,36 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
+
+// The Windows NDK creates hard-linked libc++_shared.so outputs. Gradle 8 can
+// reject those files while snapshotting native-task outputs, after compilation
+// has succeeded. Keep native tasks untracked on Windows only; other platforms
+// retain incremental tracking.
+if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
+  allprojects { project ->
+    project.tasks.configureEach { task ->
+      def nativeBuild = task.name.startsWith("buildCMake") || task.name.startsWith("externalNativeBuild")
+      if (nativeBuild || task.name.contains("NativeLibs") || task.name.contains("JniLibs")) {
+        task.doNotTrackState("Windows NDK hard-linked outputs are not snapshot-safe")
+      }
+      if (nativeBuild) {
+        task.doLast {
+          ["cxx", "cmake"].each { kind ->
+            def nativeDir = new File(project.buildDir, "intermediates/${kind}")
+            if (!nativeDir.isDirectory()) return
+            project.fileTree(nativeDir).matching { include "**/libc++_shared.so" }.files.each { library ->
+              def path = library.toPath()
+              def copy = java.nio.file.Files.createTempFile(path.parent, "c4j-ndk-", ".so")
+              try {
+                java.nio.file.Files.copy(path, copy, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                java.nio.file.Files.move(copy, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+              } finally {
+                java.nio.file.Files.deleteIfExists(copy)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

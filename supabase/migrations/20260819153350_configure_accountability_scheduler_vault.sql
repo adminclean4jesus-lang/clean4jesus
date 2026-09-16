@@ -1,0 +1,6 @@
+-- Historical production migration.
+--
+-- The original migration inserted deployment-specific values into Supabase
+-- Vault. Those secret values must never live in source control, so this local
+-- history marker intentionally contains no executable SQL. Configure the
+-- scheduler URL and secret through the documented deployment procedure.

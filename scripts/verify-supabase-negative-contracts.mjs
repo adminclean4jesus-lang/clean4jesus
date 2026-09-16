@@ -42,9 +42,16 @@ try {
     identity.id = data.user.id;
 
     const client = createClient(url, publishableKey, clientOptions());
-    const { data: sessionData, error: signInError } = await client.auth.signInWithPassword({
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       email: identity.email,
-      password,
+      type: "magiclink",
+    });
+    if (linkError || !linkData.properties?.hashed_token) {
+      throw linkError ?? new Error(`No se genero el enlace administrativo para ${identity.role}`);
+    }
+    const { data: sessionData, error: signInError } = await client.auth.verifyOtp({
+      token_hash: linkData.properties.hashed_token,
+      type: "magiclink",
     });
     if (signInError || !sessionData.session) throw signInError ?? new Error(`No inicio sesion ${identity.role}`);
     identity.client = client;
@@ -321,12 +328,18 @@ try {
   );
 
   console.log("QA negativa 8/8: invalidando el JWT despues del borrado...");
-  await expectEdgeSuccess(
-    deleted.token,
-    "delete-account",
-    { password, userId: deleted.id },
-    "borrar identidad por Edge Function",
-  );
+  const deletionCaptchaToken = process.env.SUPABASE_DELETE_CAPTCHA_TOKEN?.trim();
+  if (deletionCaptchaToken) {
+    await expectEdgeSuccess(
+      deleted.token,
+      "delete-account",
+      { captchaToken: deletionCaptchaToken, password, userId: deleted.id },
+      "borrar identidad por Edge Function",
+    );
+  } else {
+    console.log("SKIP: delete-account requiere un token Turnstile de un solo uso; se valida manualmente desde la app beta.");
+    await mustSucceed(admin.auth.admin.deleteUser(deleted.id), "borrar identidad de QA como administrador");
+  }
   deletedUserIds.add(deleted.id);
   const staleTokenClient = createClient(url, publishableKey, {
     ...clientOptions(),
