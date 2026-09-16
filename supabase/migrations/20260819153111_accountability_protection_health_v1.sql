@@ -21,6 +21,7 @@ create table private.accountability_protection_health_checkins (
   received_at timestamptz not null default now(),
   primary key (device_id, idempotency_key)
 );
+;
 
 create table private.accountability_protection_health_alerts (
   id uuid primary key default gen_random_uuid(),

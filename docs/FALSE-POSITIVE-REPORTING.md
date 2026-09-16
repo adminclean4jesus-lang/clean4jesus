@@ -1,6 +1,6 @@
 # Reporte de falsos positivos
 
-> Actualización 2026-09-13: la migración `20260830120000_false_positive_rate_limit_v2.sql` y la Edge Function revisada están preparadas **solo en el repositorio local**. El rate limit v2 se reserva atómicamente por RPC privada; no se ha desplegado ni probado contra el proyecto remoto desde este PC. La verificación histórica más abajo corresponde a la versión anterior.
+> Actualización 2026-09-16: la migración `20260830120000_false_positive_rate_limit_v2.sql`, la retención reparada y la Edge Function revisada ya están desplegadas en el proyecto de producción vinculado. Las suites remotas positiva y negativa aprobaron el rate limit atómico, RLS, evidencia durable, idempotencia y contratos de sesión revocada/eliminada.
 
 ## Objetivo
 
@@ -27,19 +27,20 @@ Clean4Jesus puede registrar que una persona considera que una interrupción fue 
 1. La pantalla nativa conserva la aprobación local de 20 segundos.
 2. Después del PIN correcto, Android intenta enviar el reporte en segundo plano.
 3. La Edge Function `report-false-positive` valida esquema, idioma, paquete, huellas y API pública.
-4. La función reserva atómicamente por RPC privada un máximo de 10 reportes por instalación y hora; requiere desplegar la migración y la función de esta candidata.
+4. La función reserva atómicamente por RPC privada un máximo de 10 reportes por instalación y hora.
 5. El registro se guarda en `public.false_positive_reports`, con RLS habilitado y permisos de lectura/escritura revocados para `anon` y `authenticated`. Solo el rol de servicio puede operar la tabla desde backend. La migración de retención v2 repara el job diario para esta tabla y borra los eventos técnicos de rate limit tras 24 horas.
 
 ## Qué significa “aprender”
 
 Esta primera versión no cambia reglas automáticamente. Los reportes quedan como señales anonimizadas para revisión. La siguiente fase debe incluir una consola de moderación donde una persona pueda agrupar falsos positivos, aprobar una excepción contextual y publicar una nueva versión de reglas. No se debe convertir un reporte aislado en una lista blanca automática.
 
-## Verificación histórica de la versión anterior
+## Verificación de producción
 
 - Migraciones Supabase aplicadas en el proyecto vinculado.
 - Edge Function desplegada.
 - Payload inválido rechazado con `400`.
-- Payload sintético válido insertado y eliminado después de la prueba.
+- Payload sintético válido, idempotencia y concurrencia verificados sin exponer contenido personal.
+- Contratos negativos de RLS, sesión revocada y usuario eliminado verificados remotamente.
 - Tabla verificada con RLS activo y sin permisos para `anon`/`authenticated`.
 - TypeScript validado con `npx tsc --noEmit`.
 - Kotlin nativo compilado con `:app:compileDebugKotlin`.

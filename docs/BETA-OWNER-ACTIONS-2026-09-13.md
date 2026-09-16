@@ -1,40 +1,38 @@
-# Acciones de la persona titular para la candidata beta 1.3.36
+# Acciones finales de la persona titular para la candidata beta 1.3.37
 
-Fecha: 13 de septiembre de 2026. Esta es una hoja operativa; marcar cada casilla solo con evidencia. `1.3.35` es la última versión distribuida y `1.3.36` sigue en QA.
+Fecha de corte: 16 de septiembre de 2026. Esta hoja contiene únicamente tareas que requieren dispositivo físico, cuentas de tienda, custodia de claves o aprobación humana. La ingeniería automatizable de esta sesión ya fue ejecutada.
 
-La APK `1.3.36 (54)` de `artifacts/apk/current` ya se compiló, pasó lint nativo y se verificó como debug universal. SHA-256: `C52E9015D2544CED48AF864ABE903056746D0FD472202569C52642380F7EC81A`. `previous` conserva `1.3.35 (53)`; solo hay dos APK locales.
+La APK `1.3.37 (55)` fue compilada con Gradle local, aprobó lint nativo, fue verificada criptográficamente y queda destinada solo a QA interna con Metro. SHA-256: `C38B8714C28C9F5003A91E4297F80800464CCD9916E06412BD30FDB7AB2E1701`. Certificado debug SHA-256: `3B8E9BCA44BD9E013D66E36A8B1BF0E44E932191DDA0580EE70D734C22C5DBB5`.
 
-## 1. Android real y matriz de protección
+## 1. Tus pruebas Android
 
-- [ ] Conectar el Pixel por USB, habilitar depuración USB y aceptar la huella del PC. Comprobar `adb devices -l`: debe aparecer `device`, no `unauthorized`.
-- [ ] Instalar la APK `artifacts/apk/current/Clean4Jesus-current.apk` después de confirmar que informa `1.3.36 (54)` y firma debug. Es solo para QA interna; necesita `npm run dev-client` y conexión al PC. Antes, crear `.env.local` desde `.env.example` con la URL/clave **publicable** real de Supabase y el CAPTCHA público, sin incluir jamás la service role key. Ejecutar Metro desde `C:\c4j\beta-1.3.36`.
-- [ ] Probar VPN, Accesibilidad, interrupción, salida con PIN, WhatsApp/Business OFF por defecto, activación con aviso, desactivación con PIN, bancos y YouTube sin interrupción. Durante un desbloqueo deliberado de 15 minutos, abrir contenido adulto distinto en esa app: debe seguir interrumpiéndose.
-- [ ] Repetir la instalación y regresiones en un Android de otro fabricante. Registrar modelo, versión Android, fecha, versión/firma de APK, red, pasos y resultado.
-- [ ] En un dispositivo/cuenta desechables con modo acompañado aceptado, desactivar protección y verificar el aviso genérico después del periodo de gracia y cron; solo después probar desinstalación. Nunca afirmar bloqueo de desinstalación del sistema.
+- [ ] Instalar `artifacts/apk/current/Clean4Jesus-current.apk` en el Pixel. Ejecutar Metro desde `C:\c4j\beta-1.3.37` con `npm run dev-client`; si falla la red local, usar `npm run dev-client:tunnel`.
+- [ ] Probar en Wi-Fi y datos móviles: VPN, Accesibilidad, búsqueda de un dominio adulto, página de interrupción, PIN, WhatsApp/Business OFF por defecto y opt-in, bancos/YouTube sin bloqueo, reinicio y pérdida de red.
+- [ ] Verificar específicamente DNS-over-TLS: la navegación normal funciona, el dominio adulto se bloquea y, si el upstream falla repetidamente, la protección vuelve a estado inactivo sin dejar el teléfono sin red indefinidamente.
+- [ ] Durante un desbloqueo deliberado de 15 minutos, abrir contenido adulto distinto en esa app: el análisis visible debe seguir interrumpiéndolo.
+- [ ] Repetir la matriz en un Android de otro fabricante y registrar modelo, Android, red, versión, pasos y resultado.
+- [ ] Con una cuenta desechable, probar “Eliminar cuenta” dentro de la app completando el CAPTCHA real. Esta última parte no puede automatizarse porque Turnstile emite tokens de un solo uso en el cliente.
 
-Usar `TESTING-CELULAR.md` y `ANDROID-MODO-ACOMPANADO.md` para los pasos completos. No compartir capturas con PIN, mensajes o navegación personal.
+## 2. Tus pruebas de correo y operación
 
-## 2. Supabase y correo
+- [ ] Con dos cuentas de prueba consentidas, aceptar el modo acompañado, enviar la invitación y confirmar la entrega real.
+- [ ] Desactivar la protección y comprobar que llega un solo aviso genérico después del periodo de gracia y del cron; no debe revelar apps, contenido ni navegación.
+- [ ] Confirmar en Supabase Dashboard que los cron `clean4jesus-accountability-health-dispatch` y `clean4jesus-privacy-retention` están ejecutándose sin error.
+- [ ] Activar MFA en cada cuenta moderadora y realizar un simulacro documentado de reporte, escalamiento y crisis según `MODERATION-RUNBOOK.md`.
 
-- [ ] Iniciar sesión en Supabase CLI desde este PC (`npx supabase login`) y vincular el proyecto existente `moqlovsxklxcpihvheyc` (`npx supabase link --project-ref moqlovsxklxcpihvheyc`). No crear un proyecto nuevo ni publicar tokens.
-- [ ] Ejecutar `npx supabase migration list --linked` y `npx supabase db push --linked --dry-run`. Revisar que solo estén pendientes las migraciones esperadas `20260830120000_false_positive_rate_limit_v2.sql`, `20260913120000_accountability_invite_privacy_v2.sql` y `20260913130000_privacy_retention_v2.sql`; si aparece deriva u otras migraciones, detener el push y revisar.
-- [ ] Aplicar `npx supabase db push --linked`. Luego desplegar, sin `--prune`, `npx supabase functions deploy report-false-positive accountability accountability-health --project-ref moqlovsxklxcpihvheyc --no-verify-jwt --use-api`. Confirmar en Dashboard que las tres funciones están activas, que la RPC nueva no concede acceso a `anon` y que el cron `clean4jesus-privacy-retention` ejecuta la función reparada sobre `public.false_positive_reports` y la tabla de eventos.
-- [ ] Configurar/verificar en Supabase los secretos `RESEND_API_KEY`, `ACCOUNTABILITY_FROM_EMAIL` y `ACCOUNTABILITY_SCHEDULER_SECRET`, y los valores de Vault descritos en `ANDROID-MODO-ACOMPANADO.md`. Confirmar que el remitente pertenece a un dominio verificado en Resend. Guardar secretos solo en el proveedor o equipo local.
-- [ ] Con dos cuentas de prueba consentidas, enviar invitación y comprobar entrega; después desactivar la protección y verificar un solo aviso de salud con versión texto/HTML. Confirmar el cron `clean4jesus-accountability-health-dispatch` cada 15 minutos y los reintentos. Ejecutar las suites remotas con variables locales y `ALLOW_REMOTE_SECURITY_TEST=true` únicamente en el proyecto previsto.
+Las migraciones de seguridad y retención ya están aplicadas en producción; `report-false-positive`, `accountability`, `accountability-health` y `delete-account` ya fueron desplegadas; las suites remotas positivas y negativas aprobaron.
 
-No se aplicó ninguna migración ni se hizo un envío real desde este PC: la CLI no tiene sesión Supabase y faltan las variables de QA.
+## 3. Tus tareas iPhone y tiendas
 
-## 3. iPhone y TestFlight
+- [ ] Revisar y aprobar el diff de la candidata antes de hacer commit/push y abrir el PR contra `main`.
+- [ ] Ejecutar el workflow iOS en GitHub/macOS para `1.3.37 (27)`, revisar firma y entitlements de la app y sus cuatro extensiones, y subir la IPA a TestFlight.
+- [ ] En iPhone real, completar `IOS-DEVICE-QA-MATRIX.md`: PIN ante deep links, selección con protección activa, límites independientes, Shield, permiso revocado y estados de “Uso de hoy”.
+- [ ] Crear y custodiar fuera de Git la clave release Android definitiva, activar Play App Signing y generar el AAB release local. No usar el certificado debug del APK de QA.
+- [ ] Revisar con asesoría legal colombiana privacidad, términos, edad, comunidad, eliminación, licencias bíblicas, disclosures de VPN/Accesibilidad, Data Safety y App Privacy.
+- [ ] Aprobar fichas, capturas y copy reales de Play Store/App Store antes de invitar testers externos.
 
-- [ ] Revisar la rama local `beta/1.3.36-readiness` y sus commits; cuando apruebes los cambios, ejecutar `git push -u origin beta/1.3.36-readiness` y abrir un PR contra `main`. Esperar el workflow `ios-release-smoke` y revisar cualquier error Swift antes de fusionar. No se hizo push ni PR desde este PC.
-- [ ] En App Store Connect, comprobar estado de procesamiento, fecha y testers internos de `1.3.35 (25)`; aceptar invitaciones pendientes. Registrar el resultado.
-- [ ] Después de aprobar el PR de `1.3.36 (26)`, ejecutar el workflow iOS de GitHub/macOS, comprobar firma/entitlements de la app y cuatro extensiones y subir la IPA nueva a TestFlight.
-- [ ] En iPhone real, ejecutar `IOS-DEVICE-QA-MATRIX.md`, especialmente PIN ante deep links, cambio de selección con protección activa, límites independientes, Shield efectivo, permiso revocado y estados de “Uso de hoy”. La IPA `25` no valida correcciones de `26`.
+## 4. Decisión pendiente de dependencias
 
-## 4. Firma, legal y operación de beta
+- [ ] Autorizar una rama separada para actualizar Expo/React Native y resolver el inventario de `npm audit`: 34 vulnerabilidades transitivas (`16` altas, `18` moderadas). No ejecutar `npm audit fix --force` sobre esta candidata; la actualización requiere regresión Android/iPhone.
 
-- [ ] Antes de beta externa, revisar el informe `npm audit --omit=dev --audit-level=high`: hoy registra 16 alertas altas y 22 moderadas en el árbol de Expo/React Native y dependencias transitivas. El cambio mayor de SDK requiere una rama y regresión nativa/iPhone; no aplicar `npm audit fix --force` a la candidata congelada.
-- [ ] Crear y custodiar fuera de Git la clave release Android definitiva; configurar Play App Signing. Generar AAB local con Gradle y verificar certificado, permisos y versión antes de Play Console. No subir una build firmada con debug.
-- [ ] Revisar con abogado colombiano privacidad, términos, edad, comunidad, eliminación, licencias bíblicas y declaraciones de `VpnService`/Accesibilidad y Data Safety. Ver `legal/BETA-LEGAL-READINESS.md`, `legal/GOOGLE-PLAY-DATA-SAFETY.md` e `IOS-APP-STORE-PREPARATION.md`.
-- [ ] Probar eliminación de cuenta extremo a extremo, MFA de cada moderador y un simulacro de moderación/crisis según `MODERATION-RUNBOOK.md`.
-- [ ] Aprobar las fichas y capturas reales de las tiendas antes de invitar testers externos. Conservar evidencia de todos los gates; la beta externa sigue en NO-GO hasta cerrar los pendientes anteriores.
+La beta externa continúa en **NO-GO** hasta cerrar estas casillas. Sí existe **GO para QA interna supervisada** de `1.3.37 (55)`.

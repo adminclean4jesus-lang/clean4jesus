@@ -21,18 +21,18 @@ Para eso usamos una **development build**: una app Clean4Jesus propia con herram
 - `expo-dev-client` instalado.
 - Android package: `com.clean4jesus.app`.
 - Carpeta nativa `android/` generada y debe permanecer versionada.
-- La candidata local es `1.3.36 (versionCode 54)`; una APK debug necesita Metro.
+- La candidata local es `1.3.37 (versionCode 55)`; una APK debug necesita Metro.
 
 ## Primer APK De Desarrollo
 
 En una terminal normal de Windows:
 
 ```bash
-cd C:\c4j\beta-1.3.36
+cd C:\c4j\beta-1.3.37
 npm run build:android:local
 ```
 
-El repositorio de OneDrive sigue siendo la fuente de verdad; esta copia corta se creó para compilar `1.3.36` sin tocar la carpeta antigua `C:\c4j\clean4jesus`. Sincroniza los cambios de fuente antes de compilar nuevas versiones. Después de copiar cambios del repo principal, ejecuta `npm ci` en la copia para evitar cachés Gradle trasladadas. Antes de usar Metro, crea `.env.local` desde `.env.example` con la URL y clave **publicable** del proyecto Supabase y la configuración pública de CAPTCHA; nunca pongas allí una service role key.
+El repositorio de OneDrive sigue siendo la fuente de verdad; esta copia corta se creó para compilar `1.3.37` sin tocar la carpeta antigua `C:\c4j\clean4jesus`. Sincroniza los cambios de fuente antes de compilar nuevas versiones. No copies `.gradle` ni carpetas `build/` entre rutas absolutas; ejecuta `npm ci` y deja que Gradle regenere sus metadatos. Antes de usar Metro, crea `.env.local` desde `.env.example` con la URL y clave **publicable** del proyecto Supabase y la configuración pública de CAPTCHA; nunca pongas allí una service role key.
 
 La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Antes de entregar una nueva `current`, verifica versión, firma, pruebas y rotación con `previous`.
 `android/build.gradle` evita en Windows que Gradle intente tomar snapshots de enlaces `libc++_shared.so` generados por el NDK; la compilación en macOS/Linux conserva el seguimiento incremental normal.
@@ -65,6 +65,14 @@ Abre Clean4Jesus en el Pixel 9. Si no conecta:
 ```bash
 npm run dev-client:tunnel
 ```
+
+En Windows, Expo requiere que `@expo/ngrok` esté instalado globalmente para usar `--tunnel`:
+
+```bash
+npm install -g @expo/ngrok
+```
+
+Si aparece `Cannot read properties of undefined (reading 'body')`, confirma primero que `@expo/ngrok` esté instalado y que `https://status.ngrok.com/` esté operativo. El túnel publica temporalmente Metro mediante una URL externa; ciérralo con `Ctrl+C` al terminar la prueba y no compartas el QR fuera del equipo autorizado.
 
 - Si vas por USB, usa:
 

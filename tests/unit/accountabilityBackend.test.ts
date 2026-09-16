@@ -13,7 +13,7 @@ const reliabilityMigration = readFileSync(
   "utf8",
 );
 const healthMigration = readFileSync(
-  path.join(root, "supabase/migrations/20260818120000_accountability_protection_health_v1.sql"),
+  path.join(root, "supabase/migrations/20260819153111_accountability_protection_health_v1.sql"),
   "utf8",
 );
 const invitePrivacyMigration = readFileSync(

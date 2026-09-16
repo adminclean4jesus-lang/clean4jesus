@@ -36,7 +36,7 @@ Implementacion:
 
 - Crear un modulo Android Kotlin con `VpnService`.
 - Pedir consentimiento al usuario con el dialogo nativo de Android.
-- Redirigir DNS a Cloudflare Family por defecto.
+- Redirigir consultas a Cloudflare Family mediante DNS-over-TLS (`family.cloudflare-dns.com:853`), con verificacion TLS del hostname y sockets del tunel protegidos para evitar bucles de VPN.
 - Mantener estado del escudo sincronizado con React Native.
 
 Lo que si puede hacer:

@@ -1,5 +1,14 @@
 # Clean4Jesus Version History
 
+## Candidata local 1.3.37 — Android 55 / iOS 27 — 2026-09-16
+
+- Android reemplaza el upstream DNS sin cifrar por DNS-over-TLS hacia Cloudflare Family (`family.cloudflare-dns.com:853`), con SNI, validación de hostname y socket protegido fuera del túnel.
+- Supabase de producción quedó reconciliado y endurecido: migraciones de rate limit, privacidad y retención aplicadas; `report-false-positive`, `accountability`, `accountability-health` y `delete-account` desplegadas; suites remotas positiva y negativa aprobadas.
+- La eliminación de cuenta solicita un token Turnstile real en el cliente y lo usa durante la reautenticación del backend cuando CAPTCHA está activo.
+- TypeScript, 191 pruebas unitarias y lint Android aprobaron. APK debug universal compilada con Gradle local y firma v2 verificada.
+- APK SHA-256: `C38B8714C28C9F5003A91E4297F80800464CCD9916E06412BD30FDB7AB2E1701`. Certificado de QA SHA-256: `3B8E9BCA44BD9E013D66E36A8B1BF0E44E932191DDA0580EE70D734C22C5DBB5`.
+- Continúa siendo una build de QA interna con Metro. No acredita pruebas físicas, firma release, TestFlight `27`, revisión legal ni aprobación de beta externa.
+
 ## Candidata local 1.3.36 — Android 54 / iOS 26 — 2026-09-13
 
 - Android: el desbloqueo supervisado de 15 minutos omite solo la regla deliberada de la app; el análisis de contenido visible sigue activo. Se retira `RECORD_AUDIO` de la configuración Expo porque la app no usa micrófono.

@@ -143,11 +143,11 @@ El build de prueba se hace con Gradle local. `npm run build:android:local` gener
 La APK de QA se genera en Windows, fuera de GitHub Actions, y se rota manualmente para conservar una comparación:
 
 ```powershell
-cd C:\c4j\beta-1.3.36
+cd C:\c4j\beta-1.3.37
 .\android\gradlew.bat :app:assembleDebug --no-daemon --max-workers=1
 ```
 
-La APK debug candidata `1.3.36 (versionCode 54)` ya se compiló y verificó en `artifacts/apk/current/Clean4Jesus-current.apk`; `1.3.35 (53)` queda en `artifacts/apk/previous/Clean4Jesus-previous.apk`. Ambas rutas son locales e ignoradas por Git. La nueva APK requiere Metro y todavía no acredita QA físico ni firma release.
+La APK debug candidata `1.3.37 (versionCode 55)` ya se compiló y verificó en `artifacts/apk/current/Clean4Jesus-current.apk`; `1.3.36 (54)` queda en `artifacts/apk/previous/Clean4Jesus-previous.apk`. Ambas rutas son locales e ignoradas por Git. La nueva APK requiere Metro y todavía no acredita QA físico ni firma release.
 
 ### Build iOS desde GitHub
 

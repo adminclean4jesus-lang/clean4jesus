@@ -67,10 +67,12 @@ describe("endurecimiento de Auth movil", () => {
     const client = read("src/features/auth/authService.ts");
     const edgeFunction = read("supabase/functions/delete-account/index.ts");
 
-    expect(client).toContain("body: { password, userId }");
+    expect(client).toContain("body: { captchaToken, password, userId }");
     expect(edgeFunction).toContain("readDeletionRequest(request)");
     expect(edgeFunction).toContain("data.user.id !== deletionRequest.userId");
     expect(edgeFunction).toContain("verifier.auth.signInWithPassword");
+    expect(edgeFunction).toContain("options: deletionRequest.captchaToken ? { captchaToken: deletionRequest.captchaToken } : undefined");
+    expect(edgeFunction).toContain('reauthenticationError?.code === "captcha_failed"');
     expect(edgeFunction).toContain("reauthenticated.user?.id !== data.user.id");
     expect(edgeFunction.indexOf("signInWithPassword")).toBeLessThan(edgeFunction.indexOf("admin.deleteUser"));
   });

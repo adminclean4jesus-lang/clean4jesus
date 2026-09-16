@@ -10,10 +10,12 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.net.ssl.SNIHostName
+import javax.net.ssl.SSLSocket
+import javax.net.ssl.SSLSocketFactory
 
 class Clean4JesusVpnService : VpnService() {
   private var vpnInterface: ParcelFileDescriptor? = null
@@ -29,7 +31,10 @@ class Clean4JesusVpnService : VpnService() {
     private const val NOTIFICATION_ID = 4104
     private const val VPN_ADDRESS = "10.10.10.2"
     private const val VPN_DNS = "10.10.10.1"
-    private val UPSTREAM_DNS = listOf("1.1.1.3", "1.0.0.3")
+    private val FAMILY_DNS_UPSTREAMS = listOf("1.1.1.3", "1.0.0.3")
+    private const val FAMILY_DNS_HOSTNAME = "family.cloudflare-dns.com"
+    private const val DNS_OVER_TLS_PORT = 853
+    private const val DNS_OVER_TLS_TIMEOUT_MS = 2500
     private const val MAX_CONSECUTIVE_DNS_FAILURES = 3
 
     @Volatile
@@ -153,7 +158,7 @@ class Clean4JesusVpnService : VpnService() {
 
     val dnsPayloadOffset = udpOffset + 8
     val dnsPayloadLength = udpLength - 8
-    val dnsResponse = forwardDns(packet, dnsPayloadOffset, dnsPayloadLength)
+    val dnsResponse = forwardDnsOverTls(packet, dnsPayloadOffset, dnsPayloadLength)
     if (dnsResponse == null) {
       consecutiveDnsFailures += 1
       if (consecutiveDnsFailures >= MAX_CONSECUTIVE_DNS_FAILURES) {
@@ -172,24 +177,66 @@ class Clean4JesusVpnService : VpnService() {
     )
   }
 
-  private fun forwardDns(packet: ByteArray, offset: Int, length: Int): ByteArray? {
-    for (upstreamAddress in UPSTREAM_DNS) {
+  /**
+   * Resolves the local VPN query through DNS-over-TLS. The upstream TCP socket is
+   * protected before connecting so the VPN never captures its own tunnel traffic.
+   * TLS validates the Cloudflare Family hostname; an IP address alone is not trusted.
+   */
+  private fun forwardDnsOverTls(packet: ByteArray, offset: Int, length: Int): ByteArray? {
+    if (length <= 0 || length > 0xffff) return null
+
+    for (upstreamAddress in FAMILY_DNS_UPSTREAMS) {
+      val tcpSocket = Socket()
       try {
-        DatagramSocket().use { socket ->
-          protect(socket)
-          socket.soTimeout = 2500
+        if (!protect(tcpSocket)) continue
+        tcpSocket.connect(InetSocketAddress(upstreamAddress, DNS_OVER_TLS_PORT), DNS_OVER_TLS_TIMEOUT_MS)
+        tcpSocket.soTimeout = DNS_OVER_TLS_TIMEOUT_MS
 
-          val upstream = InetAddress.getByName(upstreamAddress)
-          val query = DatagramPacket(packet, offset, length, upstream, 53)
-          socket.send(query)
+        val tlsSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+        val tlsSocket = (tlsSocketFactory.createSocket(
+          tcpSocket,
+          FAMILY_DNS_HOSTNAME,
+          DNS_OVER_TLS_PORT,
+          true
+        ) as SSLSocket)
 
-          val responseBuffer = ByteArray(4096)
-          val responsePacket = DatagramPacket(responseBuffer, responseBuffer.size)
-          socket.receive(responsePacket)
-          return responseBuffer.copyOf(responsePacket.length)
+        tlsSocket.use { socket ->
+          socket.soTimeout = DNS_OVER_TLS_TIMEOUT_MS
+          socket.sslParameters = socket.sslParameters.apply {
+            endpointIdentificationAlgorithm = "HTTPS"
+            serverNames = listOf(SNIHostName(FAMILY_DNS_HOSTNAME))
+          }
+          socket.startHandshake()
+
+          val output = socket.outputStream
+          output.write((length ushr 8) and 0xff)
+          output.write(length and 0xff)
+          output.write(packet, offset, length)
+          output.flush()
+
+          val input = socket.inputStream
+          val high = input.read()
+          val low = input.read()
+          if (high < 0 || low < 0) return null
+          val responseLength = (high shl 8) or low
+          if (responseLength <= 0) return null
+
+          val response = ByteArray(responseLength)
+          var bytesRead = 0
+          while (bytesRead < responseLength) {
+            val count = input.read(response, bytesRead, responseLength - bytesRead)
+            if (count < 0) return null
+            bytesRead += count
+          }
+          return response
         }
       } catch (_: Exception) {
         if (!running.get()) return null
+      } finally {
+        try {
+          tcpSocket.close()
+        } catch (_: Exception) {
+        }
       }
     }
     return null

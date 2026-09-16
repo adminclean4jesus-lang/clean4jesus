@@ -67,10 +67,10 @@ El escudo DNS/VPN y Accessibility Service no se pueden validar en Expo Go. Para 
 3. Modulo nativo Android en `/android`
 4. Pruebas en APK instalado
 
-Comandos vigentes desde la copia física corta de esta candidata (`C:\c4j\beta-1.3.36`):
+Comandos vigentes desde la copia física corta de esta candidata (`C:\c4j\beta-1.3.37`):
 
 ```bash
-cd C:\c4j\beta-1.3.36
+cd C:\c4j\beta-1.3.37
 npm run build:android:local
 npm run dev-client
 ```
@@ -82,7 +82,7 @@ Usar este camino para probar Clean4Jesus como app propia en tu Google Pixel 9.
 1. Genera la APK de desarrollo en el PC, desde una copia física corta que incluya `node_modules` y `android/`:
 
 ```bash
-cd C:\c4j\beta-1.3.36
+cd C:\c4j\beta-1.3.37
 npm run build:android:local
 ```
 

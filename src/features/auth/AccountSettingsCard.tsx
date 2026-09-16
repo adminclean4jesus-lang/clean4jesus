@@ -8,6 +8,8 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { deleteMyAccount, signOut } from "@/features/auth/authService";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { captchaConfig } from "@/features/auth/captchaConfig";
+import { TurnstileChallengeModal } from "@/features/auth/TurnstileChallengeModal";
 import { getMyProfile, updateMyProfile } from "@/features/community/communityService";
 import { formatAccountText, getAccountText } from "@/features/i18n/accountText";
 import { getAuthErrorMessage } from "@/features/i18n/authAuxText";
@@ -36,6 +38,7 @@ export function AccountSettingsCard() {
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
+  const [deleteCaptchaVisible, setDeleteCaptchaVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [profileLoadState, setProfileLoadState] = useState<ProfileLoadState>("loading");
   const [saving, setSaving] = useState(false);
@@ -71,6 +74,7 @@ export function AccountSettingsCard() {
     setDeleteVisible(false);
     setDeleteConfirmation("");
     setDeletePassword("");
+    setDeleteCaptchaVisible(false);
     setSaving(false);
     setDeleting(false);
     setProfileLoadState("loading");
@@ -121,17 +125,27 @@ export function AccountSettingsCard() {
     ]);
   }
 
-  async function deleteAccount() {
+  function requestAccountDeletion() {
     if (deleteInFlight.current) return;
     if (!user || deleteConfirmation !== copy.deleteToken || !deletePassword) {
       Alert.alert(copy.missingConfirmationTitle, formatAccountText(copy.missingConfirmationBody, { token: copy.deleteToken }));
       return;
     }
+    if (captchaConfig.enabled) {
+      setDeleteCaptchaVisible(true);
+      return;
+    }
+    void deleteAccount();
+  }
+
+  async function deleteAccount(captchaToken?: string) {
+    if (deleteInFlight.current || !user) return;
     const userId = user.id;
+    setDeleteCaptchaVisible(false);
     deleteInFlight.current = true;
     setDeleting(true);
     try {
-      await deleteMyAccount(userId, deletePassword);
+      await deleteMyAccount(userId, deletePassword, captchaToken);
       if (activeProfileUserId.current !== userId) return;
       setDeleteVisible(false);
       setDeleteConfirmation("");
@@ -255,12 +269,18 @@ export function AccountSettingsCard() {
             <Text style={styles.body}>{copy.deleteBody}</Text>
             <ProfileField autoCapitalize="characters" editable={!deleting} label={copy.typeDeleteToken} onChangeText={setDeleteConfirmation} value={deleteConfirmation} />
             <ProfileField autoCapitalize="none" editable={!deleting} label={copy.currentPassword} onChangeText={setDeletePassword} secureTextEntry value={deletePassword} />
-            <Pressable disabled={deleting} onPress={() => void deleteAccount()} style={styles.destructiveButton}>
+            <Pressable disabled={deleting} onPress={requestAccountDeletion} style={styles.destructiveButton}>
               <Text style={styles.destructiveButtonText}>{deleting ? copy.deleting : copy.deletePermanently}</Text>
             </Pressable>
           </View>
         </View>
       </Modal>
+
+      <TurnstileChallengeModal
+        onCancel={() => setDeleteCaptchaVisible(false)}
+        onSolved={(token) => void deleteAccount(token)}
+        visible={deleteCaptchaVisible}
+      />
     </>
   );
 }

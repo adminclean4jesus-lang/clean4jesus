@@ -51,12 +51,14 @@ Deno.serve(async (request) => {
   const { data: reauthenticated, error: reauthenticationError } = await verifier.auth.signInWithPassword({
     email: data.user.email,
     password: deletionRequest.password,
+    options: deletionRequest.captchaToken ? { captchaToken: deletionRequest.captchaToken } : undefined,
   });
   if (reauthenticationError || reauthenticated.user?.id !== data.user.id) {
     if (reauthenticated.session) {
       await verifier.auth.signOut({ scope: "local" });
     }
-    return json({ error: "reauthentication_failed" }, 403);
+    const errorCode = reauthenticationError?.code === "captcha_failed" ? "captcha_failed" : "reauthentication_failed";
+    return json({ error: errorCode }, 403);
   }
 
   const { error: deleteError } = await admin.auth.admin.deleteUser(data.user.id);
@@ -77,7 +79,7 @@ function json(body: Record<string, unknown>, status: number) {
 
 async function readDeletionRequest(request: Request) {
   try {
-    const body = await request.json() as { password?: unknown; userId?: unknown };
+    const body = await request.json() as { captchaToken?: unknown; password?: unknown; userId?: unknown };
     if (
       typeof body.password !== "string"
       || body.password.length < 1
@@ -85,10 +87,11 @@ async function readDeletionRequest(request: Request) {
       || typeof body.userId !== "string"
       || body.userId.length < 1
       || body.userId.length > 128
+      || (body.captchaToken !== undefined && (typeof body.captchaToken !== "string" || body.captchaToken.length > 4096))
     ) {
       return null;
     }
-    return { password: body.password, userId: body.userId };
+    return { captchaToken: body.captchaToken, password: body.password, userId: body.userId };
   } catch {
     return null;
   }
