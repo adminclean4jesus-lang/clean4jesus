@@ -193,6 +193,14 @@ export default function SettingsScreen() {
         />
         {isAndroid ? (
           <SettingsRow
+            onPress={() => router.push("/banking-mode")}
+            testID="settings-banking-mode"
+            subtitle={t(language, "settings.row.bankingModeHint")}
+            title={t(language, "settings.row.bankingMode")}
+          />
+        ) : null}
+        {isAndroid ? (
+          <SettingsRow
             accessory={
               <Switch
                 accessibilityLabel={t(language, "settings.whatsapp.title")}

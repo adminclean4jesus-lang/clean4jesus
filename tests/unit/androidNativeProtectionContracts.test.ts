@@ -98,6 +98,23 @@ describe("Android native protection contracts", () => {
     expect(serviceConfig).not.toContain("com.nu.production");
   });
 
+  it("keeps a real banking escape hatch for banks that reject active Accessibility", () => {
+    const serviceSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+    const moduleSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt");
+    const bridgeSource = readProjectFile("src/features/shield/localDnsVpnService.ts");
+    const settingsSource = readProjectFile("app/settings.tsx");
+    const bankingSource = readProjectFile("app/banking-mode.tsx");
+
+    expect(serviceSource).toContain("fun pauseIfRunning(): Boolean");
+    expect(serviceSource).toContain("service.disableSelf()");
+    expect(moduleSource).toContain("fun pauseAccessibilityIntervention(promise: Promise)");
+    expect(bridgeSource).toContain("export async function pauseAccessibilityIntervention()");
+    expect(settingsSource).toContain('router.push("/banking-mode")');
+    expect(bankingSource).toContain("pauseAccessibilityIntervention()");
+    expect(bankingSource).toContain("isLocalDnsVpnActive()");
+    expect(bankingSource).toContain("openAndroidAccessibilitySettings()");
+  });
+
   it("coalesces expensive accessibility tree scans without delaying typed searches", () => {
     const source = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
 

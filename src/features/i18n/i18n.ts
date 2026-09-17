@@ -26,6 +26,20 @@ export type TranslationKey =
   | "settings.row.trustedPersonHint"
   | "settings.row.interruption"
   | "settings.row.interruptionHint"
+  | "settings.row.bankingMode"
+  | "settings.row.bankingModeHint"
+  | "banking.eyebrow"
+  | "banking.title"
+  | "banking.subtitle"
+  | "banking.activeTitle"
+  | "banking.activeBody"
+  | "banking.pausedTitle"
+  | "banking.pausedBody"
+  | "banking.pause"
+  | "banking.reactivate"
+  | "banking.vpnActive"
+  | "banking.vpnInactive"
+  | "banking.unavailable"
   | "settings.whatsapp.title"
   | "settings.whatsapp.onHint"
   | "settings.whatsapp.offHint"
@@ -110,6 +124,20 @@ const es: TranslationTable = {
   "settings.row.trustedPersonHint": "Consentimiento, vínculo y alertas privadas",
   "settings.row.interruption": "Pantalla de interrupción",
   "settings.row.interruptionHint": "Tu frase e imagen para volver a lo importante",
+  "settings.row.bankingMode": "Modo banca",
+  "settings.row.bankingModeHint": "Pausa Accesibilidad para usar bancos sin desinstalar Clean4Jesus",
+  "banking.eyebrow": "Compatibilidad financiera",
+  "banking.title": "Usa tu banco con tranquilidad",
+  "banking.subtitle": "Algunos bancos bloquean cualquier servicio de Accesibilidad activo. Clean4Jesus no leerá ni interrumpirá tu banco.",
+  "banking.activeTitle": "Accesibilidad está activa",
+  "banking.activeBody": "Páusala antes de abrir una app financiera. La protección DNS local seguirá activa.",
+  "banking.pausedTitle": "Accesibilidad está pausada",
+  "banking.pausedBody": "Ya puedes abrir NU u otra app financiera. Cuando termines, reactiva Clean4Jesus desde los ajustes de Accesibilidad.",
+  "banking.pause": "Pausar Accesibilidad para usar mi banco",
+  "banking.reactivate": "Reactivar en Ajustes de Android",
+  "banking.vpnActive": "La protección DNS local sigue activa.",
+  "banking.vpnInactive": "La protección DNS local está inactiva. Reactívala después de terminar.",
+  "banking.unavailable": "No pudimos pausar Accesibilidad. Abre los ajustes de Android y desactiva Clean4Jesus manualmente.",
   "settings.whatsapp.title": "Protección en WhatsApp",
   "settings.whatsapp.onHint": "Activa para WhatsApp y WhatsApp Business.",
   "settings.whatsapp.offHint": "Desactivada para evitar bloqueos por mensajes que te envían otras personas.",
@@ -194,6 +222,20 @@ const en: TranslationTable = {
   "settings.row.trustedPersonHint": "Consent, connection, and private alerts",
   "settings.row.interruption": "Interruption screen",
   "settings.row.interruptionHint": "Your phrase and image to return to what matters",
+  "settings.row.bankingMode": "Banking mode",
+  "settings.row.bankingModeHint": "Pause Accessibility to use banking apps without uninstalling Clean4Jesus",
+  "banking.eyebrow": "Financial compatibility",
+  "banking.title": "Use your bank with confidence",
+  "banking.subtitle": "Some banks block any active Accessibility service. Clean4Jesus will not read or interrupt your bank.",
+  "banking.activeTitle": "Accessibility is active",
+  "banking.activeBody": "Pause it before opening a financial app. Local DNS protection will remain active.",
+  "banking.pausedTitle": "Accessibility is paused",
+  "banking.pausedBody": "You can now open NU or another financial app. When you finish, re-enable Clean4Jesus from Android Accessibility settings.",
+  "banking.pause": "Pause Accessibility to use my bank",
+  "banking.reactivate": "Re-enable in Android Settings",
+  "banking.vpnActive": "Local DNS protection remains active.",
+  "banking.vpnInactive": "Local DNS protection is inactive. Turn it back on when you finish.",
+  "banking.unavailable": "We could not pause Accessibility. Open Android Settings and turn off Clean4Jesus manually.",
   "settings.whatsapp.title": "WhatsApp protection",
   "settings.whatsapp.onHint": "On for WhatsApp and WhatsApp Business.",
   "settings.whatsapp.offHint": "Off to prevent blocks caused by messages other people send you.",
@@ -278,6 +320,20 @@ const fr: TranslationTable = {
   "settings.row.trustedPersonHint": "Consentement, lien et alertes privées",
   "settings.row.interruption": "Écran d'interruption",
   "settings.row.interruptionHint": "Votre phrase et votre image pour revenir à l'essentiel",
+  "settings.row.bankingMode": "Mode bancaire",
+  "settings.row.bankingModeHint": "Mettez Accessibilité en pause pour utiliser votre banque sans désinstaller Clean4Jesus",
+  "banking.eyebrow": "Compatibilité financière",
+  "banking.title": "Utilisez votre banque sereinement",
+  "banking.subtitle": "Certaines banques bloquent tout service d'accessibilité actif. Clean4Jesus ne lira ni n'interrompra votre banque.",
+  "banking.activeTitle": "Accessibilité est active",
+  "banking.activeBody": "Mettez-la en pause avant d'ouvrir une app financière. La protection DNS locale restera active.",
+  "banking.pausedTitle": "Accessibilité est en pause",
+  "banking.pausedBody": "Vous pouvez maintenant ouvrir NU ou une autre app financière. Réactivez Clean4Jesus depuis les réglages Accessibilité lorsque vous avez terminé.",
+  "banking.pause": "Mettre Accessibilité en pause pour ma banque",
+  "banking.reactivate": "Réactiver dans les réglages Android",
+  "banking.vpnActive": "La protection DNS locale reste active.",
+  "banking.vpnInactive": "La protection DNS locale est inactive. Réactivez-la après avoir terminé.",
+  "banking.unavailable": "Impossible de mettre Accessibilité en pause. Ouvrez les réglages Android et désactivez Clean4Jesus manuellement.",
   "settings.whatsapp.title": "Protection dans WhatsApp",
   "settings.whatsapp.onHint": "Activée pour WhatsApp et WhatsApp Business.",
   "settings.whatsapp.offHint": "Désactivée pour éviter les blocages causés par les messages reçus.",
@@ -362,6 +418,20 @@ const pt: TranslationTable = {
   "settings.row.trustedPersonHint": "Consentimento, vínculo e alertas privados",
   "settings.row.interruption": "Tela de interrupção",
   "settings.row.interruptionHint": "Sua frase e imagem para voltar ao que importa",
+  "settings.row.bankingMode": "Modo bancário",
+  "settings.row.bankingModeHint": "Pause a Acessibilidade para usar bancos sem desinstalar o Clean4Jesus",
+  "banking.eyebrow": "Compatibilidade financeira",
+  "banking.title": "Use seu banco com tranquilidade",
+  "banking.subtitle": "Alguns bancos bloqueiam qualquer serviço de Acessibilidade ativo. O Clean4Jesus não lerá nem interromperá seu banco.",
+  "banking.activeTitle": "Acessibilidade está ativa",
+  "banking.activeBody": "Pause antes de abrir um app financeiro. A proteção DNS local continuará ativa.",
+  "banking.pausedTitle": "Acessibilidade está pausada",
+  "banking.pausedBody": "Agora você pode abrir o NU ou outro app financeiro. Ao terminar, reative o Clean4Jesus nos ajustes de Acessibilidade do Android.",
+  "banking.pause": "Pausar Acessibilidade para usar meu banco",
+  "banking.reactivate": "Reativar nos ajustes do Android",
+  "banking.vpnActive": "A proteção DNS local continua ativa.",
+  "banking.vpnInactive": "A proteção DNS local está inativa. Reative-a quando terminar.",
+  "banking.unavailable": "Não foi possível pausar a Acessibilidade. Abra os ajustes do Android e desative o Clean4Jesus manualmente.",
   "settings.whatsapp.title": "Proteção no WhatsApp",
   "settings.whatsapp.onHint": "Ativa para WhatsApp e WhatsApp Business.",
   "settings.whatsapp.offHint": "Desativada para evitar bloqueios por mensagens enviadas por outras pessoas.",
