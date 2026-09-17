@@ -1,289 +1,132 @@
-import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Card } from "react-native-paper";
 
+import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
-import { hasPin, savePin, verifyPin } from "@/features/pin/pinService";
-import {
-  isCompletePin,
-  normalizePinInput,
-  pinLength,
-  pinsMatch,
-} from "@/features/pin/pinValidation";
-import { fonts, ThemeColors } from "@/theme";
-import { useI18n } from "@/features/i18n/I18nProvider";
-import { getPinText } from "@/features/i18n/pinText";
+import { cancelGuardianPinRequest, getGuardianPinRequestStatus, GuardianPinRequestStatus, requestGuardianPin, syncConfirmedGuardianPin } from "@/features/pin/guardianPinService";
+import { hasPin, verifyPin } from "@/features/pin/pinService";
+import { normalizePinInput, pinLength } from "@/features/pin/pinValidation";
+import { fonts } from "@/theme";
 
 export default function PinSetupScreen() {
   const router = useRouter();
-  const { colors } = useAppAppearance();
-  const { language } = useI18n();
-  const copy = getPinText(language);
-  const styles = usePinSetupStyles();
   const { after } = useLocalSearchParams<{ after?: string }>();
-  const [pin, setPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [pinExists, setPinExists] = useState(false);
+  const styles = useStyles();
+  const { colors } = useAppAppearance();
+  const [email, setEmail] = useState("");
   const [currentPin, setCurrentPin] = useState("");
-  const canSave =
-    pinsMatch(pin, confirmPin) &&
-    (!pinExists || isCompletePin(currentPin)) &&
-    !saving;
+  const [pinExists, setPinExists] = useState(false);
+  const [status, setStatus] = useState<GuardianPinRequestStatus | null>(null);
+  const [busy, setBusy] = useState(true);
 
-  useEffect(() => {
-    void hasPin().then(setPinExists);
+  const refresh = useCallback(async () => {
+    setBusy(true);
+    try {
+      const [exists, nextStatus] = await Promise.all([hasPin(), getGuardianPinRequestStatus()]);
+      setPinExists(exists);
+      setStatus(nextStatus);
+    } catch {
+      setStatus(null);
+    } finally {
+      setBusy(false);
+    }
   }, []);
 
-  async function handleSave() {
-    if (!isCompletePin(pin) || !isCompletePin(confirmPin)) {
-      Alert.alert(copy.incompleteTitle, copy.incompleteBody);
-      return;
-    }
+  useEffect(() => { void refresh(); }, [refresh]);
 
-    if (pin !== confirmPin) {
-      Alert.alert(copy.mismatchTitle, copy.mismatchBody);
-      return;
-    }
+  function continueAfterSetup() {
+    router.replace(after === "shield-setup" ? "/?setup=1" : after === "ios-limit-configured" ? "/ios-protection" : "/");
+  }
 
-    setSaving(true);
+  async function send() {
+    if (!email.trim()) return;
+    setBusy(true);
     try {
       if (pinExists && !(await verifyPin(currentPin))) {
-        Alert.alert(copy.currentInvalidTitle, copy.currentInvalidBody);
+        Alert.alert("PIN actual incorrecto", "Pídele a tu persona de confianza el PIN vigente para cambiarlo.");
         setCurrentPin("");
         return;
       }
-      await savePin(pin);
-
-      if (after === "shield-setup") {
-        router.replace("/?setup=1");
-        return;
-      }
-
-      router.replace(after === "ios-limit-configured" ? "/ios-protection" : "/");
+      setStatus(await requestGuardianPin(email));
+      Alert.alert("Correo enviado", "Tu persona de confianza debe confirmar el correo. El PIN se generará y llegará únicamente a esa persona.");
+    } catch {
+      Alert.alert("No pudimos enviar el correo", "Revisa la dirección e inténtalo de nuevo más tarde.");
     } finally {
-      setSaving(false);
+      setBusy(false);
     }
   }
 
+  async function checkConfirmation() {
+    setBusy(true);
+    try {
+      if (await syncConfirmedGuardianPin()) {
+        Alert.alert("PIN protegido", "Tu persona de confianza ya tiene el PIN. La protección quedó configurada.", [{ text: "Continuar", onPress: continueAfterSetup }]);
+        return;
+      }
+      await refresh();
+      Alert.alert("Aún pendiente", "La persona elegida todavía debe confirmar el correo.");
+    } catch {
+      Alert.alert("No pudimos verificar", "Comprueba tu conexión e inténtalo de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function cancel() {
+    setBusy(true);
+    try {
+      await cancelGuardianPinRequest();
+      await refresh();
+    } catch {
+      Alert.alert("No pudimos cancelar", "Inténtalo nuevamente.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const pending = status?.status === "pending";
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.kicker}>{copy.security}</Text>
-        <Text style={styles.title}>
-          {pinExists ? copy.changeTitle : copy.createTitle}
-        </Text>
-        <Text style={styles.subtitle}>{copy.setupBody}</Text>
+        <Text style={styles.kicker}>SEGURIDAD ACOMPAÑADA</Text>
+        <Text style={styles.title}>{pinExists ? "Cambia tu persona de confianza" : "Protege tus decisiones con compañía"}</Text>
+        <Text style={styles.subtitle}>No creas este PIN. Elige a una persona de confianza: ella confirma su correo y recibe el PIN de protección.</Text>
       </View>
-
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.form}>
-          <View style={styles.cardAccent} />
-          <View style={styles.helperRow}>
-            <View style={styles.helperIcon}>
-              <MaterialCommunityIcons
-                color={colors.primaryDark}
-                name="shield-key-outline"
-                size={16}
-              />
-            </View>
-            <View style={styles.helperCopy}>
-              <Text style={styles.label}>{copy.newPin}</Text>
-              <Text style={styles.helperText}>{copy.guardianHint}</Text>
-            </View>
-          </View>
-          {pinExists ? (
-            <>
-              <Text style={styles.label}>{copy.currentPin}</Text>
-              <TextInput
-                accessibilityLabel={copy.currentPin}
-                caretHidden
-                inputMode="numeric"
-                keyboardType="number-pad"
-                maxLength={pinLength}
-                onChangeText={(value) =>
-                  setCurrentPin(normalizePinInput(value))
-                }
-                placeholder="1234"
-                placeholderTextColor={colors.mutedDark}
-                secureTextEntry
-                style={styles.input}
-                value={currentPin}
-              />
-              <PinDots value={currentPin} />
-            </>
-          ) : null}
-          <TextInput
-            accessibilityLabel={copy.newPin}
-            autoFocus={!pinExists}
-            caretHidden
-            inputMode="numeric"
-            keyboardType="number-pad"
-            maxLength={pinLength}
-            onChangeText={(value) => setPin(normalizePinInput(value))}
-            placeholder="1234"
-            placeholderTextColor={colors.mutedDark}
-            secureTextEntry
-            selectionColor={colors.primary}
-            style={styles.input}
-            testID="pin-setup-new"
-            textContentType="oneTimeCode"
-            value={pin}
-          />
-          <PinDots value={pin} />
-
-          <Text style={styles.label}>{copy.confirmPin}</Text>
-          <TextInput
-            accessibilityLabel={copy.confirmNewPin}
-            caretHidden
-            inputMode="numeric"
-            keyboardType="number-pad"
-            maxLength={pinLength}
-            onChangeText={(value) => setConfirmPin(normalizePinInput(value))}
-            placeholder="1234"
-            placeholderTextColor={colors.mutedDark}
-            secureTextEntry
-            selectionColor={colors.primary}
-            style={styles.input}
-            testID="pin-setup-confirm"
-            textContentType="oneTimeCode"
-            value={confirmPin}
-          />
-          <PinDots value={confirmPin} />
+          <View style={styles.icon}><MaterialCommunityIcons color={colors.primaryDark} name="shield-account-outline" size={24} /></View>
+          {pending ? <>
+            <Text style={styles.cardTitle}>Esperando confirmación</Text>
+            <Text style={styles.body}>El enlace expira el {status?.expiresAt ? new Date(status.expiresAt).toLocaleString() : "pronto"}. Cuando esa persona confirme, recibirá el PIN en su correo.</Text>
+            <PrimaryButton disabled={busy} label="Ya confirmó: revisar" onPress={() => void checkConfirmation()} />
+            <PrimaryButton disabled={busy} label="Cancelar solicitud" onPress={() => void cancel()} variant="ghost" />
+          </> : <>
+            <Text style={styles.cardTitle}>{pinExists ? "Envía un nuevo PIN protegido" : "¿Quién guardará el PIN?"}</Text>
+            <Text style={styles.body}>Solo compartiremos el PIN con esta dirección después de que acepte acompañarte. Puede rechazar o ignorar la solicitud.</Text>
+            {pinExists ? <TextInput accessibilityLabel="PIN actual" caretHidden inputMode="numeric" keyboardType="number-pad" maxLength={pinLength} onChangeText={(value) => setCurrentPin(normalizePinInput(value))} placeholder="PIN actual" placeholderTextColor={colors.mutedDark} secureTextEntry style={styles.input} value={currentPin} /> : null}
+            <TextInput accessibilityLabel="Correo de la persona de confianza" autoCapitalize="none" autoComplete="email" keyboardType="email-address" onChangeText={setEmail} placeholder="persona@correo.com" placeholderTextColor={colors.mutedDark} style={styles.input} value={email} />
+            <PrimaryButton disabled={busy || !email.trim() || (pinExists && !currentPin)} label={busy ? "Preparando..." : "Enviar solicitud"} onPress={() => void send()} />
+          </>}
         </Card.Content>
       </Card>
-
-      <PrimaryButton
-        disabled={!canSave}
-        label={saving ? copy.saving : copy.save}
-        onPress={handleSave}
-        testID="pin-setup-save"
-      />
+      <Text style={styles.footnote}>El PIN no aparecerá en este teléfono ni se guardará como texto. Para cambiarlo después, necesitarás el PIN vigente.</Text>
     </Screen>
   );
 }
 
-function PinDots({ value }: { value: string }) {
-  const styles = usePinSetupStyles();
-  return (
-    <View style={styles.dotsRow}>
-      {Array.from({ length: pinLength }).map((_, index) => (
-        <View
-          key={index}
-          style={[styles.dot, index < value.length ? styles.dotFilled : null]}
-        />
-      ))}
-    </View>
-  );
-}
-
-function usePinSetupStyles() {
+function useStyles() {
   const { colors } = useAppAppearance();
-  return useMemo(() => createStyles(colors), [colors]);
-}
-
-function createStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    header: {
-      gap: 8,
-    },
-    kicker: {
-      color: colors.accent,
-      fontFamily: fonts.label,
-      fontSize: 11,
-      textTransform: "uppercase",
-    },
-    title: {
-      color: colors.text,
-      fontFamily: fonts.display,
-      fontSize: 22,
-      lineHeight: 27,
-    },
-    subtitle: {
-      color: colors.muted,
-      fontFamily: "Inter_400Regular",
-      fontSize: 12,
-      lineHeight: 18,
-    },
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 24,
-      borderColor: colors.border,
-      borderWidth: 1,
-      elevation: 2,
-    },
-    form: {
-      gap: 10,
-    },
-    cardAccent: {
-      backgroundColor: colors.primary,
-      borderRadius: 999,
-      height: 4,
-      width: 44,
-    },
-    helperRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 10,
-    },
-    helperIcon: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceAlt,
-      borderColor: colors.border,
-      borderRadius: 14,
-      borderWidth: 1,
-      height: 34,
-      justifyContent: "center",
-      width: 34,
-    },
-    helperCopy: {
-      flex: 1,
-      gap: 2,
-    },
-    label: {
-      color: colors.muted,
-      fontFamily: fonts.label,
-      fontSize: 10,
-      textTransform: "uppercase",
-    },
-    helperText: {
-      color: colors.muted,
-      fontFamily: "Inter_400Regular",
-      fontSize: 11.5,
-      lineHeight: 16,
-    },
-    input: {
-      backgroundColor: colors.surfaceAlt,
-      borderColor: colors.border,
-      borderRadius: 16,
-      borderWidth: 1,
-      color: colors.text,
-      fontFamily: fonts.display,
-      fontSize: 18,
-      height: 50,
-      includeFontPadding: false,
-      letterSpacing: 8,
-      textAlign: "center",
-    },
-    dotsRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 8,
-      justifyContent: "center",
-      paddingBottom: 6,
-    },
-    dot: {
-      backgroundColor: "#CFD7D6",
-      borderRadius: 5,
-      height: 8,
-      width: 8,
-    },
-    dotFilled: {
-      backgroundColor: colors.primary,
-    },
-  });
+  return useMemo(() => StyleSheet.create({
+    header: { gap: 8 }, kicker: { color: colors.accent, fontFamily: fonts.label, fontSize: 11, letterSpacing: 1 },
+    title: { color: colors.text, fontFamily: fonts.display, fontSize: 24, lineHeight: 30 }, subtitle: { color: colors.muted, fontFamily: "Inter_400Regular", fontSize: 13, lineHeight: 20 },
+    card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 24, borderWidth: 1 }, form: { gap: 14 },
+    icon: { alignItems: "center", alignSelf: "flex-start", backgroundColor: colors.surfaceAlt, borderRadius: 16, height: 48, justifyContent: "center", width: 48 },
+    cardTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 20 }, body: { color: colors.muted, fontFamily: "Inter_400Regular", fontSize: 13, lineHeight: 20 },
+    input: { backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderRadius: 16, borderWidth: 1, color: colors.text, fontFamily: fonts.heading, fontSize: 16, minHeight: 52, paddingHorizontal: 16, textAlign: "center" },
+    footnote: { color: colors.muted, fontFamily: "Inter_400Regular", fontSize: 11.5, lineHeight: 17 },
+  }), [colors]);
 }

@@ -32,24 +32,21 @@ describe("Phase 1 protection contracts", () => {
     );
   });
 
-  it("requires the current guardian PIN before replacing an existing PIN", () => {
+  it("requires the current guardian PIN before requesting a replacement from another trusted person", () => {
     const source = read("app/pin-setup.tsx");
-    const copy = read("src/features/i18n/pinText.ts");
     expect(source).toContain("pinExists && !(await verifyPin(currentPin))");
-    expect(source).toContain("accessibilityLabel={copy.currentPin}");
-    expect(source).toContain("accessibilityLabel={copy.newPin}");
-    expect(copy).toContain('currentPin: "PIN actual"');
-    expect(copy).toContain('newPin: "Nuevo PIN"');
+    expect(source).toContain('accessibilityLabel="PIN actual"');
+    expect(source).toContain("requestGuardianPin(email)");
+    expect(source).toContain("syncConfirmedGuardianPin()");
   });
 
-  it("keeps first-time PIN creation available after the initial iOS configuration", () => {
+  it("keeps email-based PIN setup available after the initial iOS configuration", () => {
     const source = read("app/pin-setup.tsx");
     const protectionSource = read("app/ios-protection.tsx");
     const maestro = read(".maestro/ios-startup-smoke.yml");
 
-    expect(source).toContain('testID="pin-setup-new"');
-    expect(source).toContain('testID="pin-setup-confirm"');
-    expect(source).toContain('testID="pin-setup-save"');
+    expect(source).toContain('accessibilityLabel="Correo de la persona de confianza"');
+    expect(source).toContain("No creas este PIN");
     expect(protectionSource).toContain('router.push("/pin-setup?after=ios-limit-configured")');
     expect(source).toContain('after === "ios-limit-configured" ? "/ios-protection" : "/"');
     expect(maestro).toContain('visible: ".*(Refugio|Refuge|iOS).*"');
