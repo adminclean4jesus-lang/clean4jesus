@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash-mark-transparent.png",
       "resizeMode": "contain",
       "backgroundColor": "#071F52"
     },
@@ -51,7 +51,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#071F52",
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/splash-mark-transparent.png",
           "imageWidth": 148,
           "resizeMode": "contain"
         }
