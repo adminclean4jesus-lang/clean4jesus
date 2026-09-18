@@ -1,5 +1,11 @@
 # Directivas Clean4Jesus
 
+## Checkpoint Landing Reemplazada - 2026-09-18
+
+- `clean4jesus.com` usa el HTML autocontenido entregado para la landing vigente, con capturas reales de Refugio, Palabra y Comunidad y los originales preservados en `web/landing/assets/`.
+- El CTA público apunta a `https://tally.so/r/Y5BAzv` y se presenta como `Beta cerrada · Solicita acceso`; no afirmar que la beta está abierta ni que Android/iOS estén disponibles hasta contar con evidencia y aprobación de salida.
+- No ejecutar `npm run landing:build` para esta versión: el script anterior reconstruye y reemplaza la landing autocontenida. Desplegar directamente `web/landing` con Wrangler tras la autorización explícita del CEO.
+
 ## Checkpoint De Validacion Temprana De Demanda - 2026-09-15
 
 - La lista de espera alcanzó ocho personas interesadas tras la campaña pública. Esto valida interés inicial y debe tratarse como una señal de demanda, no como autorización para abrir la beta externa.
