@@ -72,6 +72,7 @@
 ## Producto
 
 - Nombre publico: **Clean4Jesus**. Usarlo exactamente asi en UI, documentacion, splash, tabs y textos.
+- Splash de lanzamiento (17 de septiembre de 2026): el emblema debe aparecer integrado sobre el fondo azul oficial `#071F52`, nunca como una imagen azul sobre una pantalla blanca. Mantener una transición breve y serena; validar siempre en una build nativa, pues Metro no representa fielmente el splash de producción.
 - Tono: cristiano, calido, motivador y concreto. Evitar lenguaje clinico, generico o de dashboard empresarial.
 - Primer objetivo del MVP: que la app abra siempre, que el usuario entienda el estado del escudo y que pueda registrar habitos/devocional sin friccion.
 - La experiencia base es "escudo primero": el usuario activa la proteccion y solo entonces entra al resto de la app.
