@@ -1,41 +1,41 @@
 import { MD3DarkTheme, MD3LightTheme, configureFonts } from "react-native-paper";
-import { Appearance, Platform } from "react-native";
+import { Appearance } from "react-native";
 
 export const lightColors = {
   background: "#F8F9FA",
   surface: "#FFFFFF",
-  surfaceAlt: "#EEF2FF",
+  surfaceAlt: "#F3F4F5",
   card: "#FFFFFF",
   cardText: "#17211D",
-  primary: "#1A237E",
-  primaryDark: "#0F164E",
-  accent: "#F9A825",
-  accentSoft: "rgba(249, 168, 37, 0.16)",
-  danger: "#C62828",
-  text: "#17211D",
-  muted: "#66726D",
-  mutedDark: "#8A958F",
-  border: "#DDE4DE",
-  success: "#2E7D32",
-  successSoft: "rgba(46, 125, 50, 0.12)",
-  partial: "#A67C00",
-  partialSoft: "rgba(249, 168, 37, 0.18)",
-  empty: "#EEF2EE",
-  black: "#101815",
+  primary: "#02174B",
+  primaryDark: "#02174B",
+  accent: "#D9A441",
+  accentSoft: "#FFDEA5",
+  danger: "#BA1A1A",
+  text: "#191C1D",
+  muted: "#45464F",
+  mutedDark: "#757680",
+  border: "#E1E3E4",
+  success: "#12835B",
+  successSoft: "#D5F4E7",
+  partial: "#775A19",
+  partialSoft: "#FFF1D6",
+  empty: "#E7E8E9",
+  black: "#000000",
   onPrimary: "#FFFFFF",
   onAccent: "#17211D",
 } as const;
 
 export const darkColors = {
-  background: "#10131B",
-  surface: "#181D28",
-  surfaceAlt: "#242C3C",
-  card: "#181D28",
+  background: "#071226",
+  surface: "#101D35",
+  surfaceAlt: "#192846",
+  card: "#101D35",
   cardText: "#F4F7FB",
-  primary: "#AAB9FF",
-  primaryDark: "#DCE3FF",
-  accent: "#F6C652",
-  accentSoft: "rgba(246, 198, 82, 0.18)",
+  primary: "#DCE1FF",
+  primaryDark: "#DCE1FF",
+  accent: "#E9C176",
+  accentSoft: "rgba(233, 193, 118, 0.18)",
   danger: "#FF8A86",
   text: "#F4F7FB",
   muted: "#B5BFCC",
@@ -58,14 +58,11 @@ export type ThemeColors = { [Key in keyof typeof lightColors]: string };
 export const colors = Appearance.getColorScheme() === "dark" ? darkColors : lightColors;
 
 export const fonts = {
-  // These faces are not bundled in the iOS binary. Passing their names to
-  // UIKit during the first render can crash the React Native font bridge on
-  // iOS 18. Use the proven system face there; Android retains its typography.
-  display: Platform.OS === "ios" ? "System" : "LexendDeca_700Bold",
-  heading: Platform.OS === "ios" ? "System" : "PlusJakartaSans_600SemiBold",
-  body: Platform.OS === "ios" ? "System" : "Inter_400Regular",
-  bodyMedium: Platform.OS === "ios" ? "System" : "PlusJakartaSans_500Medium",
-  label: Platform.OS === "ios" ? "System" : "Inter_400Regular",
+  display: "Montserrat_700Bold",
+  heading: "Montserrat_600SemiBold",
+  body: "Inter_400Regular",
+  bodyMedium: "Inter_500Medium",
+  label: "Inter_500Medium",
 } as const;
 
 const fontConfig = {

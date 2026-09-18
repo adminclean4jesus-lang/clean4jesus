@@ -113,9 +113,10 @@ Deno.serve(async (request) => {
     const from = Deno.env.get("ACCOUNTABILITY_FROM_EMAIL");
     if (!resendKey || !from) return json({ error: "email_delivery_not_configured" }, 503);
     const token = createUrlToken();
+    const tokenHash = `\\x${await sha256Hex(token)}`;
     const { data, error } = await client.rpc("create_guardian_pin_request", {
       p_guardian_email: body.email.trim().toLowerCase(),
-      p_confirmation_token_hash: `\\x${await sha256Hex(token)}`,
+      p_confirmation_token_hash: tokenHash,
     });
     if (error) return databaseError(error);
     const request = data?.[0];
@@ -131,8 +132,14 @@ Deno.serve(async (request) => {
           html: guardianConfirmationEmail(confirmationUrl),
         }),
       });
-      if (!response.ok) return json({ error: "email_delivery_failed" }, 502);
-    } catch { return json({ error: "email_delivery_failed" }, 502); }
+      if (!response.ok) {
+        await discardGuardianPinRequest(client, tokenHash);
+        return json({ error: "email_delivery_failed" }, 502);
+      }
+    } catch {
+      await discardGuardianPinRequest(client, tokenHash);
+      return json({ error: "email_delivery_failed" }, 502);
+    }
     return json({ status: request?.status ?? "pending", expiresAt: request?.expires_at ?? null }, 202);
   }
 
@@ -321,8 +328,27 @@ function databaseError(error: { code?: string; message: string }) {
   if (error.code === "42501") return json({ error: "forbidden" }, 403);
   if (error.code === "P0002") return json({ error: "not_found" }, 404);
   if (error.code === "23505") return json({ error: "conflict" }, 409);
+  if (error.code === "22023" && error.message.includes("guardian_pin_request_rate_limited")) {
+    return json({ error: "guardian_pin_request_rate_limited" }, 429);
+  }
+  if (error.code === "22023" && error.message.includes("invalid_guardian_pin_request")) {
+    return json({ error: "invalid_guardian_email" }, 400);
+  }
+  if (error.code === "PGRST202" || /guardian_pin_request/i.test(error.message) && /not find|schema cache/i.test(error.message)) {
+    return json({ error: "guardian_pin_backend_not_ready" }, 503);
+  }
   if (error.code === "22023") return json({ error: "invalid_request" }, 400);
   return json({ error: "accountability_operation_failed" }, 400);
+}
+
+async function discardGuardianPinRequest(
+  client: ReturnType<typeof createClient>,
+  tokenHash: string,
+) {
+  const { error } = await client.rpc("discard_my_guardian_pin_request", {
+    p_confirmation_token_hash: tokenHash,
+  });
+  if (error) console.error("guardian_pin_cleanup_failed", error.code);
 }
 
 function json(body: Record<string, unknown>, status: number) {

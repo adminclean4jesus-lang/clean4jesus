@@ -22,6 +22,7 @@ const locales = [
 for (const locale of locales) {
   test(`la interfaz publica renderiza ${locale.language} sin perder estructura`, async ({ page }) => {
     await page.addInitScript(({ language, shieldState }) => {
+      localStorage.setItem("clean4jesus.e2e.authenticated", "true");
       localStorage.setItem("clean4jesus.languagePreference", JSON.stringify(language));
       localStorage.setItem("clean4jesus.languagePreference.explicit", "true");
       localStorage.setItem("clean4jesus.shield.enabled", "true");

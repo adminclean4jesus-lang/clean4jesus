@@ -40,6 +40,22 @@ describe("Phase 1 protection contracts", () => {
     expect(source).toContain("syncConfirmedGuardianPin()");
   });
 
+  it("rolls back a guardian request when the email provider rejects delivery", () => {
+    const backend = read("supabase/functions/accountability/index.ts");
+    const rollback = read("supabase/migrations/20260918143000_guardian_pin_delivery_rollback_v2.sql");
+    const client = read("src/features/pin/guardianPinService.ts");
+
+    expect(backend).toContain("discardGuardianPinRequest(client, tokenHash)");
+    expect(backend).toContain('client.rpc("discard_my_guardian_pin_request"');
+    expect(rollback).toContain("request.owner_user_id = caller_id");
+    expect(rollback).toContain("request.confirmation_token_hash = p_confirmation_token_hash");
+    expect(rollback).toContain("request.status = 'pending'");
+    expect(rollback).toContain("[^[:space:]@]");
+    expect(rollback).not.toContain("[^\\\\s@]");
+    expect(client).toContain("readBackendErrorCode");
+    expect(client).toContain('backendCode === "email_delivery_failed"');
+  });
+
   it("keeps email-based PIN setup available after the initial iOS configuration", () => {
     const source = read("app/pin-setup.tsx");
     const protectionSource = read("app/ios-protection.tsx");

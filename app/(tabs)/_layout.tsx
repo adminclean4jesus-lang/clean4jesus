@@ -6,6 +6,8 @@ import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { uiText } from "@/features/i18n/uiText";
 import { fonts } from "@/theme";
+import { AppLoadingExperience } from "@/components/AppLoadingExperience";
+import { useShieldGate } from "@/features/shield/useShieldGate";
 
 function TabLabel({ color, text }: { color: string; text: string }) {
   return (
@@ -29,6 +31,11 @@ function TabLabel({ color, text }: { color: string; text: string }) {
 export default function TabsLayout() {
   const { colors } = useAppAppearance();
   const { language } = useI18n();
+  const { checked, enabled } = useShieldGate();
+
+  if (!checked || !enabled) {
+    return <AppLoadingExperience message="Terminando de preparar tu refugio..." />;
+  }
 
   return (
     <Tabs

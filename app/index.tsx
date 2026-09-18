@@ -16,6 +16,9 @@ import { InfoCard } from "@/components/InfoCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
+import { AppLoadingExperience } from "@/components/AppLoadingExperience";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { WelcomeAuthScreen } from "@/features/onboarding/WelcomeAuthScreen";
 import { hasPin } from "@/features/pin/pinService";
 import {
   isAccessibilityInterventionActive,
@@ -40,6 +43,16 @@ import { fonts, ThemeColors } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function GateScreen() {
+  const { status } = useAuth();
+
+  if (status === "loading") {
+    return <AppLoadingExperience message="Preparando tu refugio..." />;
+  }
+
+  if (status !== "authenticated") {
+    return <WelcomeAuthScreen />;
+  }
+
   // iOS uses the dedicated refuge flow (equivalent to <Redirect href="/ios-protection" />).
   if (Platform.OS === "ios") return <IosGateScreen />;
   return <AndroidGateScreen />;
@@ -503,6 +516,10 @@ function AndroidGateScreen() {
       // The base refuge must therefore remain usable with the PIN and local DNS VPN
       // alone; visible-content interruption is an explicit advanced opt-in.
       if (accessibilityActive) await pauseAccessibilityIntervention();
+      if (!pinExists) {
+        router.replace("/pin-setup?after=shield-setup");
+        return;
+      }
       const protectionReady = pinExists && vpnActive;
       setShieldEnabled(currentShield && protectionReady);
       setPinReady(pinExists);

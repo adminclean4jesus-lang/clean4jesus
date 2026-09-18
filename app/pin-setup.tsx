@@ -7,7 +7,8 @@ import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
-import { cancelGuardianPinRequest, getGuardianPinRequestStatus, GuardianPinRequestStatus, requestGuardianPin, syncConfirmedGuardianPin } from "@/features/pin/guardianPinService";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { cancelGuardianPinRequest, getGuardianPinRequestStatus, GuardianPinError, GuardianPinRequestStatus, requestGuardianPin, syncConfirmedGuardianPin } from "@/features/pin/guardianPinService";
 import { hasPin, verifyPin } from "@/features/pin/pinService";
 import { normalizePinInput, pinLength } from "@/features/pin/pinValidation";
 import { fonts } from "@/theme";
@@ -17,6 +18,7 @@ export default function PinSetupScreen() {
   const { after } = useLocalSearchParams<{ after?: string }>();
   const styles = useStyles();
   const { colors } = useAppAppearance();
+  const { status: authStatus } = useAuth();
   const [email, setEmail] = useState("");
   const [currentPin, setCurrentPin] = useState("");
   const [pinExists, setPinExists] = useState(false);
@@ -38,6 +40,12 @@ export default function PinSetupScreen() {
 
   useEffect(() => { void refresh(); }, [refresh]);
 
+  useEffect(() => {
+    if (authStatus === "anonymous" || authStatus === "unconfigured") {
+      router.replace("/");
+    }
+  }, [authStatus, router]);
+
   function continueAfterSetup() {
     router.replace(after === "shield-setup" ? "/?setup=1" : after === "ios-limit-configured" ? "/ios-protection" : "/");
   }
@@ -53,8 +61,22 @@ export default function PinSetupScreen() {
       }
       setStatus(await requestGuardianPin(email));
       Alert.alert("Correo enviado", "Tu persona de confianza debe confirmar el correo. El PIN se generará y llegará únicamente a esa persona.");
-    } catch {
-      Alert.alert("No pudimos enviar el correo", "Revisa la dirección e inténtalo de nuevo más tarde.");
+    } catch (error) {
+      if (error instanceof GuardianPinError && error.code === "sign_in_required") {
+        Alert.alert("Primero protege tu cuenta", "Para guardar este PIN de forma segura, crea o inicia sesión en Clean4Jesus.", [{ text: "Ir al acceso", onPress: () => router.replace("/") }]);
+      } else if (error instanceof GuardianPinError && error.code === "invalid_email") {
+        Alert.alert("Revisa el correo", "Escribe una dirección completa y válida para tu persona de confianza.");
+      } else if (error instanceof GuardianPinError && error.code === "backend_not_ready") {
+        Alert.alert("Actualización del servicio pendiente", "La app está lista, pero el servicio seguro del PIN todavía no está actualizado. No se creó ninguna solicitud.");
+      } else if (error instanceof GuardianPinError && error.code === "email_delivery_not_configured") {
+        Alert.alert("Entrega de correo en preparación", "El servicio seguro de envío aún no está configurado. No se creó ningún PIN ni se guardó tu correo.");
+      } else if (error instanceof GuardianPinError && error.code === "email_delivery_failed") {
+        Alert.alert("El correo fue rechazado", "El proveedor no pudo entregar la solicitud. No se creó ningún PIN ni quedó una solicitud pendiente. Inténtalo de nuevo en unos minutos.");
+      } else if (error instanceof GuardianPinError && error.code === "rate_limited") {
+        Alert.alert("Límite de seguridad", "Ya alcanzaste el límite de tres solicitudes en 24 horas. Inténtalo de nuevo mañana.");
+      } else {
+        Alert.alert("No pudimos enviar el correo", "Comprueba la conexión y la dirección. No se creó ningún PIN.");
+      }
     } finally {
       setBusy(false);
     }
@@ -91,10 +113,27 @@ export default function PinSetupScreen() {
   const pending = status?.status === "pending";
   return (
     <Screen>
+      <View style={styles.progressRow}>
+        <ProgressStep complete label="Cuenta" number="1" />
+        <View style={styles.progressLine} />
+        <ProgressStep active label="Confianza" number="2" />
+        <View style={styles.progressLine} />
+        <ProgressStep label="Protección" number="3" />
+      </View>
       <View style={styles.header}>
         <Text style={styles.kicker}>SEGURIDAD ACOMPAÑADA</Text>
         <Text style={styles.title}>{pinExists ? "Cambia tu persona de confianza" : "Protege tus decisiones con compañía"}</Text>
         <Text style={styles.subtitle}>No creas este PIN. Elige a una persona de confianza: ella confirma su correo y recibe el PIN de protección.</Text>
+      </View>
+      <View style={styles.trustBanner}>
+        <View style={styles.trustMark}>
+          <MaterialCommunityIcons color={colors.primaryDark} name="account-heart-outline" size={28} />
+        </View>
+        <View style={styles.trustCopy}>
+          <Text style={styles.trustEyebrow}>UN PIN QUE NO VIVE CONTIGO</Text>
+          <Text style={styles.trustTitle}>Tu persona de confianza lo guarda por ti.</Text>
+          <Text style={styles.trustBody}>Clean4Jesus lo genera de forma segura después de que esa persona confirma la solicitud.</Text>
+        </View>
       </View>
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.form}>
@@ -118,15 +157,42 @@ export default function PinSetupScreen() {
   );
 }
 
+function ProgressStep({ active = false, complete = false, label, number }: { active?: boolean; complete?: boolean; label: string; number: string }) {
+  const { colors } = useAppAppearance();
+  const styles = useStyles();
+  return (
+    <View style={styles.progressStep}>
+      <View style={[styles.progressDot, (active || complete) && styles.progressDotActive]}>
+        <Text style={[styles.progressNumber, (active || complete) && { color: colors.surface }]}>{complete ? "✓" : number}</Text>
+      </View>
+      <Text style={[styles.progressLabel, active && styles.progressLabelActive]}>{label}</Text>
+    </View>
+  );
+}
+
 function useStyles() {
   const { colors } = useAppAppearance();
   return useMemo(() => StyleSheet.create({
+    progressRow: { alignItems: "flex-start", flexDirection: "row", marginBottom: 10 },
+    progressStep: { alignItems: "center", gap: 5, width: 72 },
+    progressLine: { backgroundColor: colors.border, flex: 1, height: 1, marginTop: 15 },
+    progressDot: { alignItems: "center", backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderRadius: 999, borderWidth: 1, height: 30, justifyContent: "center", width: 30 },
+    progressDotActive: { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark },
+    progressNumber: { color: colors.muted, fontFamily: fonts.heading, fontSize: 11 },
+    progressLabel: { color: colors.muted, fontFamily: fonts.label, fontSize: 9 },
+    progressLabelActive: { color: colors.primaryDark, fontFamily: fonts.heading },
     header: { gap: 8 }, kicker: { color: colors.accent, fontFamily: fonts.label, fontSize: 11, letterSpacing: 1 },
-    title: { color: colors.text, fontFamily: fonts.display, fontSize: 24, lineHeight: 30 }, subtitle: { color: colors.muted, fontFamily: "Inter_400Regular", fontSize: 13, lineHeight: 20 },
-    card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 24, borderWidth: 1 }, form: { gap: 14 },
-    icon: { alignItems: "center", alignSelf: "flex-start", backgroundColor: colors.surfaceAlt, borderRadius: 16, height: 48, justifyContent: "center", width: 48 },
+    title: { color: colors.text, fontFamily: fonts.display, fontSize: 28, lineHeight: 35 }, subtitle: { color: colors.muted, fontFamily: fonts.body, fontSize: 14, lineHeight: 22 },
+    trustBanner: { alignItems: "center", backgroundColor: colors.primaryDark, borderRadius: 20, flexDirection: "row", gap: 14, padding: 18 },
+    trustMark: { alignItems: "center", backgroundColor: colors.accentSoft, borderRadius: 999, height: 56, justifyContent: "center", width: 56 },
+    trustCopy: { flex: 1, gap: 4 },
+    trustEyebrow: { color: colors.accent, fontFamily: fonts.label, fontSize: 9, letterSpacing: 1 },
+    trustTitle: { color: "#FFFFFF", fontFamily: fonts.heading, fontSize: 15, lineHeight: 20 },
+    trustBody: { color: "rgba(255,255,255,0.72)", fontFamily: fonts.body, fontSize: 11.5, lineHeight: 17 },
+    card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 20, borderWidth: 1 }, form: { gap: 14, paddingVertical: 6 },
+    icon: { alignItems: "center", alignSelf: "flex-start", backgroundColor: colors.accentSoft, borderRadius: 999, height: 48, justifyContent: "center", width: 48 },
     cardTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 20 }, body: { color: colors.muted, fontFamily: "Inter_400Regular", fontSize: 13, lineHeight: 20 },
-    input: { backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderRadius: 16, borderWidth: 1, color: colors.text, fontFamily: fonts.heading, fontSize: 16, minHeight: 52, paddingHorizontal: 16, textAlign: "center" },
+    input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 14, borderWidth: 1, color: colors.text, fontFamily: fonts.bodyMedium, fontSize: 15, minHeight: 54, paddingHorizontal: 16 },
     footnote: { color: colors.muted, fontFamily: "Inter_400Regular", fontSize: 11.5, lineHeight: 17 },
   }), [colors]);
 }

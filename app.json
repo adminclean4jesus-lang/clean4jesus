@@ -3,7 +3,7 @@
     "name": "Clean4Jesus",
     "slug": "clean4jesus",
     "scheme": "clean4jesus",
-    "version": "1.3.39",
+    "version": "1.3.41",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,14 +11,14 @@
     "splash": {
       "image": "./assets/splash-mark-transparent.png",
       "resizeMode": "contain",
-      "backgroundColor": "#071F52"
+      "backgroundColor": "#02174B"
     },
     "android": {
-      "versionCode": 57,
+      "versionCode": 59,
       "package": "com.clean4jesus.app",
       "newArchEnabled": true,
       "adaptiveIcon": {
-        "backgroundColor": "#071F52",
+        "backgroundColor": "#02174B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -29,7 +29,7 @@
     "ios": {
       "appleTeamId": "Z7NA7KP494",
       "bundleIdentifier": "com.clean4jesus.app",
-      "buildNumber": "28",
+      "buildNumber": "29",
       "supportsTablet": false,
       "entitlements": {
         "com.apple.developer.family-controls": true,
@@ -50,7 +50,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#071F52",
+          "backgroundColor": "#02174B",
           "image": "./assets/splash-mark-transparent.png",
           "imageWidth": 148,
           "resizeMode": "contain"
@@ -61,7 +61,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#071F52",
+          "color": "#02174B",
           "defaultChannel": "devotional-reminders"
         }
       ],

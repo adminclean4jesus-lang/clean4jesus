@@ -16,19 +16,19 @@ export function InfoCard({ children, style, tone = "dark", ...viewProps }: InfoC
       ? { backgroundColor: colors.successSoft, borderColor: colors.successSoft, borderLeftColor: colors.success }
       : tone === "outline"
         ? { backgroundColor: colors.surface, borderColor: colors.border, borderLeftColor: colors.border, borderLeftWidth: StyleSheet.hairlineWidth }
-        : { backgroundColor: colors.surface, borderColor: colors.border, borderLeftColor: colors.primary };
+        : { backgroundColor: colors.surface, borderColor: colors.border, borderTopColor: colors.accent, borderTopWidth: 3 };
   return <View {...viewProps} style={[styles.card, toneStyle, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 14,
-    shadowColor: "#AFC0F4",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.07,
-    shadowRadius: 18,
+    padding: 18,
+    shadowColor: "#02174B",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 20,
     elevation: 2,
   },
 });

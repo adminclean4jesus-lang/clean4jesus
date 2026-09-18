@@ -2,7 +2,6 @@ import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { APP_VERSION_LABEL } from "@/config/appInfo";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { coreFlowText } from "@/features/i18n/coreFlowText";
 import { useI18n } from "@/features/i18n/I18nProvider";
@@ -23,7 +22,7 @@ export function AppHeader({
   title,
   subtitle,
   icon = "cross",
-  version = APP_VERSION_LABEL,
+  version,
   titleTrailing,
   onBack,
 }: AppHeaderProps) {
@@ -37,16 +36,17 @@ export function AppHeader({
             <MaterialCommunityIcons color={colors.primaryDark} name="arrow-left" size={20} />
           </Pressable>
         ) : null}
-        <View style={[styles.iconMark, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
-          <MaterialCommunityIcons color={colors.primaryDark} name={icon} size={16} />
+        <View style={[styles.iconMark, { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark }]}>
+          <MaterialCommunityIcons color="#FFFFFF" name={icon} size={16} />
         </View>
-        <Text numberOfLines={1} style={[styles.eyebrow, { color: colors.primaryDark }]}>
-          {eyebrow}
+        <Text numberOfLines={1} style={[styles.brand, { color: colors.text }]}>
+          Clean4Jesus
         </Text>
-        <View style={[styles.versionChip, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+        {version ? <View style={[styles.versionChip, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
           <Text style={[styles.versionText, { color: colors.primaryDark }]}>{version}</Text>
-        </View>
+        </View> : null}
       </View>
+      <Text style={[styles.eyebrow, { color: colors.partial }]}>{eyebrow}</Text>
       <View style={styles.titleRow}>
         <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         {titleTrailing ? <View style={styles.trailing}>{titleTrailing}</View> : null}
@@ -58,7 +58,8 @@ export function AppHeader({
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 8,
+    gap: 7,
+    marginBottom: 4,
   },
   topRow: {
     alignItems: "center",
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
   },
   iconMark: {
     alignItems: "center",
-    borderRadius: 14,
+    borderRadius: 999,
     borderWidth: 1,
     height: 30,
     justifyContent: "center",
@@ -101,25 +102,30 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   eyebrow: {
-    flexShrink: 1,
     fontFamily: fonts.label,
-    fontSize: 11,
-    letterSpacing: 0.8,
+    fontSize: 11.5,
+    letterSpacing: 1,
     textTransform: "uppercase",
+  },
+  brand: {
+    flex: 1,
+    fontFamily: fonts.heading,
+    fontSize: 20,
+    letterSpacing: -0.3,
   },
   title: {
     flex: 1,
     fontFamily: fonts.display,
-    fontSize: 24,
-    lineHeight: 28,
+    fontSize: 28,
+    lineHeight: 36,
   },
   trailing: {
     alignItems: "flex-end",
     justifyContent: "center",
   },
   subtitle: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12.5,
-    lineHeight: 18,
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 22,
   },
 });
