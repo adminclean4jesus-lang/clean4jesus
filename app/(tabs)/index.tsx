@@ -68,10 +68,10 @@ export default function HomeScreen() {
   }, []);
 
   /* ── Readiness calculation differs by platform ── */
-  const totalLayers = isIos ? 2 : 3;
+  const totalLayers = 2;
   const readyCount = isIos
     ? [pinReady, familyControlsReady].filter(Boolean).length
-    : [pinReady, vpnReady, accessibilityReady].filter(Boolean).length;
+    : [pinReady, vpnReady].filter(Boolean).length;
   const readiness = readyCount / totalLayers;
   const refugeReady = enabled && readiness === 1;
   const coverageLabel = Math.round(readiness * 100);
@@ -80,7 +80,7 @@ export default function HomeScreen() {
 
   const missingLayers = isIos
     ? [!pinReady ? layers.pin : null, !familyControlsReady ? layers.familyControls : null].filter(Boolean) as string[]
-    : [!pinReady ? layers.pin : null, !vpnReady ? layers.vpn : null, !accessibilityReady ? layers.accessibility : null].filter(Boolean) as string[];
+    : [!pinReady ? layers.pin : null, !vpnReady ? layers.vpn : null].filter(Boolean) as string[];
 
   async function refreshHomeState() {
     try {

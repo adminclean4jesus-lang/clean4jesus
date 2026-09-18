@@ -513,3 +513,9 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - La app recibe y sincroniza únicamente el hash SHA-256 compatible con la verificación nativa de Android; nunca recibe, muestra ni persiste el PIN en texto. El enlace de confirmación es aleatorio, de un solo uso, vence en 24 horas y la solicitud puede cancelarse antes de confirmar.
 - El backend limita a tres solicitudes de PIN por cuenta cada 24 horas y mantiene un único enlace pendiente. Los correos externos usan el logo oficial, dominio remitente verificado y copy explícito de consentimiento; el destinatario puede ignorar la solicitud.
 - Cambiar el PIN exige validar el PIN vigente en la app. Este control protege el flujo ordinario de UI; no se debe describir como resistencia frente a un dispositivo rooteado o comprometido. Antes de beta externa, probar el recorrido completo con dos correos reales y comprobar que los links, cancelación, expiración y entrega no duplicada funcionan.
+
+## Compatibilidad Con Banca Android (17 De Septiembre De 2026)
+
+- Nunca exigir ni activar por defecto el servicio de Accesibilidad para completar el Refugio Android. Nu y otras entidades financieras pueden marcar la mera presencia de un servicio que lee contenido de pantalla como riesgo, incluso si Clean4Jesus no observa ni bloquea sus paquetes.
+- La protección base Android es PIN por persona de confianza más VPN DNS local. Accesibilidad queda fuera de ese requisito y debe permanecer apagada tras actualizar instalaciones que la tuvieran activa. No crear un “modo banca”, pausas por aplicación ni flujos especiales para que una entidad financiera funcione.
+- La QA de toda APK candidata debe incluir abrir Nu con Accesibilidad apagada, verificar que no se muestra aviso de acceso a cuenta y confirmar que el nuevo flujo inicial solicita el correo de una persona de confianza, nunca la creación de un PIN local.

@@ -17,10 +17,10 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { hasPin } from "@/features/pin/pinService";
-import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
+  pauseAccessibilityIntervention,
   startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
 import {
@@ -489,7 +489,6 @@ function AndroidGateScreen() {
   const [shieldEnabled, setShieldEnabled] = useState(false);
   const [setupPending, setSetupPending] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
-  const [accessibilityReady, setAccessibilityReady] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -500,11 +499,14 @@ function AndroidGateScreen() {
           isLocalDnsVpnActive(),
           isAccessibilityInterventionActive(),
         ]);
-      const protectionReady = pinExists && vpnActive && accessibilityActive;
+      // Accessibility can trigger bank anti-fraud checks merely by being enabled.
+      // The base refuge must therefore remain usable with the PIN and local DNS VPN
+      // alone; visible-content interruption is an explicit advanced opt-in.
+      if (accessibilityActive) await pauseAccessibilityIntervention();
+      const protectionReady = pinExists && vpnActive;
       setShieldEnabled(currentShield && protectionReady);
       setPinReady(pinExists);
       setVpnReady(vpnActive);
-      setAccessibilityReady(accessibilityActive);
 
       if (setup === "1" && pinExists && !currentShield) {
         await prepareShield();
@@ -529,15 +531,13 @@ function AndroidGateScreen() {
   }, []);
 
   async function refreshProtectionStatus() {
-    const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
+    const [pinExists, vpnActive] = await Promise.all([
       hasPin(),
       isLocalDnsVpnActive(),
-      isAccessibilityInterventionActive(),
     ]);
     setPinReady(pinExists);
     setVpnReady(vpnActive);
-    setAccessibilityReady(accessibilityActive);
-    return { accessibilityActive, pinExists, vpnActive };
+    return { pinExists, vpnActive };
   }
 
   async function handleStartVpn() {
@@ -563,7 +563,7 @@ function AndroidGateScreen() {
     }
 
     const status = await refreshProtectionStatus();
-    if (!status.pinExists || !status.vpnActive || !status.accessibilityActive) {
+    if (!status.pinExists || !status.vpnActive) {
       Alert.alert(copy.setupPending, copy.setupPendingBody);
       return;
     }
@@ -615,19 +615,12 @@ function AndroidGateScreen() {
           ready={vpnReady}
           value={vpnReady ? copy.active : copy.pending}
         />
-        <View style={styles.divider} />
-        <CheckRow
-          label={copy.accessibility}
-          ready={accessibilityReady}
-          value={accessibilityReady ? copy.active : copy.pending}
-        />
       </InfoCard>
 
       <InfoCard tone="light" style={styles.blockCard}>
         <Text style={styles.blockLabel}>{copy.steps}</Text>
         <Step ready={pinReady} text={copy.stepPin} />
         <Step ready={vpnReady} text={copy.stepVpn} />
-        <Step ready={accessibilityReady} text={copy.stepAccessibility} />
       </InfoCard>
 
       {setupPending ? (
@@ -646,20 +639,6 @@ function AndroidGateScreen() {
               />
               <Text style={styles.setupLinkText}>{copy.vpn}</Text>
             </Pressable>
-            <Pressable
-              onPress={() => void openAndroidAccessibilitySettings()}
-              style={[
-                styles.setupLink,
-                accessibilityReady && styles.setupLinkReady,
-              ]}
-            >
-              <MaterialCommunityIcons
-                color={colors.primaryDark}
-                name="access-point"
-                size={16}
-              />
-              <Text style={styles.setupLinkText}>{copy.accessibility}</Text>
-            </Pressable>
           </View>
           <PrimaryButton
             label={copy.gateConfirm}
@@ -673,17 +652,6 @@ function AndroidGateScreen() {
           label={shieldEnabled ? copy.gateEnter : copy.gatePrepare}
           onPress={handleActivate}
         />
-        <Pressable
-          onPress={() => void openAndroidAccessibilitySettings()}
-          style={styles.secondaryLink}
-        >
-          <MaterialCommunityIcons
-            color={colors.primaryDark}
-            name="access-point"
-            size={16}
-          />
-          <Text style={styles.secondaryLinkText}>{copy.openAccessibility}</Text>
-        </Pressable>
       </View>
     </Screen>
   );
