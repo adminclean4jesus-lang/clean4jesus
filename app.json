@@ -3,7 +3,7 @@
     "name": "Clean4Jesus",
     "slug": "clean4jesus",
     "scheme": "clean4jesus",
-    "version": "1.3.41",
+    "version": "1.3.42",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
       "backgroundColor": "#02174B"
     },
     "android": {
-      "versionCode": 59,
+      "versionCode": 60,
       "package": "com.clean4jesus.app",
       "newArchEnabled": true,
       "adaptiveIcon": {
@@ -29,7 +29,7 @@
     "ios": {
       "appleTeamId": "Z7NA7KP494",
       "bundleIdentifier": "com.clean4jesus.app",
-      "buildNumber": "29",
+      "buildNumber": "30",
       "supportsTablet": false,
       "entitlements": {
         "com.apple.developer.family-controls": true,

@@ -52,6 +52,9 @@ describe("Phase 1 protection contracts", () => {
     expect(rollback).toContain("request.status = 'pending'");
     expect(rollback).toContain("[^[:space:]@]");
     expect(rollback).not.toContain("[^\\\\s@]");
+    const ambiguityFix = read("supabase/migrations/20260918150000_guardian_pin_status_ambiguity_fix.sql");
+    expect(ambiguityFix).toContain("update private.guardian_pin_requests as request");
+    expect(ambiguityFix).toContain("request.status = 'pending'");
     expect(client).toContain("readBackendErrorCode");
     expect(client).toContain('backendCode === "email_delivery_failed"');
   });

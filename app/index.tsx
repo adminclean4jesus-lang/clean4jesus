@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   AppState,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -156,10 +157,11 @@ function IosGateScreen() {
     return (
       <Screen>
         <View style={styles.loadingCenter}>
-          <MaterialCommunityIcons
-            color={colors.primary}
-            name="shield-cross"
-            size={48}
+          <Image
+            accessibilityLabel="Logo oficial de Clean4Jesus"
+            resizeMode="contain"
+            source={require("../assets/splash-mark-transparent.png")}
+            style={styles.loadingLogo}
           />
           <Text style={styles.loadingText}>{copy.loading}</Text>
         </View>
@@ -171,10 +173,11 @@ function IosGateScreen() {
     <Screen>
       <View style={styles.brandRow}>
         <View style={styles.brandBadge}>
-          <MaterialCommunityIcons
-            color={colors.primaryDark}
-            name="shield-cross"
-            size={20}
+          <Image
+            accessibilityLabel="Logo oficial de Clean4Jesus"
+            resizeMode="contain"
+            source={require("../assets/splash-mark-transparent.png")}
+            style={styles.brandLogo}
           />
         </View>
         <View style={styles.brandText}>
@@ -199,7 +202,14 @@ function IosGateScreen() {
         <Text style={styles.heroBody}>{copy.body}</Text>
 
         <View style={styles.orbCenter}>
-          <ShieldOrb enabled={refugeReady} />
+          <View style={[styles.refugeMark, refugeReady && styles.refugeMarkActive]}>
+            <Image
+              accessibilityLabel="Logo oficial de Clean4Jesus"
+              resizeMode="contain"
+              source={require("../assets/splash-mark-transparent.png")}
+              style={styles.refugeLogo}
+            />
+          </View>
         </View>
 
         <View style={styles.progressBlock}>
@@ -331,6 +341,7 @@ function createIosStyles(colors: ThemeColors) {
       justifyContent: "center",
     },
     loadingText: { color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
+    loadingLogo: { height: 56, width: 56 },
     brandRow: { alignItems: "center", flexDirection: "row", gap: 10 },
     brandBadge: {
       alignItems: "center",
@@ -342,6 +353,7 @@ function createIosStyles(colors: ThemeColors) {
       justifyContent: "center",
       width: 42,
     },
+    brandLogo: { height: 26, width: 26 },
     brandText: { flex: 1, gap: 2 },
     brandEyebrow: {
       color: colors.muted,
@@ -392,6 +404,18 @@ function createIosStyles(colors: ThemeColors) {
       lineHeight: 16,
     },
     orbCenter: { alignItems: "center", paddingVertical: 6 },
+    refugeMark: {
+      alignItems: "center",
+      backgroundColor: colors.primaryDark,
+      borderColor: "rgba(217,164,65,0.48)",
+      borderRadius: 999,
+      borderWidth: 1,
+      height: 92,
+      justifyContent: "center",
+      width: 92,
+    },
+    refugeMarkActive: { backgroundColor: colors.primary },
+    refugeLogo: { height: 58, width: 58 },
     progressBlock: { gap: 6 },
     progressHeader: { flexDirection: "row", justifyContent: "space-between" },
     progressLabel: {

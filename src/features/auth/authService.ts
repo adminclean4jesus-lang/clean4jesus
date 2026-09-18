@@ -57,7 +57,14 @@ export async function signInWithEmail(
     throw toAuthServiceError(error.message);
   }
 
-  await recordLegalAcceptance(language, "email_signin");
+  // Authentication has already succeeded. A telemetry/audit write must not
+  // show a false login failure or strand the user in a half-finished flow.
+  // Re-consent remains enforced where it is required by the dedicated gate.
+  try {
+    await recordLegalAcceptance(language, "email_signin");
+  } catch {
+    // Best effort only; the authenticated session is valid.
+  }
 }
 
 export async function signUpWithEmail(

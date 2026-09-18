@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { Text } from "react-native";
 
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
@@ -33,8 +33,14 @@ export default function TabsLayout() {
   const { language } = useI18n();
   const { checked, enabled } = useShieldGate();
 
-  if (!checked || !enabled) {
+  if (!checked) {
     return <AppLoadingExperience message="Terminando de preparar tu refugio..." />;
+  }
+
+  // Returning to setup is safer than leaving a tab shell frozen when a native
+  // protection state cannot be confirmed.
+  if (!enabled) {
+    return <Redirect href="/" />;
   }
 
   return (

@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, AppState, Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ProgressBar } from "react-native-paper";
 
 import { AppHeader } from "@/components/AppHeader";
@@ -160,7 +160,16 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <View style={[styles.heroMark, refugeReady && styles.heroMarkActive]}>
-                <MaterialCommunityIcons color={refugeReady ? colors.primaryDark : colors.muted} name="shield-cross" size={34} />
+                {isIos ? (
+                  <Image
+                    accessibilityLabel="Logo oficial de Clean4Jesus"
+                    resizeMode="contain"
+                    source={require("../../assets/splash-mark-transparent.png")}
+                    style={styles.heroLogo}
+                  />
+                ) : (
+                  <MaterialCommunityIcons color={refugeReady ? colors.primaryDark : colors.muted} name="shield-cross" size={34} />
+                )}
               </View>
             </View>
 
@@ -301,6 +310,10 @@ function createStyles(colors: ThemeColors) {
   heroMarkActive: {
     backgroundColor: "rgba(176, 139, 74, 0.10)",
     borderColor: "rgba(176, 139, 74, 0.28)",
+  },
+  heroLogo: {
+    height: 42,
+    width: 42,
   },
   heroBar: {
     backgroundColor: colors.surfaceAlt,
