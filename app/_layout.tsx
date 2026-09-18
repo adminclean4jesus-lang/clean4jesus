@@ -1,5 +1,6 @@
 
 import { Stack, useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Platform } from "react-native";
@@ -16,6 +17,11 @@ import { getIosProtectionText } from "@/features/i18n/iosProtectionText";
 import { VersionGateProvider } from "@/features/runtime/VersionGateProvider";
 import { createPaperTheme, fonts } from "@/theme";
 import { useSegments } from "expo-router";
+
+SplashScreen.setOptions({
+  duration: 420,
+  fade: true,
+});
 
 export default function RootLayout() {
   const router = useRouter();
