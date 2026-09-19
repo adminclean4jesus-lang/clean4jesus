@@ -4,6 +4,7 @@ const {
   authorizePasswordRecovery,
   clearPasswordRecovery,
   hasPasswordRecoveryAuthorization,
+  recordLegalAcceptance,
   exchangeCodeForSession,
   getSession,
   onAuthStateChange,
@@ -15,6 +16,7 @@ const {
   const authorizePasswordRecovery = vi.fn();
   const clearPasswordRecovery = vi.fn();
   const hasPasswordRecoveryAuthorization = vi.fn();
+  const recordLegalAcceptance = vi.fn();
   const exchangeCodeForSession = vi.fn();
   const getSession = vi.fn();
   const onAuthStateChange = vi.fn();
@@ -26,6 +28,7 @@ const {
     authorizePasswordRecovery,
     clearPasswordRecovery,
     hasPasswordRecoveryAuthorization,
+    recordLegalAcceptance,
     exchangeCodeForSession,
     getSession,
     onAuthStateChange,
@@ -63,6 +66,11 @@ vi.mock("@/features/accountability/accountabilityService", () => ({
   clearAccountabilityDevice: vi.fn(),
 }));
 
+vi.mock("@/features/legal/legalPolicy", () => ({
+  legalSignupMetadata: vi.fn(() => ({})),
+  recordLegalAcceptance,
+}));
+
 import { exchangeAuthCode, signInWithEmail, updatePassword } from "@/features/auth/authService";
 
 describe("comportamiento de authService", () => {
@@ -87,6 +95,14 @@ describe("comportamiento de authService", () => {
       email: "persona@example.com",
       password: "password",
     });
+  });
+
+  it("does not report a failed login after credentials already succeeded", async () => {
+    signInWithPassword.mockResolvedValueOnce({ error: null });
+    recordLegalAcceptance.mockRejectedValueOnce(new Error("audit unavailable"));
+
+    await expect(signInWithEmail("persona@example.com", "password", "es")).resolves.toBeUndefined();
+    expect(recordLegalAcceptance).toHaveBeenCalledWith("es", "email_signin");
   });
 
   it("acepta una sola vez el codigo de recuperacion y explica el segundo consumo", async () => {

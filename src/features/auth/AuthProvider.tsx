@@ -23,10 +23,18 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function getE2eSession(): Session | null {
+  if (process.env.EXPO_PUBLIC_E2E !== "true" || Platform.OS !== "web" || typeof window === "undefined") return null;
+  if (window.localStorage.getItem("clean4jesus.e2e.authenticated") !== "true") return null;
+  const user = { app_metadata: {}, aud: "authenticated", created_at: "2026-01-01T00:00:00.000Z", id: "clean4jesus-e2e-user", email: "qa@clean4jesus.com", user_metadata: { display_name: "Tu espacio" } } as User;
+  return { access_token: "e2e-access", expires_at: Math.floor(Date.now() / 1000) + 3600, expires_in: 3600, refresh_token: "e2e-refresh", token_type: "bearer", user } as Session;
+}
+
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [e2eSession] = useState<Session | null>(() => getE2eSession());
+  const [session, setSession] = useState<Session | null>(e2eSession);
   const [error, setError] = useState<AuthSessionErrorCode | null>(null);
-  const [status, setStatus] = useState<AuthStatus>(isSupabaseConfigured ? "loading" : "unconfigured");
+  const [status, setStatus] = useState<AuthStatus>(e2eSession ? "authenticated" : isSupabaseConfigured ? "loading" : "unconfigured");
   const [pendingVerification, setPendingVerification] = useState<PendingAuthVerification | null>(null);
   const operationId = useRef(0);
   const sessionRef = useRef<Session | null>(null);
@@ -55,6 +63,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [commitSession]);
 
   useEffect(() => {
+    if (e2eSession) return undefined;
     if (!isSupabaseConfigured) {
       return undefined;
     }
@@ -106,7 +115,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       operationId.current += 1;
       data.subscription.unsubscribe();
     };
-  }, [commitSession, verifyAndCommit]);
+  }, [commitSession, e2eSession, verifyAndCommit]);
 
   useEffect(() => {
     if (!pendingVerification) {

@@ -32,11 +32,23 @@ import { useI18n } from "@/features/i18n/I18nProvider";
 import { getAuthText } from "@/features/i18n/authText";
 import { getAuthAuxText, getAuthErrorMessage, getCaptchaConfigurationMessage } from "@/features/i18n/authAuxText";
 
-export function CommunityAuthGate() {
+type CommunityAuthGateProps = {
+  presentation?: "card" | "onboarding";
+};
+
+const onboardingEntryCopy = {
+  es: { body: "Guarda tu progreso, configura tu protección y continúa tu camino desde cualquier dispositivo.", create: "Crear cuenta", eyebrow: "Tu camino empieza aquí", enter: "Iniciar sesión", signIn: "Bienvenido de nuevo", signUp: "Únete a Clean4Jesus" },
+  en: { body: "Save your progress, set up protection, and continue your journey from any device.", create: "Create account", eyebrow: "Your journey starts here", enter: "Sign in", signIn: "Welcome back", signUp: "Join Clean4Jesus" },
+  fr: { body: "Enregistrez vos progrès, configurez votre protection et poursuivez votre chemin sur chaque appareil.", create: "Créer un compte", eyebrow: "Votre chemin commence ici", enter: "Se connecter", signIn: "Bon retour", signUp: "Rejoignez Clean4Jesus" },
+  pt: { body: "Salve seu progresso, configure sua proteção e continue sua jornada em qualquer dispositivo.", create: "Criar conta", eyebrow: "Sua jornada começa aqui", enter: "Entrar", signIn: "Bem-vindo de volta", signUp: "Junte-se ao Clean4Jesus" },
+} as const;
+
+export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGateProps) {
   const { colors } = useAppAppearance();
   const { language, t } = useI18n();
   const copy = getAuthText(language);
   const auxCopy = getAuthAuxText(language);
+  const entryCopy = onboardingEntryCopy[language];
   const styles = useCommunityAuthStyles();
   const [mode, setMode] = useState<"forgot" | "signIn" | "signUp">("signIn");
   const [displayName, setDisplayName] = useState("");
@@ -160,7 +172,7 @@ export function CommunityAuthGate() {
 
   if (confirmationEmail) {
     return (
-      <View style={styles.card} testID="community-auth-gate">
+      <View style={[styles.card, presentation === "onboarding" && styles.onboarding]} testID="community-auth-gate">
         <View style={styles.iconWrap}>
           <MaterialCommunityIcons color={colors.success} name="email-check-outline" size={28} />
         </View>
@@ -193,16 +205,16 @@ export function CommunityAuthGate() {
   }
 
   return (
-    <View style={styles.card} testID="community-auth-gate">
+    <View style={[styles.card, presentation === "onboarding" && styles.onboarding]} testID="community-auth-gate">
       <View style={styles.iconWrap}>
         <MaterialCommunityIcons color={colors.primaryDark} name="account-heart-outline" size={28} />
       </View>
-      <Text style={styles.eyebrow}>{copy.protected}</Text>
+      <Text style={styles.eyebrow}>{presentation === "onboarding" ? entryCopy.eyebrow : copy.protected}</Text>
       <Text style={styles.title}>
-        {mode === "signIn" ? copy.signInTitle : mode === "signUp" ? copy.signUpTitle : copy.forgotTitle}
+        {mode === "signIn" ? (presentation === "onboarding" ? entryCopy.signIn : copy.signInTitle) : mode === "signUp" ? (presentation === "onboarding" ? entryCopy.signUp : copy.signUpTitle) : copy.forgotTitle}
       </Text>
       <Text style={styles.body}>
-        {copy.cardBody}
+        {presentation === "onboarding" ? entryCopy.body : copy.cardBody}
       </Text>
 
       {mode !== "forgot" ? (
@@ -302,7 +314,7 @@ export function CommunityAuthGate() {
 
       <PrimaryButton
         disabled={submitting}
-        label={submitting ? copy.connecting : mode === "signIn" ? copy.enter : mode === "signUp" ? copy.create : copy.sendLink}
+        label={submitting ? copy.connecting : mode === "signIn" ? (presentation === "onboarding" ? entryCopy.enter : copy.enter) : mode === "signUp" ? (presentation === "onboarding" ? entryCopy.create : copy.create) : copy.sendLink}
         onPress={() => void handleSubmit()}
       />
       {mode === "signIn" ? (
@@ -431,6 +443,11 @@ function createStyles(colors: ThemeColors) {
     borderWidth: 1,
     gap: 14,
     padding: 20,
+  },
+  onboarding: {
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    paddingTop: 6,
   },
   iconWrap: {
     alignItems: "center",

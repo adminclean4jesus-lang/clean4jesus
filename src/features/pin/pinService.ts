@@ -39,7 +39,14 @@ export async function hasPin(): Promise<boolean> {
 }
 
 export async function savePin(pin: string): Promise<void> {
-  const pinHash = await hashPin(pin);
+  await savePinHash(await hashPin(pin));
+}
+
+/** Stores an already-derived verifier; the raw guardian PIN never reaches the app. */
+export async function savePinHash(pinHash: string): Promise<void> {
+  if (!/^[a-f0-9]{64}$/i.test(pinHash)) {
+    throw new Error("invalid_pin_hash");
+  }
   if (
     (Platform.OS === "android" || Platform.OS === "ios") &&
     !(await syncPinToNative(pinHash))

@@ -79,6 +79,7 @@
 ## Producto
 
 - Nombre publico: **Clean4Jesus**. Usarlo exactamente asi en UI, documentacion, splash, tabs y textos.
+- Splash de lanzamiento (17 de septiembre de 2026): el emblema debe aparecer integrado sobre el fondo azul oficial `#071F52`, nunca como una imagen azul sobre una pantalla blanca. Mantener una transición breve y serena; validar siempre en una build nativa, pues Metro no representa fielmente el splash de producción.
 - Tono: cristiano, calido, motivador y concreto. Evitar lenguaje clinico, generico o de dashboard empresarial.
 - Primer objetivo del MVP: que la app abra siempre, que el usuario entienda el estado del escudo y que pueda registrar habitos/devocional sin friccion.
 - La experiencia base es "escudo primero": el usuario activa la proteccion y solo entonces entra al resto de la app.
@@ -122,6 +123,7 @@
 - Solo se incluyen despues de un consentimiento explicito en Ajustes con advertencia de falsos positivos; retirarlos posteriormente exige PIN.
 - No agregar WhatsApp al catalogo de limites por app ni enviar mensajes, texto visible o enlaces al backend.
 - Android se entrega mediante compilacion local y rotacion exclusiva de `artifacts/apk/current/Clean4Jesus-current.apk` y `artifacts/apk/previous/Clean4Jesus-previous.apk`. No crear PR ni ejecutar EAS/GitHub Actions para entregar APK Android.
+- Regla permanente de almacenamiento (18 de septiembre de 2026): no guardar codigo, APK, IPA, builds ni artefactos de Clean4Jesus en OneDrive. El repositorio activo y fuente de verdad local es `C:\\Users\\millo\\Desktop\\Clean4Jesus`; `C:\\c4j` se usa solo como ruta corta de trabajo/compilacion. Los APK entregables deben reemplazar exclusivamente `C:\\Users\\millo\\Desktop\\Clean4Jesus\\artifacts\\apk\\current\\Clean4Jesus-current.apk` y rotar el anterior a `...\\previous\\Clean4Jesus-previous.apk`.
 
 ## Escudo
 
@@ -342,8 +344,8 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - No tocar el servicio de Accesibilidad ni su XML cuando se trabaje en VPN/DNS, salvo que el usuario pida explicitamente cambiar la pantalla de interrupcion o reglas de redes/navegadores.
 - Cuando el bloqueo detecte una senal adulta, debe intentar sacar la app bloqueada del frente antes de mostrar la interrupcion, dejando el bloqueo como salida best-effort sin matar procesos.
 - La salida best-effort no debe ejecutar `HOME` despues de lanzar `InterruptionActivity`; primero cerrar/sacar la app bloqueada y luego abrir la pantalla de interrupcion para que quede visible.
-- Para builds locales en Windows, si la ruta de OneDrive rompe Gradle por longitud, construir desde una ruta corta temporal y usar JDK 17; no tocar el codigo solo por el entorno.
-- Para APKs locales de prueba, la ruta corta vigente y validada es `C:\\c4j` con `:app:assembleDebug`. No volver a intentar empaquetado pesado desde la ruta larga de OneDrive si ya sabemos que Gradle/CMake puede romper por longitud.
+- Para builds locales en Windows, construir desde una ruta corta en `C:\\c4j` y usar JDK 17; no tocar el codigo solo por el entorno.
+- Para APKs locales de prueba, la ruta corta vigente y validada es `C:\\c4j` con `:app:assembleDebug`. No ejecutar empaquetado pesado desde OneDrive.
 - La allowlist sensible debe cubrir prefijos reales de paquetes confiables, no solo coincidencias sueltas de nombre. YouTube y Nubank deben quedar exentos por categoria y por prefijo estable cuando corresponda.
 - En Android, el launcher usa adaptive icons y recorta con mascara distinta segun fabricante. No calibrar el icono para un Pixel especifico: usar fondo full-bleed separado y `foreground` transparente centrado dentro de zona segura conservadora. Para este logo, el simbolo debe ocupar aprox. 49-55% del lienzo de 1024px, no 60-65%, para que circulo, squircle y rounded-square no lo corten ni lo vean pegado.
 - YouTube como checkpoint tambien depende del DNS: CleanBrowsing Family puede forzar YouTube Restricted Mode y ocultar comentarios. La correccion preferida es Cloudflare Family como DNS base, manteniendo Accesibilidad como en el checkpoint probado.
@@ -509,6 +511,19 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 
 - Con CAPTCHA de Supabase activo, toda reautenticación destructiva debe obtener un token Turnstile nuevo en el cliente y enviarlo al backend. Un script administrativo no puede fabricar ese token ni reutilizarlo; la eliminación satisfactoria conserva una prueba manual en la app con cuenta desechable, aunque los contratos negativos se automaticen.
 - Las migraciones `20260830120000`, `20260913120000` y `20260913130000` están aplicadas en producción; `report-false-positive`, `accountability`, `accountability-health` y `delete-account` están desplegadas. Las suites remotas positiva y negativa del 16 de septiembre aprobaron. No volver a describir este despliegue como pendiente sin evidencia nueva de deriva.
-- En copias cortas de compilación Windows no copiar `.gradle`, `android/.gradle` ni carpetas `build/` desde otra ruta absoluta: esos metadatos conservan rutas anteriores y rompen la resolución. Regenerarlos en la copia física; el repositorio OneDrive continúa como fuente de verdad.
+- En copias cortas de compilación Windows no copiar `.gradle`, `android/.gradle` ni carpetas `build/` desde otra ruta absoluta: esos metadatos conservan rutas anteriores y rompen la resolución. Regenerarlos en la copia física; el repositorio de Desktop continúa como fuente de verdad.
 - La APK `1.3.37 (55)` acredita compilación, lint nativo, firma debug v2, TypeScript y 191 pruebas unitarias; no acredita QA físico ni beta externa. DNS-over-TLS requiere todavía pruebas en Wi-Fi, datos móviles, dominio bloqueado y fallo de upstream en dos fabricantes.
 - En Windows, `expo start --tunnel` requiere `@expo/ngrok` instalado globalmente aunque exista `~/.expo/ngrok.yml`. El error `Cannot read properties of undefined (reading 'body')` puede aparecer antes de Metro cuando falta ese paquete. Confirmar estado oficial de ngrok, instalar el paquete y cerrar el túnel con `Ctrl+C` al terminar; una URL de túnel expone temporalmente Metro y su QR solo se comparte con testers autorizados.
+
+## PIN Por Correo De Persona De Confianza (16 De Septiembre De 2026)
+
+- El PIN inicial de protección no se crea ni se muestra en el teléfono. El dueño introduce el correo de una persona de confianza; esa persona confirma desde cualquier navegador y recibe un PIN aleatorio de ocho dígitos por correo. No necesita instalar Clean4Jesus ni crear una cuenta.
+- La app recibe y sincroniza únicamente el hash SHA-256 compatible con la verificación nativa de Android; nunca recibe, muestra ni persiste el PIN en texto. El enlace de confirmación es aleatorio, de un solo uso, vence en 24 horas y la solicitud puede cancelarse antes de confirmar.
+- El backend limita a tres solicitudes de PIN por cuenta cada 24 horas y mantiene un único enlace pendiente. Los correos externos usan el logo oficial, dominio remitente verificado y copy explícito de consentimiento; el destinatario puede ignorar la solicitud.
+- Cambiar el PIN exige validar el PIN vigente en la app. Este control protege el flujo ordinario de UI; no se debe describir como resistencia frente a un dispositivo rooteado o comprometido. Antes de beta externa, probar el recorrido completo con dos correos reales y comprobar que los links, cancelación, expiración y entrega no duplicada funcionan.
+
+## Compatibilidad Con Banca Android (17 De Septiembre De 2026)
+
+- Nunca exigir ni activar por defecto el servicio de Accesibilidad para completar el Refugio Android. Nu y otras entidades financieras pueden marcar la mera presencia de un servicio que lee contenido de pantalla como riesgo, incluso si Clean4Jesus no observa ni bloquea sus paquetes.
+- La protección base Android es PIN por persona de confianza más VPN DNS local. Accesibilidad queda fuera de ese requisito y debe permanecer apagada tras actualizar instalaciones que la tuvieran activa. No crear un “modo banca”, pausas por aplicación ni flujos especiales para que una entidad financiera funcione.
+- La QA de toda APK candidata debe incluir abrir Nu con Accesibilidad apagada, verificar que no se muestra aviso de acceso a cuenta y confirmar que el nuevo flujo inicial solicita el correo de una persona de confianza, nunca la creación de un PIN local.

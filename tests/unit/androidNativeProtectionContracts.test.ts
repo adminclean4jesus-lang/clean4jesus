@@ -79,11 +79,12 @@ describe("Android native protection contracts", () => {
 
   it("does not enable the shield while a native protection layer is pending", () => {
     const gateSource = readProjectFile("app/index.tsx");
-    const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive || !status.accessibilityActive");
+    const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive");
     const enableIndex = gateSource.indexOf("await enableShield()");
 
     expect(validationIndex).toBeGreaterThan(-1);
     expect(enableIndex).toBeGreaterThan(validationIndex);
+    expect(gateSource).not.toContain("!status.pinExists || !status.vpnActive || !status.accessibilityActive");
   });
 
   it("bounds app usage between accessibility events without widening package access", () => {

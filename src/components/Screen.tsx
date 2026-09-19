@@ -1,6 +1,6 @@
 import { PropsWithChildren } from "react";
 import { useSegments } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
@@ -14,6 +14,7 @@ export function Screen({ children, scroll = true }: ScreenProps) {
   const segments = useSegments();
   const { colors } = useAppAppearance();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const hasPersistentFooter = segments[0] === "(tabs)" || segments[0] === "plans";
   const bottomPadding = hasPersistentFooter
     ? PERSISTENT_TAB_BAR_HEIGHT + insets.bottom + 24
@@ -23,11 +24,11 @@ export function Screen({ children, scroll = true }: ScreenProps) {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={edges}>
       {scroll ? (
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomPadding }]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomPadding, paddingHorizontal: width >= 768 ? 32 : 24 }]} showsVerticalScrollIndicator={false}>
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.content, { paddingBottom: bottomPadding }]}>{children}</View>
+        <View style={[styles.content, { paddingBottom: bottomPadding, paddingHorizontal: width >= 768 ? 32 : 24 }]}>{children}</View>
       )}
     </SafeAreaView>
   );
@@ -39,8 +40,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    gap: 14,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    gap: 16,
+    maxWidth: 760,
+    paddingTop: 20,
+    width: "100%",
+    alignSelf: "center",
   },
 });

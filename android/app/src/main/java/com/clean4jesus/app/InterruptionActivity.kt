@@ -354,55 +354,6 @@ class InterruptionActivity : Activity() {
     reasonCard.addView(reasonTitle)
     reasonCard.addView(reason)
 
-    val rescueActionCard = LinearLayout(this).apply {
-      orientation = LinearLayout.VERTICAL
-      setPadding(dp(18), dp(18), dp(18), dp(18))
-      background = roundedSurface(goldSoft, gold, dp(22))
-      layoutParams = LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.WRAP_CONTENT
-      ).apply {
-        topMargin = dp(16)
-      }
-    }
-
-    val rescueLabel = TextView(this).apply {
-      text = "60 s"
-      setTextColor(indigo)
-      textSize = 13f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-    }
-
-    val rescueTitle = TextView(this).apply {
-      text = rescueCopy(language, "title")
-      setTextColor(indigo)
-      textSize = 18f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      setPadding(0, dp(6), 0, dp(4))
-    }
-
-    val rescueHint = TextView(this).apply {
-      text = rescueCopy(language, "rescueIntro")
-      setTextColor(muted)
-      textSize = 14f
-      setLineSpacing(0f, 1.14f)
-      setPadding(0, 0, 0, dp(4))
-    }
-
-    val rescueButton = actionButton(
-      text = rescueCopy(language, "action"),
-      backgroundColor = indigo,
-      textColor = Color.WHITE,
-      borderColor = indigo
-    ) {
-      renderRescue(sourceIntent)
-    }
-
-    rescueActionCard.addView(rescueLabel)
-    rescueActionCard.addView(rescueTitle)
-    rescueActionCard.addView(rescueHint)
-    rescueActionCard.addView(rescueButton)
-
     val unlockCard = LinearLayout(this).apply {
       orientation = LinearLayout.VERTICAL
       setPadding(dp(18), dp(18), dp(18), dp(18))
@@ -464,7 +415,9 @@ class InterruptionActivity : Activity() {
     val pinInput = EditText(this).apply {
       hint = "PIN"
       inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-      filters = arrayOf(InputFilter.LengthFilter(4))
+      // Guardian PINs are generated as eight digits. Keeping this aligned with
+      // the app prevents an impossible-to-enter valid PIN on the lock screen.
+      filters = arrayOf(InputFilter.LengthFilter(8))
       gravity = Gravity.CENTER
       textSize = 18f
       typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
@@ -610,9 +563,6 @@ class InterruptionActivity : Activity() {
     content.addView(heroCard)
 
     content.addView(reasonCard)
-    if (!blockedPackage.isNullOrBlank()) {
-      content.addView(rescueActionCard)
-    }
     if (!blockedPackage.isNullOrBlank()) {
       content.addView(unlockCard)
     }

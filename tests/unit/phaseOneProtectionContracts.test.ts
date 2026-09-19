@@ -32,24 +32,40 @@ describe("Phase 1 protection contracts", () => {
     );
   });
 
-  it("requires the current guardian PIN before replacing an existing PIN", () => {
+  it("requires the current guardian PIN before requesting a replacement from another trusted person", () => {
     const source = read("app/pin-setup.tsx");
-    const copy = read("src/features/i18n/pinText.ts");
     expect(source).toContain("pinExists && !(await verifyPin(currentPin))");
-    expect(source).toContain("accessibilityLabel={copy.currentPin}");
-    expect(source).toContain("accessibilityLabel={copy.newPin}");
-    expect(copy).toContain('currentPin: "PIN actual"');
-    expect(copy).toContain('newPin: "Nuevo PIN"');
+    expect(source).toContain('accessibilityLabel="PIN actual"');
+    expect(source).toContain("requestGuardianPin(email)");
+    expect(source).toContain("syncConfirmedGuardianPin()");
   });
 
-  it("keeps first-time PIN creation available after the initial iOS configuration", () => {
+  it("rolls back a guardian request when the email provider rejects delivery", () => {
+    const backend = read("supabase/functions/accountability/index.ts");
+    const rollback = read("supabase/migrations/20260918143000_guardian_pin_delivery_rollback_v2.sql");
+    const client = read("src/features/pin/guardianPinService.ts");
+
+    expect(backend).toContain("discardGuardianPinRequest(client, tokenHash)");
+    expect(backend).toContain('client.rpc("discard_my_guardian_pin_request"');
+    expect(rollback).toContain("request.owner_user_id = caller_id");
+    expect(rollback).toContain("request.confirmation_token_hash = p_confirmation_token_hash");
+    expect(rollback).toContain("request.status = 'pending'");
+    expect(rollback).toContain("[^[:space:]@]");
+    expect(rollback).not.toContain("[^\\\\s@]");
+    const ambiguityFix = read("supabase/migrations/20260918150000_guardian_pin_status_ambiguity_fix.sql");
+    expect(ambiguityFix).toContain("update private.guardian_pin_requests as request");
+    expect(ambiguityFix).toContain("request.status = 'pending'");
+    expect(client).toContain("readBackendErrorCode");
+    expect(client).toContain('backendCode === "email_delivery_failed"');
+  });
+
+  it("keeps email-based PIN setup available after the initial iOS configuration", () => {
     const source = read("app/pin-setup.tsx");
     const protectionSource = read("app/ios-protection.tsx");
     const maestro = read(".maestro/ios-startup-smoke.yml");
 
-    expect(source).toContain('testID="pin-setup-new"');
-    expect(source).toContain('testID="pin-setup-confirm"');
-    expect(source).toContain('testID="pin-setup-save"');
+    expect(source).toContain('accessibilityLabel="Correo de la persona de confianza"');
+    expect(source).toContain("No creas este PIN");
     expect(protectionSource).toContain('router.push("/pin-setup?after=ios-limit-configured")');
     expect(source).toContain('after === "ios-limit-configured" ? "/ios-protection" : "/"');
     expect(maestro).toContain('visible: ".*(Refugio|Refuge|iOS).*"');
@@ -73,13 +89,11 @@ describe("Phase 1 protection contracts", () => {
     );
   });
 
-  it("keeps the approved interruption hierarchy with reason before rescue and guardian actions", () => {
+  it("removes the 60-second rescue experience and keeps guardian help available", () => {
     const source = read(
       "android/app/src/main/java/com/clean4jesus/app/InterruptionActivity.kt",
     );
-    expect(source.indexOf("content.addView(reasonCard)")).toBeLessThan(
-      source.indexOf("content.addView(rescueActionCard)"),
-    );
+    expect(source).not.toContain("content.addView(rescueActionCard)");
     expect(source.indexOf("content.addView(reasonCard)")).toBeLessThan(
       source.indexOf("content.addView(unlockCard)"),
     );

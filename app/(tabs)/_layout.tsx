@@ -1,11 +1,13 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { Text } from "react-native";
 
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { uiText } from "@/features/i18n/uiText";
 import { fonts } from "@/theme";
+import { AppLoadingExperience } from "@/components/AppLoadingExperience";
+import { useShieldGate } from "@/features/shield/useShieldGate";
 
 function TabLabel({ color, text }: { color: string; text: string }) {
   return (
@@ -29,6 +31,17 @@ function TabLabel({ color, text }: { color: string; text: string }) {
 export default function TabsLayout() {
   const { colors } = useAppAppearance();
   const { language } = useI18n();
+  const { checked, enabled } = useShieldGate();
+
+  if (!checked) {
+    return <AppLoadingExperience message="Terminando de preparar tu refugio..." />;
+  }
+
+  // Returning to setup is safer than leaving a tab shell frozen when a native
+  // protection state cannot be confirmed.
+  if (!enabled) {
+    return <Redirect href="/" />;
+  }
 
   return (
     <Tabs

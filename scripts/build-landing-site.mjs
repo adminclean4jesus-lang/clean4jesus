@@ -1,4 +1,4 @@
-import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
@@ -6,8 +6,9 @@ const output = path.join(root, "web", "landing");
 const assets = path.join(root, "assets");
 const fonts = path.join(root, "node_modules", "@expo-google-fonts");
 
-await rm(output, { recursive: true, force: true });
+await mkdir(output, { recursive: true });
 await mkdir(path.join(output, "fonts"), { recursive: true });
+await mkdir(path.join(output, "guardian", "confirm"), { recursive: true });
 
 await Promise.all([
   copyFile(path.join(assets, "icon.png"), path.join(output, "brand-mark.png")),
@@ -19,6 +20,7 @@ await Promise.all([
 ]);
 
 await writeFile(path.join(output, "index.html"), page(), "utf8");
+await writeFile(path.join(output, "guardian", "confirm", "index.html"), guardianConfirmationPage(), "utf8");
 await writeFile(path.join(output, "robots.txt"), "User-agent: *\nAllow: /\nSitemap: https://clean4jesus.com/sitemap.xml\n", "utf8");
 await writeFile(path.join(output, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://clean4jesus.com/</loc></url></urlset>`, "utf8");
 await writeFile(path.join(output, "_headers"), "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n/*.png\n  Cache-Control: public, max-age=31536000, immutable\n/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n", "utf8");
@@ -181,6 +183,73 @@ function page() {
   </main>
 
   <footer class="footer"><div class="shell footer-row"><a class="brand" href="#inicio"><img src="/brand-mark.png" alt=""><span>Clean4Jesus</span></a><div class="footer-links"><a href="https://legal.clean4jesus.com/privacidad">Privacidad</a><a href="https://legal.clean4jesus.com/terminos">Términos</a><a href="https://legal.clean4jesus.com/comunidad">Comunidad</a><a href="mailto:soporte@clean4jesus.com">soporte@clean4jesus.com</a></div><small>© 2026 Clean4Jesus</small></div></footer>
+</body>
+</html>`;
+}
+
+function guardianConfirmationPage() {
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0d2860">
+  <title>Confirma tu acompañamiento | Clean4Jesus</title>
+  <style>
+    @font-face{font-family:Lexend;src:url('/fonts/lexend-regular.ttf');font-display:swap}
+    @font-face{font-family:Lexend;src:url('/fonts/lexend-bold.ttf');font-display:swap;font-weight:700}
+    :root{--navy:#0d2860;--deep:#091a43;--gold:#e2a42d;--paper:#f4f6fa;--ink:#15213d;--muted:#5d6c87;--line:#e1e7f0}
+    *{box-sizing:border-box}body{align-items:center;background:radial-gradient(circle at 20% 0,#f9e7ba 0,transparent 31%),var(--paper);color:var(--ink);display:flex;font:16px/1.55 Lexend,Arial,sans-serif;justify-content:center;margin:0;min-height:100vh;padding:24px}
+    main{max-width:520px;width:100%}.brand{align-items:center;color:var(--navy);display:flex;font-size:18px;font-weight:700;gap:10px;justify-content:center;margin:0 0 22px;text-decoration:none}.brand img{border-radius:11px;height:42px;width:42px}
+    .card{background:#fff;border:1px solid var(--line);border-radius:28px;box-shadow:0 22px 55px rgba(13,40,96,.16);overflow:hidden}.card-top{background:linear-gradient(135deg,var(--deep),var(--navy));min-height:126px;padding:28px;text-align:center}.card-top img{filter:brightness(0) invert(1);height:52px;margin:auto;width:52px}.content{padding:38px}.eyebrow{color:#af7917;font-size:11px;font-weight:700;letter-spacing:.13em;margin:0 0 12px;text-transform:uppercase}h1{color:var(--deep);font-size:clamp(29px,7vw,39px);letter-spacing:-.045em;line-height:1.08;margin:0 0 18px}p{color:var(--muted);margin:0 0 18px}.owner{background:#fff5de;border-left:3px solid var(--gold);color:var(--deep);font-size:14px;font-weight:700;margin:24px 0;padding:13px 15px}.button{background:var(--navy);border:0;border-radius:999px;color:#fff;cursor:pointer;font:700 15px Lexend,Arial,sans-serif;min-height:54px;padding:0 24px;width:100%}.button:hover{background:#173b81}.button:focus-visible{outline:3px solid var(--gold);outline-offset:4px}.button:disabled{cursor:wait;opacity:.65}.notice{color:#708099;font-size:13px;margin:20px 0 0;text-align:center}.success-mark{align-items:center;background:#fff1cc;border-radius:50%;color:#936410;display:flex;font-size:31px;height:58px;justify-content:center;margin:0 0 20px;width:58px}.error .card-top{background:#654841}.error .button{background:#654841}@media(max-width:520px){body{padding:17px}.content{padding:31px 25px}.card{border-radius:23px}}
+  </style>
+</head>
+<body>
+  <main>
+    <a class="brand" href="/" aria-label="Ir a Clean4Jesus"><img src="/brand-mark.png" alt=""><span>Clean4Jesus</span></a>
+    <section class="card" id="card" aria-live="polite">
+      <div class="card-top"><img src="/brand-mark.png" alt="Logo oficial de Clean4Jesus"></div>
+      <div class="content" id="content">
+        <p class="eyebrow">Acompañamiento de confianza</p>
+        <h1>Confirma tu acompañamiento.</h1>
+        <p>Al confirmar, recibirás por correo el PIN de protección. La persona que te eligió no verá ese PIN en su teléfono.</p>
+        <button class="button" id="confirm" type="button">Confirmar y recibir el PIN</button>
+        <p class="notice">No necesitas descargar Clean4Jesus. Este enlace es de un solo uso.</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const content = document.getElementById('content');
+    const card = document.getElementById('card');
+    const token = new URLSearchParams(window.location.search).get('token');
+    const button = document.getElementById('confirm');
+    const renderError = (title, message) => {
+      card.classList.add('error');
+      content.innerHTML = '<p class="eyebrow">Enlace de acompañamiento</p><h1>' + title + '</h1><p>' + message + '</p><p class="notice">Pide una nueva solicitud desde Clean4Jesus si la necesitas.</p>';
+    };
+    if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token)) {
+      renderError('Este enlace no es válido.', 'Puede estar incompleto o haber cambiado.');
+    } else {
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.textContent = 'Confirmando de forma segura…';
+        try {
+          const response = await fetch('https://moqlovsxklxcpihvheyc.supabase.co/functions/v1/guardian-pin-confirmation', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token}) });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.status !== 'confirmed') {
+            const delivery = result.error === 'pin_delivery_failed';
+            renderError(delivery ? 'No pudimos entregar el PIN.' : 'Este enlace ya no está disponible.', delivery ? 'No se activó ninguna protección. Puedes intentarlo otra vez más tarde.' : 'Puede haber vencido, sido cancelado o ya fue confirmado.');
+            return;
+          }
+          const owner = typeof result.ownerLabel === 'string' ? result.ownerLabel : 'esta persona';
+          content.innerHTML = '<div class="success-mark" aria-hidden="true">✓</div><p class="eyebrow">Acompañamiento confirmado</p><h1>Tu PIN ya está en tu correo.</h1><p>Gracias por acompañar a <strong>' + owner.replace(/[&<>]/g, '') + '</strong>. Guárdalo en un lugar seguro y no lo reenvíes.</p><p class="notice">Que Cristo guíe cada decisión.</p>';
+        } catch {
+          renderError('No pudimos conectarnos.', 'Revisa tu conexión e inténtalo de nuevo. No se generó ningún PIN.');
+        }
+      });
+    }
+  </script>
 </body>
 </html>`;
 }

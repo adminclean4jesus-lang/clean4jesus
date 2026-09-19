@@ -1,6 +1,5 @@
-import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { fonts, ThemeColors } from "@/theme";
@@ -22,7 +21,12 @@ export function AppLoadingExperience({
     <View style={[styles.shell, layout === "contextual" && styles.shellContextual]}>
       <View style={styles.center}>
         <View style={styles.iconWrap}>
-          <MaterialCommunityIcons color={colors.primaryDark} name="shield-cross" size={34} />
+          <Image
+            accessibilityLabel="Logo oficial de Clean4Jesus"
+            resizeMode="contain"
+            source={require("../../assets/splash-mark-transparent.png")}
+            style={styles.logo}
+          />
         </View>
         <Text
           style={styles.title}
@@ -41,7 +45,7 @@ function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
   shell: {
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: colors.primaryDark,
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 28,
@@ -59,21 +63,25 @@ function createStyles(colors: ThemeColors) {
   },
   iconWrap: {
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderColor: "rgba(255,255,255,0.2)",
     borderRadius: 999,
     borderWidth: 1,
     elevation: 4,
     height: 78,
     justifyContent: "center",
-    shadowColor: colors.primary,
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.16,
     shadowRadius: 22,
     width: 78,
   },
+  logo: {
+    height: 48,
+    width: 48,
+  },
   title: {
-    color: colors.text,
+    color: "#FFFFFF",
     fontFamily: fonts.display,
     fontSize: 22,
     lineHeight: 28,
@@ -82,7 +90,7 @@ function createStyles(colors: ThemeColors) {
     textAlign: "center",
   },
   message: {
-    color: colors.muted,
+    color: "rgba(255,255,255,0.76)",
     fontFamily: fonts.body,
     fontSize: 13,
     lineHeight: 19,
