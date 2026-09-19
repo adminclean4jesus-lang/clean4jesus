@@ -24,9 +24,9 @@ import { hasPin } from "@/features/pin/pinService";
 import {
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
-  pauseAccessibilityIntervention,
   startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
+import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
   enableShield,
   getShieldEnabled,
@@ -70,6 +70,7 @@ function IosGateScreen() {
   const [familyControlsAuthorized, setFamilyControlsAuthorized] =
     useState(false);
   const [protectionActive, setProtectionActive] = useState(false);
+  const [pinReady, setPinReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,20 +86,25 @@ function IosGateScreen() {
 
   async function refreshIosState() {
     try {
-      const status = await iosProtectionService.getProtectionStatus();
+      const [status, hasGuardianPin] = await Promise.all([
+        iosProtectionService.getProtectionStatus(),
+        hasPin(),
+      ]);
       setFamilyControlsAuthorized(status.isAuthorized);
       setProtectionActive(status.isEnabled);
+      setPinReady(hasGuardianPin);
     } catch {
       setFamilyControlsAuthorized(false);
       setProtectionActive(false);
+      setPinReady(false);
     } finally {
       setLoading(false);
     }
   }
 
   const readiness =
-    [familyControlsAuthorized, protectionActive].filter(Boolean).length / 2;
-  const refugeReady = familyControlsAuthorized && protectionActive;
+    [pinReady, familyControlsAuthorized, protectionActive].filter(Boolean).length / 3;
+  const refugeReady = pinReady && familyControlsAuthorized && protectionActive;
   const coverageLabel = Math.round(readiness * 100);
 
   async function handleRequestPermission() {
@@ -140,6 +146,10 @@ function IosGateScreen() {
   }
 
   async function handleEnter() {
+    if (!pinReady) {
+      router.replace("/pin-setup?after=ios-limit-configured");
+      return;
+    }
     if (!familyControlsAuthorized) {
       const prepared = await handleRequestPermission();
       if (prepared) router.replace("/(tabs)");
@@ -227,6 +237,12 @@ function IosGateScreen() {
 
       <InfoCard tone="outline" style={styles.layersCard}>
         <IosCheckRow
+          label="PIN de confianza"
+          ready={pinReady}
+          value={pinReady ? "Configurado" : "Pendiente"}
+        />
+        <View style={styles.divider} />
+        <IosCheckRow
           label={copy.familyControls}
           ready={familyControlsAuthorized}
           value={
@@ -247,13 +263,19 @@ function IosGateScreen() {
 
       <InfoCard tone="light" style={styles.stepsCard}>
         <Text style={styles.stepsLabel}>{copy.steps}</Text>
+        <IosStep ready={pinReady} text="Configura primero tu PIN de confianza." />
         <IosStep
           ready={familyControlsAuthorized}
           text={copy.stepFamilyControls}
         />
       </InfoCard>
 
-      {!familyControlsAuthorized ? (
+      {!pinReady ? (
+        <PrimaryButton
+          label="Configurar PIN de confianza"
+          onPress={() => router.replace("/pin-setup?after=ios-limit-configured")}
+        />
+      ) : !familyControlsAuthorized ? (
         <PrimaryButton
           label={copy.requestPermission}
           onPress={handleRequestPermission}
@@ -526,6 +548,7 @@ function AndroidGateScreen() {
   const [shieldEnabled, setShieldEnabled] = useState(false);
   const [setupPending, setSetupPending] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
+  const [accessibilityReady, setAccessibilityReady] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -536,10 +559,8 @@ function AndroidGateScreen() {
           isLocalDnsVpnActive(),
           isAccessibilityInterventionActive(),
         ]);
-      // Accessibility can trigger bank anti-fraud checks merely by being enabled.
-      // The base refuge must therefore remain usable with the PIN and local DNS VPN
-      // alone; visible-content interruption is an explicit advanced opt-in.
-      if (accessibilityActive) await pauseAccessibilityIntervention();
+      // Accessibility remains an explicit, opt-in layer. It is never enabled
+      // automatically, so banking apps are never targeted by default.
       if (!pinExists) {
         router.replace("/pin-setup?after=shield-setup");
         return;
@@ -548,6 +569,7 @@ function AndroidGateScreen() {
       setShieldEnabled(currentShield && protectionReady);
       setPinReady(pinExists);
       setVpnReady(vpnActive);
+      setAccessibilityReady(accessibilityActive);
 
       if (setup === "1" && pinExists && !currentShield) {
         await prepareShield();
@@ -572,19 +594,35 @@ function AndroidGateScreen() {
   }, []);
 
   async function refreshProtectionStatus() {
-    const [pinExists, vpnActive] = await Promise.all([
+    const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
       hasPin(),
       isLocalDnsVpnActive(),
+      isAccessibilityInterventionActive(),
     ]);
     setPinReady(pinExists);
     setVpnReady(vpnActive);
-    return { pinExists, vpnActive };
+    setAccessibilityReady(accessibilityActive);
+    return { pinExists, vpnActive, accessibilityActive };
   }
 
   async function handleStartVpn() {
-    const vpnActive = await startLocalDnsVpn();
-    setVpnReady(vpnActive);
-    return vpnActive;
+    const started = await startLocalDnsVpn();
+    if (!started) {
+      setVpnReady(false);
+      return false;
+    }
+
+    // Android commits the VPN state after the permission activity returns.
+    // Poll briefly so the first confirmation does not show a false failure.
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      if (await isLocalDnsVpnActive()) {
+        setVpnReady(true);
+        return true;
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 350));
+    }
+    setVpnReady(false);
+    return false;
   }
 
   async function handleActivate() {
@@ -599,12 +637,10 @@ function AndroidGateScreen() {
   }
 
   async function handleConfirmSetup() {
-    if (!vpnReady) {
-      await handleStartVpn();
-    }
+    const vpnActive = vpnReady || await handleStartVpn();
 
     const status = await refreshProtectionStatus();
-    if (!status.pinExists || !status.vpnActive) {
+    if (!status.pinExists || !vpnActive || !status.vpnActive) {
       Alert.alert(copy.setupPending, copy.setupPendingBody);
       return;
     }
@@ -656,12 +692,19 @@ function AndroidGateScreen() {
           ready={vpnReady}
           value={vpnReady ? copy.active : copy.pending}
         />
+        <View style={styles.divider} />
+        <CheckRow
+          label="Accesibilidad"
+          ready={accessibilityReady}
+          value={accessibilityReady ? copy.active : "Opcional"}
+        />
       </InfoCard>
 
       <InfoCard tone="light" style={styles.blockCard}>
         <Text style={styles.blockLabel}>{copy.steps}</Text>
         <Step ready={pinReady} text={copy.stepPin} />
         <Step ready={vpnReady} text={copy.stepVpn} />
+        <Step ready={accessibilityReady} text="Activa Accesibilidad solo si deseas la protección avanzada de apps." />
       </InfoCard>
 
       {setupPending ? (
@@ -679,6 +722,17 @@ function AndroidGateScreen() {
                 size={16}
               />
               <Text style={styles.setupLinkText}>{copy.vpn}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => void openAndroidAccessibilitySettings()}
+              style={[styles.setupLink, accessibilityReady && styles.setupLinkReady]}
+            >
+              <MaterialCommunityIcons
+                color={colors.primaryDark}
+                name="access-point"
+                size={16}
+              />
+              <Text style={styles.setupLinkText}>Accesibilidad (opcional)</Text>
             </Pressable>
           </View>
           <PrimaryButton

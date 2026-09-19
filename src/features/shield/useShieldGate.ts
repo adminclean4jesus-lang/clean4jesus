@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Platform } from "react-native";
 
@@ -9,7 +9,6 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { hasPin } from "@/features/pin/pinService";
 
 export function useShieldGate() {
-  const router = useRouter();
   const { status } = useAuth();
   const [checked, setChecked] = useState(false);
   const [enabled, setEnabled] = useState(false);
@@ -38,7 +37,6 @@ export function useShieldGate() {
       if (status !== "authenticated") {
         setChecked(true);
         setEnabled(false);
-        router.replace("/");
         return () => {
           active = false;
         };
@@ -64,16 +62,12 @@ export function useShieldGate() {
 
           setEnabled(nextEnabled);
 
-          if (!nextEnabled) {
-            router.replace("/");
-          }
         } catch {
           if (!active) {
             return;
           }
 
           setEnabled(false);
-          router.replace("/");
         } finally {
           if (active) {
             setChecked(true);
@@ -84,7 +78,7 @@ export function useShieldGate() {
       return () => {
         active = false;
       };
-    }, [router, status]),
+    }, [status]),
   );
 
   return { checked, enabled };
