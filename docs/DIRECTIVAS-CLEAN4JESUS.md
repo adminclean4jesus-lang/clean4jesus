@@ -5,6 +5,7 @@
 - `clean4jesus.com` usa el HTML autocontenido entregado para la landing vigente, con capturas reales de Refugio, Palabra y Comunidad y los originales preservados en `web/landing/assets/`.
 - El CTA público apunta a `https://tally.so/r/Y5BAzv` y se presenta como `Beta cerrada · Solicita acceso`; no afirmar que la beta está abierta ni que Android/iOS estén disponibles hasta contar con evidencia y aprobación de salida.
 - No ejecutar `npm run landing:build` para esta versión: el script anterior reconstruye y reemplaza la landing autocontenida. Desplegar directamente `web/landing` con Wrangler tras la autorización explícita del CEO.
+- La cabecera exterior de la landing autocontenida debe conservar `<meta name="viewport" content="width=device-width, initial-scale=1">`; declararlo únicamente dentro del contenido dinámico hace que Android renderice un viewport de escritorio y recorte la versión móvil.
 
 ## Checkpoint De Validacion Temprana De Demanda - 2026-09-15
 
