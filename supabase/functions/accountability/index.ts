@@ -121,7 +121,8 @@ Deno.serve(async (request) => {
     });
     if (error) return databaseError(error);
     const request = data?.[0];
-    const confirmationUrl = `${supabaseUrl}/functions/v1/guardian-pin-confirmation?token=${encodeURIComponent(token)}`;
+    const publicSiteUrl = (Deno.env.get("PUBLIC_SITE_URL") ?? "https://clean4jesus.com").replace(/\/$/, "");
+    const confirmationUrl = `${publicSiteUrl}/guardian/confirm/?token=${encodeURIComponent(token)}`;
     try {
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
