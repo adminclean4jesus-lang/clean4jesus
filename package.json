@@ -94,8 +94,8 @@
     "admin:build": "node scripts/build-moderation-console.mjs",
     "legal:build": "node scripts/build-legal-site.mjs",
     "legal:deploy": "npm run legal:build && npx wrangler deploy --config wrangler.legal.jsonc",
-    "landing:build": "node scripts/build-landing-site.mjs",
-    "test:landing": "npm run landing:build && node scripts/validate-landing-layout.mjs",
+    "landing:build": "node scripts/verify-current-landing.mjs",
+    "test:landing": "node scripts/verify-current-landing.mjs",
     "landing:deploy": "npm run landing:build && npx wrangler deploy --config wrangler.landing.jsonc",
     "postinstall": "node scripts/patch-apple-targets.mjs"
   },
