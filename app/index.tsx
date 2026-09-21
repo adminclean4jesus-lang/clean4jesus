@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   AppState,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -16,13 +17,16 @@ import { InfoCard } from "@/components/InfoCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
+import { AppLoadingExperience } from "@/components/AppLoadingExperience";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { WelcomeAuthScreen } from "@/features/onboarding/WelcomeAuthScreen";
 import { hasPin } from "@/features/pin/pinService";
-import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
   startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
+import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
   enableShield,
   getShieldEnabled,
@@ -40,6 +44,16 @@ import { fonts, ThemeColors } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function GateScreen() {
+  const { status } = useAuth();
+
+  if (status === "loading") {
+    return <AppLoadingExperience message="Preparando tu refugio..." />;
+  }
+
+  if (status !== "authenticated") {
+    return <WelcomeAuthScreen />;
+  }
+
   // iOS uses the dedicated refuge flow (equivalent to <Redirect href="/ios-protection" />).
   if (Platform.OS === "ios") return <IosGateScreen />;
   return <AndroidGateScreen />;
@@ -56,6 +70,7 @@ function IosGateScreen() {
   const [familyControlsAuthorized, setFamilyControlsAuthorized] =
     useState(false);
   const [protectionActive, setProtectionActive] = useState(false);
+  const [pinReady, setPinReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -71,20 +86,25 @@ function IosGateScreen() {
 
   async function refreshIosState() {
     try {
-      const status = await iosProtectionService.getProtectionStatus();
+      const [status, hasGuardianPin] = await Promise.all([
+        iosProtectionService.getProtectionStatus(),
+        hasPin(),
+      ]);
       setFamilyControlsAuthorized(status.isAuthorized);
       setProtectionActive(status.isEnabled);
+      setPinReady(hasGuardianPin);
     } catch {
       setFamilyControlsAuthorized(false);
       setProtectionActive(false);
+      setPinReady(false);
     } finally {
       setLoading(false);
     }
   }
 
   const readiness =
-    [familyControlsAuthorized, protectionActive].filter(Boolean).length / 2;
-  const refugeReady = familyControlsAuthorized && protectionActive;
+    [pinReady, familyControlsAuthorized, protectionActive].filter(Boolean).length / 3;
+  const refugeReady = pinReady && familyControlsAuthorized && protectionActive;
   const coverageLabel = Math.round(readiness * 100);
 
   async function handleRequestPermission() {
@@ -126,6 +146,10 @@ function IosGateScreen() {
   }
 
   async function handleEnter() {
+    if (!pinReady) {
+      router.replace("/pin-setup?after=ios-limit-configured");
+      return;
+    }
     if (!familyControlsAuthorized) {
       const prepared = await handleRequestPermission();
       if (prepared) router.replace("/(tabs)");
@@ -143,10 +167,11 @@ function IosGateScreen() {
     return (
       <Screen>
         <View style={styles.loadingCenter}>
-          <MaterialCommunityIcons
-            color={colors.primary}
-            name="shield-cross"
-            size={48}
+          <Image
+            accessibilityLabel="Logo oficial de Clean4Jesus"
+            resizeMode="contain"
+            source={require("../assets/splash-mark-transparent.png")}
+            style={styles.loadingLogo}
           />
           <Text style={styles.loadingText}>{copy.loading}</Text>
         </View>
@@ -158,10 +183,11 @@ function IosGateScreen() {
     <Screen>
       <View style={styles.brandRow}>
         <View style={styles.brandBadge}>
-          <MaterialCommunityIcons
-            color={colors.primaryDark}
-            name="shield-cross"
-            size={20}
+          <Image
+            accessibilityLabel="Logo oficial de Clean4Jesus"
+            resizeMode="contain"
+            source={require("../assets/splash-mark-transparent.png")}
+            style={styles.brandLogo}
           />
         </View>
         <View style={styles.brandText}>
@@ -186,7 +212,14 @@ function IosGateScreen() {
         <Text style={styles.heroBody}>{copy.body}</Text>
 
         <View style={styles.orbCenter}>
-          <ShieldOrb enabled={refugeReady} />
+          <View style={[styles.refugeMark, refugeReady && styles.refugeMarkActive]}>
+            <Image
+              accessibilityLabel="Logo oficial de Clean4Jesus"
+              resizeMode="contain"
+              source={require("../assets/splash-mark-transparent.png")}
+              style={styles.refugeLogo}
+            />
+          </View>
         </View>
 
         <View style={styles.progressBlock}>
@@ -203,6 +236,12 @@ function IosGateScreen() {
       </LinearGradient>
 
       <InfoCard tone="outline" style={styles.layersCard}>
+        <IosCheckRow
+          label="PIN de confianza"
+          ready={pinReady}
+          value={pinReady ? "Configurado" : "Pendiente"}
+        />
+        <View style={styles.divider} />
         <IosCheckRow
           label={copy.familyControls}
           ready={familyControlsAuthorized}
@@ -224,13 +263,19 @@ function IosGateScreen() {
 
       <InfoCard tone="light" style={styles.stepsCard}>
         <Text style={styles.stepsLabel}>{copy.steps}</Text>
+        <IosStep ready={pinReady} text="Configura primero tu PIN de confianza." />
         <IosStep
           ready={familyControlsAuthorized}
           text={copy.stepFamilyControls}
         />
       </InfoCard>
 
-      {!familyControlsAuthorized ? (
+      {!pinReady ? (
+        <PrimaryButton
+          label="Configurar PIN de confianza"
+          onPress={() => router.replace("/pin-setup?after=ios-limit-configured")}
+        />
+      ) : !familyControlsAuthorized ? (
         <PrimaryButton
           label={copy.requestPermission}
           onPress={handleRequestPermission}
@@ -318,6 +363,7 @@ function createIosStyles(colors: ThemeColors) {
       justifyContent: "center",
     },
     loadingText: { color: colors.muted, fontFamily: fonts.body, fontSize: 13 },
+    loadingLogo: { height: 56, width: 56 },
     brandRow: { alignItems: "center", flexDirection: "row", gap: 10 },
     brandBadge: {
       alignItems: "center",
@@ -329,6 +375,7 @@ function createIosStyles(colors: ThemeColors) {
       justifyContent: "center",
       width: 42,
     },
+    brandLogo: { height: 26, width: 26 },
     brandText: { flex: 1, gap: 2 },
     brandEyebrow: {
       color: colors.muted,
@@ -379,6 +426,18 @@ function createIosStyles(colors: ThemeColors) {
       lineHeight: 16,
     },
     orbCenter: { alignItems: "center", paddingVertical: 6 },
+    refugeMark: {
+      alignItems: "center",
+      backgroundColor: colors.primaryDark,
+      borderColor: "rgba(217,164,65,0.48)",
+      borderRadius: 999,
+      borderWidth: 1,
+      height: 92,
+      justifyContent: "center",
+      width: 92,
+    },
+    refugeMarkActive: { backgroundColor: colors.primary },
+    refugeLogo: { height: 58, width: 58 },
     progressBlock: { gap: 6 },
     progressHeader: { flexDirection: "row", justifyContent: "space-between" },
     progressLabel: {
@@ -500,7 +559,13 @@ function AndroidGateScreen() {
           isLocalDnsVpnActive(),
           isAccessibilityInterventionActive(),
         ]);
-      const protectionReady = pinExists && vpnActive && accessibilityActive;
+      // Accessibility remains an explicit, opt-in layer. It is never enabled
+      // automatically, so banking apps are never targeted by default.
+      if (!pinExists) {
+        router.replace("/pin-setup?after=shield-setup");
+        return;
+      }
+      const protectionReady = pinExists && vpnActive;
       setShieldEnabled(currentShield && protectionReady);
       setPinReady(pinExists);
       setVpnReady(vpnActive);
@@ -537,13 +602,27 @@ function AndroidGateScreen() {
     setPinReady(pinExists);
     setVpnReady(vpnActive);
     setAccessibilityReady(accessibilityActive);
-    return { accessibilityActive, pinExists, vpnActive };
+    return { pinExists, vpnActive, accessibilityActive };
   }
 
   async function handleStartVpn() {
-    const vpnActive = await startLocalDnsVpn();
-    setVpnReady(vpnActive);
-    return vpnActive;
+    const started = await startLocalDnsVpn();
+    if (!started) {
+      setVpnReady(false);
+      return false;
+    }
+
+    // Android commits the VPN state after the permission activity returns.
+    // Poll briefly so the first confirmation does not show a false failure.
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      if (await isLocalDnsVpnActive()) {
+        setVpnReady(true);
+        return true;
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 350));
+    }
+    setVpnReady(false);
+    return false;
   }
 
   async function handleActivate() {
@@ -558,12 +637,10 @@ function AndroidGateScreen() {
   }
 
   async function handleConfirmSetup() {
-    if (!vpnReady) {
-      await handleStartVpn();
-    }
+    const vpnActive = vpnReady || await handleStartVpn();
 
     const status = await refreshProtectionStatus();
-    if (!status.pinExists || !status.vpnActive || !status.accessibilityActive) {
+    if (!status.pinExists || !vpnActive || !status.vpnActive) {
       Alert.alert(copy.setupPending, copy.setupPendingBody);
       return;
     }
@@ -617,9 +694,9 @@ function AndroidGateScreen() {
         />
         <View style={styles.divider} />
         <CheckRow
-          label={copy.accessibility}
+          label="Accesibilidad"
           ready={accessibilityReady}
-          value={accessibilityReady ? copy.active : copy.pending}
+          value={accessibilityReady ? copy.active : "Opcional"}
         />
       </InfoCard>
 
@@ -627,7 +704,7 @@ function AndroidGateScreen() {
         <Text style={styles.blockLabel}>{copy.steps}</Text>
         <Step ready={pinReady} text={copy.stepPin} />
         <Step ready={vpnReady} text={copy.stepVpn} />
-        <Step ready={accessibilityReady} text={copy.stepAccessibility} />
+        <Step ready={accessibilityReady} text="Activa Accesibilidad solo si deseas la protección avanzada de apps." />
       </InfoCard>
 
       {setupPending ? (
@@ -648,17 +725,14 @@ function AndroidGateScreen() {
             </Pressable>
             <Pressable
               onPress={() => void openAndroidAccessibilitySettings()}
-              style={[
-                styles.setupLink,
-                accessibilityReady && styles.setupLinkReady,
-              ]}
+              style={[styles.setupLink, accessibilityReady && styles.setupLinkReady]}
             >
               <MaterialCommunityIcons
                 color={colors.primaryDark}
                 name="access-point"
                 size={16}
               />
-              <Text style={styles.setupLinkText}>{copy.accessibility}</Text>
+              <Text style={styles.setupLinkText}>Accesibilidad (opcional)</Text>
             </Pressable>
           </View>
           <PrimaryButton
@@ -673,17 +747,6 @@ function AndroidGateScreen() {
           label={shieldEnabled ? copy.gateEnter : copy.gatePrepare}
           onPress={handleActivate}
         />
-        <Pressable
-          onPress={() => void openAndroidAccessibilitySettings()}
-          style={styles.secondaryLink}
-        >
-          <MaterialCommunityIcons
-            color={colors.primaryDark}
-            name="access-point"
-            size={16}
-          />
-          <Text style={styles.secondaryLinkText}>{copy.openAccessibility}</Text>
-        </Pressable>
       </View>
     </Screen>
   );

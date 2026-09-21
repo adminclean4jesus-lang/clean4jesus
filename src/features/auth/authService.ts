@@ -47,17 +47,33 @@ export async function signInWithEmail(
   language: SupportedLanguage,
   captchaToken?: string,
 ) {
-  const { error } = await getSupabaseClient().auth.signInWithPassword({
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: email.trim().toLowerCase(),
     password,
     options: captchaToken ? { captchaToken } : undefined,
   });
 
-  if (error) {
+  if (error && !data?.session) {
+    // Older clients can return only an error object. That is a real failure;
+    // inspect storage only when the provider supplied a response object that
+    // could have raced with its persisted session.
+    if (!data) throw toAuthServiceError(error.message);
+    // Some mobile auth bridges emit a late transient error after writing a
+    // valid session. Never tell a signed-in person that access failed.
+    const { data: currentSession } = await supabase.auth.getSession();
+    if (currentSession.session) return;
     throw toAuthServiceError(error.message);
   }
 
-  await recordLegalAcceptance(language, "email_signin");
+  // Authentication has already succeeded. A telemetry/audit write must not
+  // show a false login failure or strand the user in a half-finished flow.
+  // Re-consent remains enforced where it is required by the dedicated gate.
+  try {
+    await recordLegalAcceptance(language, "email_signin");
+  } catch {
+    // Best effort only; the authenticated session is valid.
+  }
 }
 
 export async function signUpWithEmail(

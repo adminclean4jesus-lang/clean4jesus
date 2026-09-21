@@ -35,7 +35,7 @@ export default function AuthCallbackScreen() {
     }
 
     void exchangeAuthCode(code)
-      .then(({ isPasswordRecovery }) => router.replace(isPasswordRecovery ? "/auth/reset-password" : "/(tabs)/community"))
+      .then(({ isPasswordRecovery }) => router.replace(isPasswordRecovery ? "/auth/reset-password" : "/"))
       .catch(() => setError(auxCopy.callbackFailed));
   }, [auxCopy.callbackFailed, auxCopy.callbackMissing, auxCopy.callbackRejected, code, errorDescription, router]);
 
@@ -46,7 +46,7 @@ export default function AuthCallbackScreen() {
       </View>
       <Text style={styles.title}>{error ? copy.linkUnavailable : copy.callbackVerifying}</Text>
       <Text style={styles.body}>{error ?? copy.callbackBody}</Text>
-      {error ? <PrimaryButton label={copy.backCommunity} onPress={() => router.replace("/(tabs)/community")} /> : <ActivityIndicator color={colors.primary} />}
+      {error ? <PrimaryButton label="Volver al acceso" onPress={() => router.replace("/")} /> : <ActivityIndicator color={colors.primary} />}
     </View>
   );
 }

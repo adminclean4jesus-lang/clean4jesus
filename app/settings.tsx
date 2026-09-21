@@ -153,7 +153,7 @@ export default function SettingsScreen() {
 
   const refugeReady = isIos
     ? summary.pin
-    : summary.pin && summary.shield && summary.vpn && summary.accessibility;
+    : summary.pin && summary.shield && summary.vpn;
 
   return (
     <Screen key={preference}>

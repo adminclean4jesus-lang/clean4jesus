@@ -1,9 +1,13 @@
 
 import { Stack, useRouter } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { PaperProvider } from "react-native-paper";
+import { useFonts } from "expo-font";
+import { Inter_400Regular, Inter_500Medium } from "@expo-google-fonts/inter";
+import { Montserrat_600SemiBold, Montserrat_700Bold } from "@expo-google-fonts/montserrat";
 
 import { PersistentTabBar } from "@/components/PersistentTabBar";
 import { AuthProvider } from "@/features/auth/AuthProvider";
@@ -17,7 +21,18 @@ import { VersionGateProvider } from "@/features/runtime/VersionGateProvider";
 import { createPaperTheme, fonts } from "@/theme";
 import { useSegments } from "expo-router";
 
+SplashScreen.setOptions({
+  duration: 420,
+  fade: true,
+});
+
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+  });
   const router = useRouter();
   const segments = useSegments();
 
@@ -69,6 +84,10 @@ export default function RootLayout() {
 
     return () => clearTimeout(timeout);
   }, []);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <AppearanceProvider>
@@ -134,7 +153,7 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
           <Stack.Screen name="ios-protection" options={{ title: getIosProtectionText(language).title }} />
           <Stack.Screen name="plans/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="plans/[id]/day/[day]" options={{ headerShown: false }} />
-          <Stack.Screen name="pin-setup" options={{ title: coreFlowText(language, "pin.setup.title") }} />
+          <Stack.Screen name="pin-setup" options={{ headerShown: false }} />
           <Stack.Screen name="pin-verify" options={{ title: coreFlowText(language, "pin.verify.title") }} />
         </Stack>
         {showPersistentTabBar ? <PersistentTabBar /> : null}

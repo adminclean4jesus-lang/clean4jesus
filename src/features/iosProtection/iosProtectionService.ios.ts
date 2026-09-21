@@ -37,6 +37,20 @@ const NativeIosProtection =
       )
     : null;
 
+const STATUS_TIMEOUT_MS = 4_000;
+
+function withStatusTimeout<T>(promise: Promise<T>): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new IosProtectionError(
+        "La comprobación de protección iOS tardó demasiado. Vuelve a abrir Refugio.",
+        IOS_PROTECTION_ERROR_CODES.STATUS_TIMEOUT,
+      )), STATUS_TIMEOUT_MS);
+    }),
+  ]);
+}
+
 function requireIosProtectionModule(): NativeIosProtectionModule {
   if (!NativeIosProtection) {
     throw new IosProtectionError(
@@ -87,7 +101,7 @@ class IosProtectionService implements IIosProtectionContract {
       return { ...INITIAL_IOS_PROTECTION_STATE, status: "incompatible" };
     }
 
-    this.currentStatus = await requireIosProtectionModule().getStatus();
+    this.currentStatus = await withStatusTimeout(requireIosProtectionModule().getStatus());
     return this.currentStatus;
   }
 
