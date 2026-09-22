@@ -118,6 +118,22 @@ describe("comportamiento de authService", () => {
     );
   });
 
+  it("comparte el mismo intercambio OAuth cuando el callback y la sesion web llegan juntos", async () => {
+    exchangeCodeForSession.mockResolvedValueOnce({
+      data: { session: { user: { id: "google-user" } }, user: { id: "google-user" } },
+      error: null,
+    });
+
+    const [first, second] = await Promise.all([
+      exchangeAuthCode("google-callback", "oauth"),
+      exchangeAuthCode("google-callback", "oauth"),
+    ]);
+
+    expect(first).toEqual({ isPasswordRecovery: false });
+    expect(second).toEqual({ isPasswordRecovery: false });
+    expect(exchangeCodeForSession).toHaveBeenCalledTimes(1);
+  });
+
   it("conserva la autorizacion si falla y la limpia solo tras cambiar la contrasena", async () => {
     getSession.mockResolvedValue({ data: { session: { user: { id: "user-1" } } } });
     hasPasswordRecoveryAuthorization.mockResolvedValue(true);

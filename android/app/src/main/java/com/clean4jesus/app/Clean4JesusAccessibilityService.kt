@@ -1,8 +1,10 @@
 package com.clean4jesus.app
 
 import android.accessibilityservice.AccessibilityService
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -35,6 +37,7 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_GUARDIAN_PIN = "guardian_pin"
     const val PREF_APP_LANGUAGE = "app_language"
     const val PREF_WHATSAPP_PROTECTION_ENABLED = "whatsapp_protection_enabled"
+    const val PREF_ACCESSIBILITY_SETUP_COMPLETED = "accessibility_setup_completed"
     private const val PREF_APP_USAGE_PREFIX = "app_usage_"
     private const val MAX_TRACKED_EVENT_GAP_MS = 15_000L
     private const val FULL_TREE_SCAN_INTERVAL_MS = 800L
@@ -58,10 +61,39 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     private const val RISK_COOLDOWN_MS = 6 * 60 * 60_000L
     private var activeInstance: Clean4JesusAccessibilityService? = null
 
-    fun pauseIfRunning(): Boolean {
-      val service = activeInstance ?: return false
-      service.disableSelf()
-      return true
+    fun prepareForAccessibilitySetup(context: Context): Boolean {
+      return try {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+          .edit()
+          .putBoolean(PREF_ACCESSIBILITY_SETUP_COMPLETED, false)
+          .apply()
+        setAccessibilityComponentEnabled(context, true)
+        true
+      } catch (_: Exception) {
+        false
+      }
+    }
+
+    fun completeAccessibilitySetup(context: Context): Boolean {
+      return try {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+          .edit()
+          .putBoolean(PREF_ACCESSIBILITY_SETUP_COMPLETED, true)
+          .apply()
+        activeInstance?.disableSelf()
+        setAccessibilityComponentEnabled(context, false)
+        true
+      } catch (_: Exception) {
+        false
+      }
+    }
+
+    private fun setAccessibilityComponentEnabled(context: Context, enabled: Boolean) {
+      context.packageManager.setComponentEnabledSetting(
+        ComponentName(context, Clean4JesusAccessibilityService::class.java),
+        if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+        PackageManager.DONT_KILL_APP
+      )
     }
 
     fun getUsageSnapshot(context: Context, packageName: String, now: Long = System.currentTimeMillis()): Long {
@@ -159,6 +191,22 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     "com.davivienda",
     "com.scotiabank",
     "com.c6bank",
+    "com.nequi",
+    "com.daviplata",
+    "com.bancodebogota",
+    "com.bancodeoccidente",
+    "com.avvillas",
+    "com.bancoagrario",
+    "com.bancopopular",
+    "com.lulobank",
+    "com.rappi.pay",
+    "com.klar",
+    "com.stori",
+    "com.revolut",
+    "com.transferwise",
+    "com.n26",
+    "com.wellsfargo",
+    "com.chase.sig.android",
     "com.mercadolibre.mercadopago",
     "com.paypal.android.p2pmobile"
   )
@@ -295,6 +343,12 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
   override fun onServiceConnected() {
     super.onServiceConnected()
+    val setupCompleted = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+      .getBoolean(PREF_ACCESSIBILITY_SETUP_COMPLETED, false)
+    if (setupCompleted) {
+      disableSelf()
+      return
+    }
     activeInstance = this
     restoreTemporaryRelocks()
     flushRiskSignalsAsync()

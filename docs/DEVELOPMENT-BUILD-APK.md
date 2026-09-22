@@ -28,13 +28,12 @@ Para eso usamos una **development build**: una app Clean4Jesus propia con herram
 En una terminal normal de Windows:
 
 ```bash
-cd C:\c4j\beta-1.3.37
 npm run build:android:local
 ```
 
-El repositorio de OneDrive sigue siendo la fuente de verdad; esta copia corta se creó para compilar `1.3.37` sin tocar la carpeta antigua `C:\c4j\clean4jesus`. Sincroniza los cambios de fuente antes de compilar nuevas versiones. No copies `.gradle` ni carpetas `build/` entre rutas absolutas; ejecuta `npm ci` y deja que Gradle regenere sus metadatos. Antes de usar Metro, crea `.env.local` desde `.env.example` con la URL y clave **publicable** del proyecto Supabase y la configuración pública de CAPTCHA; nunca pongas allí una service role key.
+GitHub (`https://github.com/adminclean4jesus-lang/clean4jesus`) es la fuente de verdad y el script verifica ese remoto antes de compilar. El checkout local solo es una copia de trabajo: se sincroniza hacia `C:\c4j` y todo el trabajo pesado ocurre allí. La carpeta donde vive el checkout no recibe Gradle, CMake, caches, `node_modules`, keystore ni APKs. No copies `.gradle` ni carpetas `build/` entre rutas absolutas; el script prepara los metadatos nativos en la copia corta. Antes de usar Metro, crea `.env.local` desde `.env.example` con la URL y clave **publicable** del proyecto Supabase y la configuración pública de CAPTCHA; nunca pongas allí una service role key.
 
-La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Antes de entregar una nueva `current`, verifica versión, firma, pruebas y rotación con `previous`.
+La APK se publica en `C:\Users\millo\Desktop\Clean4Jesus\artifacts\apk\current\Clean4Jesus-current.apk`; la anterior queda en `previous`. Antes de entregar, verifica versión, firma, pruebas y rotación.
 `android/build.gradle` evita en Windows que Gradle intente tomar snapshots de enlaces `libc++_shared.so` generados por el NDK; la compilación en macOS/Linux conserva el seguimiento incremental normal.
 Antes de promover una APK de QA, ejecuta también `cd android; .\gradlew.bat :app:lintDebug --no-daemon --max-workers=1` desde la copia corta. No confundas `assembleDebug` con lint aprobado.
 

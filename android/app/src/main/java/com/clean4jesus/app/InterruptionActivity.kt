@@ -1,7 +1,6 @@
 package com.clean4jesus.app
 
 import android.app.Activity
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -10,8 +9,6 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
 import android.text.InputFilter
@@ -37,10 +34,6 @@ import java.util.UUID
 import org.json.JSONObject
 
 class InterruptionActivity : Activity() {
-  private val rescueHandler = Handler(Looper.getMainLooper())
-  private var rescueAnimator: ValueAnimator? = null
-  private var isRescueScreen = false
-
   companion object {
     const val PREF_CUSTOM_MESSAGE = "interruption_custom_message"
     const val PREF_CUSTOM_REFERENCE = "interruption_custom_reference"
@@ -120,59 +113,6 @@ class InterruptionActivity : Activity() {
     private fun localized(language: String, key: String, fallback: String): String =
       translations[language]?.get(key) ?: fallback
 
-    private fun rescueCopy(language: String, key: String): String {
-      val copy = mapOf(
-        "es" to mapOf(
-        "action" to "Respirar 60 segundos",
-        "rescueIntro" to "Una pausa guiada para volver a elegir con claridad.",
-          "title" to "Pausa antes de decidir",
-          "subtitle" to "Esto no desbloquea la app. Toma un minuto para respirar y volver a lo que importa.",
-          "inhale" to "Inhala",
-          "hold" to "Sostén",
-          "exhale" to "Exhala",
-          "done" to "El minuto terminó",
-          "doneSubtitle" to "El refugio sigue activo. Elige tu siguiente paso con la mente clara.",
-          "back" to "Volver a la pantalla de bloqueo"
-        ),
-        "en" to mapOf(
-        "action" to "Breathe for 60 seconds",
-        "rescueIntro" to "A guided pause to help you choose your next step clearly.",
-          "title" to "Pause before you decide",
-          "subtitle" to "This will not unlock the app. Take one minute to breathe and return to what matters.",
-          "inhale" to "Inhale",
-          "hold" to "Hold",
-          "exhale" to "Exhale",
-          "done" to "The minute is complete",
-          "doneSubtitle" to "The refuge is still active. Choose your next step with a clear mind.",
-          "back" to "Back to the block screen"
-        ),
-        "fr" to mapOf(
-        "action" to "Respirer 60 secondes",
-        "rescueIntro" to "Une pause guidée pour choisir la suite avec clarté.",
-          "title" to "Faites une pause avant de decider",
-          "subtitle" to "Cette pause ne debloque pas l'application. Respirez une minute et revenez a l'essentiel.",
-          "inhale" to "Inspirez",
-          "hold" to "Retenez",
-          "exhale" to "Expirez",
-          "done" to "La minute est terminee",
-          "doneSubtitle" to "Le refuge est toujours actif. Choisissez la suite avec un esprit clair.",
-          "back" to "Retour a l'ecran de blocage"
-        ),
-        "pt" to mapOf(
-        "action" to "Respirar por 60 segundos",
-        "rescueIntro" to "Uma pausa guiada para escolher o próximo passo com clareza.",
-          "title" to "Pare antes de decidir",
-          "subtitle" to "Isso nao desbloqueia o app. Respire por um minuto e volte ao que importa.",
-          "inhale" to "Inspire",
-          "hold" to "Segure",
-          "exhale" to "Expire",
-          "done" to "O minuto terminou",
-          "doneSubtitle" to "O refugio continua ativo. Escolha o proximo passo com a mente clara.",
-          "back" to "Voltar para a tela de bloqueio"
-        )
-      )
-      return copy[language]?.get(key) ?: copy["es"]!!.getValue(key)
-    }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -190,27 +130,8 @@ class InterruptionActivity : Activity() {
     renderInterruption(intent)
   }
 
-  override fun onBackPressed() {
-    if (isRescueScreen) {
-      rescueAnimator?.cancel()
-      rescueHandler.removeCallbacksAndMessages(null)
-      renderInterruption(intent)
-      return
-    }
-    super.onBackPressed()
-  }
-
-  override fun onDestroy() {
-    rescueAnimator?.cancel()
-    rescueHandler.removeCallbacksAndMessages(null)
-    super.onDestroy()
-  }
-
   private fun renderInterruption(sourceIntent: Intent) {
-    isRescueScreen = false
     window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-    rescueAnimator?.cancel()
-    rescueHandler.removeCallbacksAndMessages(null)
     val bg = Color.parseColor("#F8F9FA")
     val surface = Color.WHITE
     val surfaceAlt = Color.parseColor("#EEF2FF")
@@ -353,55 +274,6 @@ class InterruptionActivity : Activity() {
     }
     reasonCard.addView(reasonTitle)
     reasonCard.addView(reason)
-
-    val rescueActionCard = LinearLayout(this).apply {
-      orientation = LinearLayout.VERTICAL
-      setPadding(dp(18), dp(18), dp(18), dp(18))
-      background = roundedSurface(goldSoft, gold, dp(22))
-      layoutParams = LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.WRAP_CONTENT
-      ).apply {
-        topMargin = dp(16)
-      }
-    }
-
-    val rescueLabel = TextView(this).apply {
-      text = "60 s"
-      setTextColor(indigo)
-      textSize = 13f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-    }
-
-    val rescueTitle = TextView(this).apply {
-      text = rescueCopy(language, "title")
-      setTextColor(indigo)
-      textSize = 18f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      setPadding(0, dp(6), 0, dp(4))
-    }
-
-    val rescueHint = TextView(this).apply {
-      text = rescueCopy(language, "rescueIntro")
-      setTextColor(muted)
-      textSize = 14f
-      setLineSpacing(0f, 1.14f)
-      setPadding(0, 0, 0, dp(4))
-    }
-
-    val rescueButton = actionButton(
-      text = rescueCopy(language, "action"),
-      backgroundColor = indigo,
-      textColor = Color.WHITE,
-      borderColor = indigo
-    ) {
-      renderRescue(sourceIntent)
-    }
-
-    rescueActionCard.addView(rescueLabel)
-    rescueActionCard.addView(rescueTitle)
-    rescueActionCard.addView(rescueHint)
-    rescueActionCard.addView(rescueButton)
 
     val unlockCard = LinearLayout(this).apply {
       orientation = LinearLayout.VERTICAL
@@ -611,9 +483,6 @@ class InterruptionActivity : Activity() {
 
     content.addView(reasonCard)
     if (!blockedPackage.isNullOrBlank()) {
-      content.addView(rescueActionCard)
-    }
-    if (!blockedPackage.isNullOrBlank()) {
       content.addView(unlockCard)
     }
     content.addView(privacy)
@@ -622,240 +491,6 @@ class InterruptionActivity : Activity() {
 
     root.addView(content)
     setContentView(root)
-  }
-
-  private fun renderRescue(sourceIntent: Intent) {
-    isRescueScreen = true
-    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-    rescueAnimator?.cancel()
-    rescueHandler.removeCallbacksAndMessages(null)
-
-    val bg = Color.parseColor("#F8F9FA")
-    val surface = Color.WHITE
-    val indigo = Color.parseColor("#1A237E")
-    val indigoSoft = Color.parseColor("#E8EAF6")
-    val gold = Color.parseColor("#F9A825")
-    val goldSoft = Color.parseColor("#FFF8E1")
-    val slate = Color.parseColor("#334155")
-    val muted = Color.parseColor("#64748B")
-    val border = Color.parseColor("#D7DCE5")
-    val preferences = getSharedPreferences(Clean4JesusAccessibilityService.PREFS_NAME, MODE_PRIVATE)
-    val language = preferences.getString(Clean4JesusAccessibilityService.PREF_APP_LANGUAGE, "es") ?: "es"
-
-    window.statusBarColor = bg
-    window.navigationBarColor = bg
-
-    val root = ScrollView(this).apply {
-      setBackgroundColor(bg)
-      isFillViewport = true
-      layoutParams = ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.MATCH_PARENT
-      )
-    }
-
-    val content = LinearLayout(this).apply {
-      orientation = LinearLayout.VERTICAL
-      gravity = Gravity.CENTER_HORIZONTAL
-      setPadding(dp(24), statusBarInset() + dp(24), dp(24), dp(32))
-      layoutParams = ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.WRAP_CONTENT
-      )
-    }
-
-    val eyebrow = TextView(this).apply {
-      text = "CLEAN4JESUS"
-      setTextColor(indigo)
-      textSize = 14f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      gravity = Gravity.CENTER
-    }
-
-    val title = TextView(this).apply {
-      text = rescueCopy(language, "title")
-      setTextColor(slate)
-      textSize = 26f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      gravity = Gravity.CENTER
-      setLineSpacing(0f, 1.08f)
-      setPadding(0, dp(14), 0, dp(8))
-    }
-
-    val subtitle = TextView(this).apply {
-      text = rescueCopy(language, "subtitle")
-      setTextColor(muted)
-      textSize = 15f
-      gravity = Gravity.CENTER
-      setLineSpacing(0f, 1.18f)
-      setPadding(dp(6), 0, dp(6), dp(18))
-    }
-
-    val rescueCard = LinearLayout(this).apply {
-      orientation = LinearLayout.VERTICAL
-      gravity = Gravity.CENTER_HORIZONTAL
-      setPadding(dp(20), dp(24), dp(20), dp(22))
-      background = gradientSurface(
-        intArrayOf(Color.WHITE, Color.parseColor("#FFF3C4")),
-        gold,
-        dp(24)
-      )
-      layoutParams = LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.WRAP_CONTENT
-      )
-    }
-
-    val phase = TextView(this).apply {
-      text = rescueCopy(language, "inhale")
-      setTextColor(indigo)
-      textSize = 18f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      gravity = Gravity.CENTER
-    }
-
-    val rescueVisual = FrameLayout(this).apply {
-      layoutParams = LinearLayout.LayoutParams(dp(190), dp(190)).apply {
-        topMargin = dp(12)
-        bottomMargin = dp(8)
-      }
-    }
-
-    val pulseHalo = View(this).apply {
-      background = roundedSurface(Color.argb(34, 26, 35, 126), Color.TRANSPARENT, dp(999))
-      alpha = 0.72f
-      layoutParams = FrameLayout.LayoutParams(dp(184), dp(184), Gravity.CENTER)
-    }
-
-    val circle = TextView(this).apply {
-      text = "60 s"
-      setTextColor(Color.WHITE)
-      textSize = 24f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      gravity = Gravity.CENTER
-      background = gradientSurface(
-        intArrayOf(indigo, Color.parseColor("#3949AB")),
-        indigo,
-        dp(999)
-      )
-      contentDescription = rescueCopy(language, "action")
-      layoutParams = FrameLayout.LayoutParams(dp(156), dp(156), Gravity.CENTER)
-    }
-
-    rescueVisual.addView(pulseHalo)
-    rescueVisual.addView(circle)
-
-    val instruction = TextView(this).apply {
-      text = "4 s  ·  2 s  ·  6 s"
-      setTextColor(muted)
-      textSize = 14f
-      gravity = Gravity.CENTER
-    }
-
-    val timer = TextView(this).apply {
-      text = "60 s"
-      setTextColor(gold)
-      textSize = 17f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      gravity = Gravity.CENTER
-      setPadding(0, dp(14), 0, 0)
-    }
-
-    val doneTitle = TextView(this).apply {
-      text = rescueCopy(language, "done")
-      setTextColor(indigo)
-      textSize = 18f
-      typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-      gravity = Gravity.CENTER
-      visibility = View.GONE
-    }
-
-    val doneSubtitle = TextView(this).apply {
-      text = rescueCopy(language, "doneSubtitle")
-      setTextColor(muted)
-      textSize = 14f
-      gravity = Gravity.CENTER
-      setLineSpacing(0f, 1.16f)
-      setPadding(dp(8), dp(8), dp(8), 0)
-      visibility = View.GONE
-    }
-
-    rescueCard.addView(phase)
-    rescueCard.addView(rescueVisual)
-    rescueCard.addView(instruction)
-    rescueCard.addView(timer)
-    rescueCard.addView(doneTitle)
-    rescueCard.addView(doneSubtitle)
-
-    val backButton = actionButton(
-      text = rescueCopy(language, "back"),
-      backgroundColor = indigoSoft,
-      textColor = indigo,
-      borderColor = border
-    ) {
-      rescueAnimator?.cancel()
-      renderInterruption(sourceIntent)
-    }
-
-    content.addView(eyebrow)
-    content.addView(title)
-    content.addView(subtitle)
-    content.addView(rescueCard)
-    content.addView(backButton)
-    root.addView(content)
-    setContentView(root)
-
-    val duration = 60_000L
-    rescueAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-      this.duration = duration
-      addUpdateListener { animation ->
-        val progress = animation.animatedValue as Float
-        val elapsed = (progress * duration).toLong()
-        val remaining = ((duration - elapsed + 999L) / 1000L).coerceAtLeast(0L)
-        timer.text = "$remaining s"
-        circle.text = "$remaining s"
-
-        val cycleElapsed = elapsed % 12_000L
-        val scale: Float
-        when {
-          cycleElapsed < 4_000L -> {
-            phase.text = rescueCopy(language, "inhale")
-            scale = 0.86f + (cycleElapsed / 4_000f) * 0.32f
-          }
-          cycleElapsed < 6_000L -> {
-            phase.text = rescueCopy(language, "hold")
-            scale = 1.18f
-          }
-          else -> {
-            phase.text = rescueCopy(language, "exhale")
-            scale = 1.18f - ((cycleElapsed - 6_000L) / 6_000f) * 0.32f
-          }
-        }
-        circle.scaleX = scale
-        circle.scaleY = scale
-        val haloScale = scale + 0.12f
-        pulseHalo.scaleX = haloScale
-        pulseHalo.scaleY = haloScale
-        pulseHalo.alpha = 0.34f + ((scale - 0.86f) / 0.32f).coerceIn(0f, 1f) * 0.3f
-      }
-      addListener(object : android.animation.AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: android.animation.Animator) {
-          if (!isRescueScreen) return
-          phase.visibility = View.GONE
-          instruction.visibility = View.GONE
-          timer.visibility = View.GONE
-          circle.text = "OK"
-          circle.scaleX = 1f
-          circle.scaleY = 1f
-          pulseHalo.scaleX = 1f
-          pulseHalo.scaleY = 1f
-          pulseHalo.alpha = 0.72f
-          doneTitle.visibility = View.VISIBLE
-          doneSubtitle.visibility = View.VISIBLE
-        }
-      })
-      start()
-    }
   }
 
   private fun actionButton(

@@ -17,10 +17,13 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { hasPin } from "@/features/pin/pinService";
+import { getAccessibilityConfigured, markAccessibilityConfigured } from "@/features/shield/accessibilitySetupService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
+  pauseAccessibilityIntervention,
+  prepareAccessibilityIntervention,
   startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
 import {
@@ -479,6 +482,7 @@ function createIosStyles(colors: ThemeColors) {
 }
 
 function AndroidGateScreen() {
+  type SetupStep = "vpn" | "accessibility" | "complete";
   const router = useRouter();
   const { colors } = useAppAppearance();
   const { language } = useI18n();
@@ -490,25 +494,41 @@ function AndroidGateScreen() {
   const [setupPending, setSetupPending] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
   const [accessibilityReady, setAccessibilityReady] = useState(false);
+  const [accessibilityConfigured, setAccessibilityConfigured] = useState(false);
+  const [setupStep, setSetupStep] = useState<SetupStep>("vpn");
 
   useEffect(() => {
     void (async () => {
-      const [currentShield, pinExists, vpnActive, accessibilityActive] =
+      let [currentShield, pinExists, vpnActive, accessibilityActive, configured] =
         await Promise.all([
           getShieldEnabled(),
           hasPin(),
           isLocalDnsVpnActive(),
           isAccessibilityInterventionActive(),
+          getAccessibilityConfigured(),
         ]);
-      const protectionReady = pinExists && vpnActive && accessibilityActive;
+
+      if (!configured && currentShield && pinExists && vpnActive && accessibilityActive) {
+        configured = await markAccessibilityConfigured();
+        accessibilityActive = false;
+      }
+
+      if (configured && accessibilityActive) {
+        const paused = await pauseAccessibilityIntervention();
+        if (paused) accessibilityActive = false;
+      }
+
+      const protectionReady = pinExists && vpnActive && (configured || accessibilityActive);
       setShieldEnabled(currentShield && protectionReady);
       setPinReady(pinExists);
       setVpnReady(vpnActive);
       setAccessibilityReady(accessibilityActive);
+      setAccessibilityConfigured(configured);
 
       if (setup === "1" && pinExists && !currentShield) {
         await prepareShield();
         setSetupPending(true);
+        setSetupStep(vpnActive ? "accessibility" : "vpn");
       }
 
       if (currentShield && protectionReady) {
@@ -526,23 +546,29 @@ function AndroidGateScreen() {
     });
 
     return () => subscription.remove();
-  }, []);
+  }, [setupPending]);
 
   async function refreshProtectionStatus() {
-    const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
+    const [pinExists, vpnActive, accessibilityActive, configured] = await Promise.all([
       hasPin(),
       isLocalDnsVpnActive(),
       isAccessibilityInterventionActive(),
+      getAccessibilityConfigured(),
     ]);
     setPinReady(pinExists);
     setVpnReady(vpnActive);
     setAccessibilityReady(accessibilityActive);
-    return { accessibilityActive, pinExists, vpnActive };
+    setAccessibilityConfigured(configured);
+    if (setupPending) {
+      setSetupStep(!vpnActive ? "vpn" : configured || accessibilityActive ? "complete" : "accessibility");
+    }
+    return { accessibilityActive, configured, pinExists, vpnActive };
   }
 
   async function handleStartVpn() {
     const vpnActive = await startLocalDnsVpn();
     setVpnReady(vpnActive);
+    if (vpnActive) setSetupStep("accessibility");
     return vpnActive;
   }
 
@@ -555,6 +581,7 @@ function AndroidGateScreen() {
     await prepareShield();
     setShieldEnabled(false);
     setSetupPending(true);
+    setSetupStep(vpnReady ? "accessibility" : "vpn");
   }
 
   async function handleConfirmSetup() {
@@ -563,9 +590,18 @@ function AndroidGateScreen() {
     }
 
     const status = await refreshProtectionStatus();
-    if (!status.pinExists || !status.vpnActive || !status.accessibilityActive) {
+    if (!status.pinExists || !status.vpnActive || (!status.configured && !status.accessibilityActive)) {
       Alert.alert(copy.setupPending, copy.setupPendingBody);
       return;
+    }
+
+    if (!status.configured && status.accessibilityActive) {
+      const configured = await markAccessibilityConfigured();
+      if (!configured) {
+        Alert.alert(copy.setupPending, copy.setupPendingBody);
+        return;
+      }
+      setAccessibilityConfigured(configured);
     }
 
     const next = await enableShield();
@@ -618,8 +654,8 @@ function AndroidGateScreen() {
         <View style={styles.divider} />
         <CheckRow
           label={copy.accessibility}
-          ready={accessibilityReady}
-          value={accessibilityReady ? copy.active : copy.pending}
+          ready={accessibilityReady || accessibilityConfigured}
+          value={accessibilityReady ? copy.active : accessibilityConfigured ? copy.ready : copy.pending}
         />
       </InfoCard>
 
@@ -627,54 +663,46 @@ function AndroidGateScreen() {
         <Text style={styles.blockLabel}>{copy.steps}</Text>
         <Step ready={pinReady} text={copy.stepPin} />
         <Step ready={vpnReady} text={copy.stepVpn} />
-        <Step ready={accessibilityReady} text={copy.stepAccessibility} />
+        <Step ready={accessibilityReady || accessibilityConfigured} text={copy.stepAccessibility} />
       </InfoCard>
 
       {setupPending ? (
         <InfoCard tone="outline" style={styles.setupCard}>
-          <Text style={styles.setupTitle}>{copy.gatePaused}</Text>
-          <Text style={styles.setupBody}>{copy.gatePausedBody}</Text>
-          <View style={styles.setupActions}>
-            <Pressable
-              onPress={() => void handleStartVpn()}
-              style={[styles.setupLink, vpnReady && styles.setupLinkReady]}
-            >
-              <MaterialCommunityIcons
-                color={colors.primaryDark}
-                name="shield-outline"
-                size={16}
-              />
-              <Text style={styles.setupLinkText}>{copy.vpn}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => void openAndroidAccessibilitySettings()}
-              style={[
-                styles.setupLink,
-                accessibilityReady && styles.setupLinkReady,
-              ]}
-            >
-              <MaterialCommunityIcons
-                color={colors.primaryDark}
-                name="access-point"
-                size={16}
-              />
-              <Text style={styles.setupLinkText}>{copy.accessibility}</Text>
-            </Pressable>
+          <View style={styles.setupStepBadge}>
+            <MaterialCommunityIcons
+              color={colors.primaryDark}
+              name={setupStep === "vpn" ? "shield-outline" : setupStep === "accessibility" ? "access-point" : "check-circle-outline"}
+              size={20}
+            />
           </View>
-          <PrimaryButton
-            label={copy.gateConfirm}
-            onPress={handleConfirmSetup}
-          />
+          <Text style={styles.setupTitle}>
+            {setupStep === "vpn" ? copy.setupVpnTitle : setupStep === "accessibility" ? copy.setupAccessibilityTitle : copy.setupCompleteTitle}
+          </Text>
+          <Text style={styles.setupBody}>
+            {setupStep === "vpn" ? copy.setupVpnBody : setupStep === "accessibility" ? copy.setupAccessibilityBody : copy.setupCompleteBody}
+          </Text>
+          {setupStep === "vpn" ? (
+            <PrimaryButton label={copy.setupVpnAction} onPress={() => void handleStartVpn()} />
+          ) : setupStep === "accessibility" ? (
+            <>
+              <PrimaryButton label={copy.setupAccessibilityAction} onPress={() => void handleOpenAccessibility()} />
+              <Pressable onPress={() => void handleConfirmSetup()} style={styles.setupSecondaryAction}>
+                <Text style={styles.setupSecondaryText}>{copy.gateConfirm}</Text>
+              </Pressable>
+            </>
+          ) : (
+            <PrimaryButton label={copy.setupCompleteAction} onPress={handleConfirmSetup} />
+          )}
         </InfoCard>
       ) : null}
 
-      <View style={styles.actions}>
+      {!setupPending ? <View style={styles.actions}>
         <PrimaryButton
           label={shieldEnabled ? copy.gateEnter : copy.gatePrepare}
           onPress={handleActivate}
         />
         <Pressable
-          onPress={() => void openAndroidAccessibilitySettings()}
+          onPress={() => void handleOpenAccessibility()}
           style={styles.secondaryLink}
         >
           <MaterialCommunityIcons
@@ -684,9 +712,21 @@ function AndroidGateScreen() {
           />
           <Text style={styles.secondaryLinkText}>{copy.openAccessibility}</Text>
         </Pressable>
-      </View>
+      </View> : null}
     </Screen>
   );
+
+  async function handleOpenAccessibility() {
+    const prepared = await prepareAccessibilityIntervention();
+    if (!prepared) {
+      Alert.alert(copy.setupPending, copy.setupPendingBody);
+      return;
+    }
+    const opened = await openAndroidAccessibilitySettings();
+    if (!opened) {
+      Alert.alert(copy.setupPending, copy.setupPendingBody);
+    }
+  }
 }
 
 function CheckRow({
@@ -884,6 +924,16 @@ function createStyles(colors: ThemeColors) {
     setupCard: {
       gap: 12,
     },
+    setupStepBadge: {
+      alignItems: "center",
+      backgroundColor: colors.surfaceAlt,
+      borderColor: colors.border,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      height: 44,
+      justifyContent: "center",
+      width: 44,
+    },
     setupTitle: {
       color: colors.text,
       fontFamily: fonts.display,
@@ -899,6 +949,15 @@ function createStyles(colors: ThemeColors) {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 8,
+    },
+    setupSecondaryAction: {
+      alignItems: "center",
+      paddingVertical: 8,
+    },
+    setupSecondaryText: {
+      color: colors.primaryDark,
+      fontFamily: fonts.heading,
+      fontSize: 11,
     },
     setupLink: {
       alignItems: "center",

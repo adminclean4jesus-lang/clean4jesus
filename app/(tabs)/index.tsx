@@ -12,6 +12,7 @@ import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { recordFall } from "@/features/habits/habitService";
 import { hasPin } from "@/features/pin/pinService";
+import { getAccessibilityConfigured } from "@/features/shield/accessibilitySetupService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import { isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
 import { iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
@@ -50,6 +51,7 @@ export default function HomeScreen() {
   const [pinReady, setPinReady] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
   const [accessibilityReady, setAccessibilityReady] = useState(false);
+  const [accessibilityConfigured, setAccessibilityConfigured] = useState(false);
   const [familyControlsReady, setFamilyControlsReady] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -71,7 +73,7 @@ export default function HomeScreen() {
   const totalLayers = isIos ? 2 : 3;
   const readyCount = isIos
     ? [pinReady, familyControlsReady].filter(Boolean).length
-    : [pinReady, vpnReady, accessibilityReady].filter(Boolean).length;
+    : [pinReady, vpnReady, accessibilityReady || accessibilityConfigured].filter(Boolean).length;
   const readiness = readyCount / totalLayers;
   const refugeReady = enabled && readiness === 1;
   const coverageLabel = Math.round(readiness * 100);
@@ -80,7 +82,7 @@ export default function HomeScreen() {
 
   const missingLayers = isIos
     ? [!pinReady ? layers.pin : null, !familyControlsReady ? layers.familyControls : null].filter(Boolean) as string[]
-    : [!pinReady ? layers.pin : null, !vpnReady ? layers.vpn : null, !accessibilityReady ? layers.accessibility : null].filter(Boolean) as string[];
+    : [!pinReady ? layers.pin : null, !vpnReady ? layers.vpn : null, !(accessibilityReady || accessibilityConfigured) ? layers.accessibility : null].filter(Boolean) as string[];
 
   async function refreshHomeState() {
     try {
@@ -92,19 +94,22 @@ export default function HomeScreen() {
         setPinReady(pinExists);
         setFamilyControlsReady(status.isAuthorized);
       } else {
-        const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
+        const [pinExists, vpnActive, accessibilityActive, configured] = await Promise.all([
           hasPin(),
           isLocalDnsVpnActive(),
           isAccessibilityInterventionActive(),
+          getAccessibilityConfigured(),
         ]);
         setPinReady(pinExists);
         setVpnReady(vpnActive);
         setAccessibilityReady(accessibilityActive);
+        setAccessibilityConfigured(configured);
       }
     } catch {
       setPinReady(false);
       setVpnReady(false);
       setAccessibilityReady(false);
+      setAccessibilityConfigured(false);
       setFamilyControlsReady(false);
     }
   }
@@ -190,7 +195,7 @@ export default function HomeScreen() {
                   ) : (
                     <>
                       <LayerButton label={layers.vpn} ready={vpnReady} value={vpnReady ? uiText(language, "refuge.vpn.ready") : uiText(language, "refuge.vpn.activate")} icon="shield-outline" onPress={() => void handleLayerPress("vpn")} />
-                      <LayerButton label={layers.accessibility} ready={accessibilityReady} value={accessibilityReady ? uiText(language, "refuge.accessibility.ready") : uiText(language, "refuge.accessibility.open")} icon="access-point" onPress={() => void handleLayerPress("accessibility")} />
+                      <LayerButton label={layers.accessibility} ready={accessibilityReady || accessibilityConfigured} value={accessibilityReady ? uiText(language, "refuge.accessibility.ready") : accessibilityConfigured ? uiText(language, "refuge.pin.ready") : uiText(language, "refuge.accessibility.open")} icon="access-point" onPress={() => void handleLayerPress("accessibility")} />
                     </>
                   )}
                 </View>

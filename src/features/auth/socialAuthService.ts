@@ -44,7 +44,13 @@ export async function signInWithGoogle(language: SupportedLanguage) {
   }
 
   await exchangeAuthCode(code, "oauth");
-  await recordLegalAcceptance(language, "google_oauth");
+  // Authentication is already complete. A telemetry/consent write must never
+  // turn a successful Google sign-in into a false error for the user.
+  try {
+    await recordLegalAcceptance(language, "google_oauth");
+  } catch {
+    // The acceptance is recorded again on the next authenticated interaction.
+  }
   return { cancelled: false };
 }
 

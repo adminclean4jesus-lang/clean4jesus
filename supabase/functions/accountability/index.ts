@@ -9,6 +9,7 @@ const corsHeaders = {
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const pushTokenPattern = /^(ExponentPushToken|ExpoPushToken)\[[A-Za-z0-9_-]+\]$/;
+const BRAND_LOGO_URL = "https://clean4jesus.com/brand-mark.png";
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -100,6 +101,65 @@ Deno.serve(async (request) => {
     } catch {
       return json({ error: "email_delivery_failed" }, 502);
     }
+  }
+
+  if (body.operation === "requestGuardianPin") {
+    if (
+      !hasOnlyKeys(body, ["operation", "email"])
+      || typeof body.email !== "string"
+      || body.email.trim().length > 320
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())
+    ) return json({ error: "invalid_guardian_email" }, 400);
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    const from = Deno.env.get("ACCOUNTABILITY_FROM_EMAIL");
+    if (!resendKey || !from) return json({ error: "email_delivery_not_configured" }, 503);
+    const token = createUrlToken();
+    const tokenHash = `\\x${await sha256Hex(token)}`;
+    const { data, error } = await client.rpc("create_guardian_pin_request", {
+      p_guardian_email: body.email.trim().toLowerCase(),
+      p_confirmation_token_hash: tokenHash,
+    });
+    if (error) return databaseError(error);
+    const request = data?.[0];
+    const confirmationBaseUrl = (Deno.env.get("GUARDIAN_CONFIRMATION_URL") ?? "https://clean4jesus.com/guardian/confirm").replace(/\/$/, "");
+    const confirmationUrl = `${confirmationBaseUrl}?token=${encodeURIComponent(token)}`;
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from, to: [body.email.trim().toLowerCase()],
+          subject: "Confirma tu acompañamiento en Clean4Jesus",
+          text: `${guardianOwnerLabel(userData.user)} te eligió como persona de confianza en Clean4Jesus. Si aceptas guardar su PIN de protección, confirma aquí: ${confirmationUrl}. No necesitas descargar una aplicación. Este enlace expira en 24 horas.`,
+          html: guardianConfirmationEmail(confirmationUrl, guardianOwnerLabel(userData.user)),
+        }),
+      });
+      if (!response.ok) {
+        await discardGuardianPinRequest(client, tokenHash);
+        return json({ error: "email_delivery_failed" }, 502);
+      }
+    } catch {
+      await discardGuardianPinRequest(client, tokenHash);
+      return json({ error: "email_delivery_failed" }, 502);
+    }
+    return json({ status: request?.status ?? "pending", expiresAt: request?.expires_at ?? null }, 202);
+  }
+
+  if (body.operation === "getGuardianPinStatus") {
+    if (!hasOnlyKeys(body, ["operation"]) && !hasOnlyKeys(body, ["operation", "includePinHash"]) || body.includePinHash !== undefined && body.includePinHash !== true) {
+      return json({ error: "invalid_guardian_pin_status" }, 400);
+    }
+    const { data, error } = await client.rpc("get_my_guardian_pin_request", { p_include_pin_hash: body.includePinHash === true });
+    if (error) return databaseError(error);
+    const request = data?.[0];
+    return json({ status: request?.status ?? "none", expiresAt: request?.expires_at ?? null, ...(body.includePinHash === true && request?.pin_hash ? { pinHash: request.pin_hash } : {}) }, 200);
+  }
+
+  if (body.operation === "cancelGuardianPin") {
+    if (!hasOnlyKeys(body, ["operation"])) return json({ error: "invalid_guardian_pin_cancellation" }, 400);
+    const { error } = await client.rpc("cancel_my_guardian_pin_request");
+    if (error) return databaseError(error);
+    return json({ status: "cancelled", expiresAt: null }, 200);
   }
 
   if (body.operation === "list") {
@@ -247,12 +307,61 @@ function createDeviceSecret() {
     .replaceAll("=", "");
 }
 
+function createUrlToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...bytes)).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+function createGuardianPin() {
+  const values = crypto.getRandomValues(new Uint32Array(8));
+  return [...values].map((value) => String(value % 10)).join("");
+}
+
+async function sha256Hex(value: string) {
+  const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function guardianOwnerLabel(user: { email?: string | null; user_metadata?: Record<string, unknown> }) {
+  const displayName = user.user_metadata?.display_name;
+  if (typeof displayName === "string" && displayName.trim()) return displayName.trim();
+  return user.email?.split("@")[0] || "Una persona de Clean4Jesus";
+}
+
+function guardianConfirmationEmail(url: string, ownerLabel: string) {
+  const sender = escapeHtml(ownerLabel);
+  return `<div style="background:#f4f6fa;padding:28px 12px;font-family:Arial,sans-serif;color:#102a63"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="600" style="max-width:600px;background:#fff;border-radius:24px;overflow:hidden"><tr><td style="background:#0d2860;padding:32px;text-align:center"><img src="${BRAND_LOGO_URL}" width="56" height="56" alt="Logo oficial de Clean4Jesus" style="display:block;margin:0 auto 14px"/><div style="color:#fff;font-size:26px;font-weight:700">Clean4Jesus</div></td></tr><tr><td style="padding:34px"><p style="color:#b07b1f;font-size:12px;font-weight:700;letter-spacing:1.2px;margin:0 0 12px">ACOMPAÑAMIENTO DE CONFIANZA</p><h1 style="font-size:25px;margin:0 0 16px">${sender} te eligió como persona de confianza</h1><p style="font-size:16px;line-height:1.6">Al confirmar, recibirás un PIN de protección para acompañar esta decisión. No necesitas descargar una aplicación.</p><p style="font-size:16px;line-height:1.6">Acepta solo si quieres asumir este acompañamiento. Puedes ignorar este correo si no deseas hacerlo.</p><p style="margin:28px 0"><a href="${url}" style="background:#d99a20;color:#102a63;padding:14px 22px;border-radius:12px;text-decoration:none;font-weight:700">Confirmar acompañamiento</a></p><p style="font-size:13px;color:#52627e">Este enlace vence en 24 horas. Que Cristo guíe cada decisión.</p></td></tr></table></td></tr></table></div>`;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
+}
+
 function databaseError(error: { code?: string; message: string }) {
   if (error.code === "42501") return json({ error: "forbidden" }, 403);
   if (error.code === "P0002") return json({ error: "not_found" }, 404);
   if (error.code === "23505") return json({ error: "conflict" }, 409);
+  if (error.code === "22023" && error.message.includes("guardian_pin_request_rate_limited")) {
+    return json({ error: "guardian_pin_request_rate_limited" }, 429);
+  }
+  if (error.code === "22023" && error.message.includes("invalid_guardian_pin_request")) {
+    return json({ error: "invalid_guardian_email" }, 400);
+  }
+  if (error.code === "PGRST202" || /guardian_pin_request/i.test(error.message) && /not find|schema cache/i.test(error.message)) {
+    return json({ error: "guardian_pin_backend_not_ready" }, 503);
+  }
   if (error.code === "22023") return json({ error: "invalid_request" }, 400);
   return json({ error: "accountability_operation_failed" }, 400);
+}
+
+async function discardGuardianPinRequest(
+  client: ReturnType<typeof createClient>,
+  tokenHash: string,
+) {
+  const { error } = await client.rpc("discard_my_guardian_pin_request", {
+    p_confirmation_token_hash: tokenHash,
+  });
+  if (error) console.error("guardian_pin_cleanup_failed", error.code);
 }
 
 function json(body: Record<string, unknown>, status: number) {

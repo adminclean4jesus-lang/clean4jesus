@@ -389,6 +389,9 @@ deno_version = 2
 [functions.accountability]
 verify_jwt = false
 
+[functions.guardian-pin-confirmation]
+verify_jwt = false
+
 [functions.accountability-signal]
 verify_jwt = false
 

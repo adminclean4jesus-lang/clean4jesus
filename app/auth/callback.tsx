@@ -18,9 +18,10 @@ export default function AuthCallbackScreen() {
   const copy = getAuthText(language);
   const auxCopy = getAuthAuxText(language);
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { code, error_description: errorDescription } = useLocalSearchParams<{
+  const { code, error_description: errorDescription, mode } = useLocalSearchParams<{
     code?: string;
     error_description?: string;
+    mode?: string;
   }>();
   const [error, setError] = useState<string | null>(null);
 
@@ -34,10 +35,11 @@ export default function AuthCallbackScreen() {
       return;
     }
 
-    void exchangeAuthCode(code)
+    const flow = mode === "recovery" ? "recovery" : "oauth";
+    void exchangeAuthCode(code, flow)
       .then(({ isPasswordRecovery }) => router.replace(isPasswordRecovery ? "/auth/reset-password" : "/(tabs)/community"))
       .catch(() => setError(auxCopy.callbackFailed));
-  }, [auxCopy.callbackFailed, auxCopy.callbackMissing, auxCopy.callbackRejected, code, errorDescription, router]);
+  }, [auxCopy.callbackFailed, auxCopy.callbackMissing, auxCopy.callbackRejected, code, errorDescription, mode, router]);
 
   return (
     <View style={styles.screen}>

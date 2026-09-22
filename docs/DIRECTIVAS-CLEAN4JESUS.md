@@ -124,6 +124,13 @@
 - No agregar WhatsApp al catalogo de limites por app ni enviar mensajes, texto visible o enlaces al backend.
 - Android se entrega mediante compilacion local y rotacion exclusiva de `artifacts/apk/current/Clean4Jesus-current.apk` y `artifacts/apk/previous/Clean4Jesus-previous.apk`. No crear PR ni ejecutar EAS/GitHub Actions para entregar APK Android.
 
+## MUST — Generacion De APK Android
+
+- **Obligatorio en cada generacion de APK Android:** usar exclusivamente Gradle local; no ejecutar EAS ni GitHub Actions.
+- **Obligatorio:** conservar y reutilizar la cache corta de Gradle/CMake para evitar recompilaciones nativas innecesarias y no limpiar modulos nativos salvo que un error concreto lo exija.
+- **Obligatorio:** entregar siempre el APK en `C:\Users\millo\Desktop\Clean4Jesus\artifacts\apk`.
+- Antes de entregar, verificar que el archivo exista, registrar su tamano y hash SHA-256, y comprobar que la landing no haya cambiado.
+
 ## Escudo
 
 - El toggle actual persiste estado local con AsyncStorage.
@@ -272,6 +279,18 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - Politica de APKs locales: no acumular builds. Mantener maximo dos APKs en `artifacts/apk`: `current/Clean4Jesus-current.apk` y `previous/Clean4Jesus-previous.apk`. En cada build nuevo, mover current a previous, escribir el nuevo current y borrar cualquier otro `.apk` viejo.
 - Al cerrar una sesion con APK local, verificar que `artifacts/apk` tenga exactamente esos dos APKs y que cualquier copia temporal de build, como `C:\c4j`, pueda borrarse si el APK ya fue copiado.
 
+## Auditoria Del Flujo APK Local — 21 De Septiembre De 2026
+
+- El flujo unico vigente es `npm run build:android:local`; delega en `scripts/build-android-local.ps1` y nunca usa EAS ni GitHub Actions.
+- La copia de compilacion persistente es `C:\c4j` y la cache persistente de Gradle es `C:\g`. No crear una copia temporal nueva en cada build: las rutas cambiantes invalidan CMake y fuerzan recompilaciones nativas.
+- GitHub (`https://github.com/adminclean4jesus-lang/clean4jesus.git`) es siempre la fuente de verdad del repositorio. El script debe verificar `origin` antes de compilar; una carpeta local sincronizada solo puede ser checkout de trabajo y nunca repositorio principal.
+- El script sincroniza solo el codigo necesario y excluye `.git`, `node_modules`, `.gradle`, `build`, `.cxx`, `artifacts`, `tmp` y `web/landing`. Ejecuta `npm ci` unicamente si falta `node_modules` o cambia `package-lock.json`; no copiar caches de otra ruta absoluta.
+- El APK de prueba compila por defecto solo `arm64-v8a`, que es el ABI del telefono de prueba. El universal de cuatro ABI solo se solicita con `npm run build:android:local:universal`.
+- El script fija JDK 17, SDK/NDK, `local.properties`, `CLEAN4JESUS_PLATFORM=android`, `NODE_ENV=production` y `GRADLE_USER_HOME=C:\g`; no modificar codigo para resolver fallos de rutas o entorno.
+- `-ResetNative` es una salida excepcional y explicita para errores CMake/Ninja; no limpiar caches nativas como paso rutinario.
+- La salida se publica en `C:\Users\millo\Desktop\Clean4Jesus\artifacts\apk\current\Clean4Jesus-current.apk`, mueve la anterior a `previous\Clean4Jesus-previous.apk`, elimina cualquier APK sobrante y registra tamaño/hash SHA-256.
+- La auditoria que motivó este flujo identificó como causas de las demoras: compilación desde la ruta sincronizada del repositorio, copias efímeras, caches con rutas absolutas antiguas, reinstalación innecesaria de dependencias, compilación universal por defecto y preparación manual de keystore/local.properties. No repetir esos pasos manuales.
+
 ## Aprendizajes De Errores Previos
 
 - No usar `localhost` sin puerto; Expo web debe abrirse con puerto explicito.
@@ -343,8 +362,8 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - No tocar el servicio de Accesibilidad ni su XML cuando se trabaje en VPN/DNS, salvo que el usuario pida explicitamente cambiar la pantalla de interrupcion o reglas de redes/navegadores.
 - Cuando el bloqueo detecte una senal adulta, debe intentar sacar la app bloqueada del frente antes de mostrar la interrupcion, dejando el bloqueo como salida best-effort sin matar procesos.
 - La salida best-effort no debe ejecutar `HOME` despues de lanzar `InterruptionActivity`; primero cerrar/sacar la app bloqueada y luego abrir la pantalla de interrupcion para que quede visible.
-- Para builds locales en Windows, si la ruta de OneDrive rompe Gradle por longitud, construir desde una ruta corta temporal y usar JDK 17; no tocar el codigo solo por el entorno.
-- Para APKs locales de prueba, la ruta corta vigente y validada es `C:\\c4j` con `:app:assembleDebug`. No volver a intentar empaquetado pesado desde la ruta larga de OneDrive si ya sabemos que Gradle/CMake puede romper por longitud.
+- Para builds locales en Windows, la compilación debe ejecutarse desde la ruta corta `C:\\c4j` con JDK 17; la ruta sincronizada del repositorio no es una ruta de build. No tocar el codigo solo por el entorno.
+- Para APKs locales de prueba, la ruta corta vigente y validada es `C:\\c4j` con `:app:assembleDebug`. No ejecutar Gradle/CMake en la ruta donde se sincroniza el repositorio.
 - La allowlist sensible debe cubrir prefijos reales de paquetes confiables, no solo coincidencias sueltas de nombre. YouTube y Nubank deben quedar exentos por categoria y por prefijo estable cuando corresponda.
 - En Android, el launcher usa adaptive icons y recorta con mascara distinta segun fabricante. No calibrar el icono para un Pixel especifico: usar fondo full-bleed separado y `foreground` transparente centrado dentro de zona segura conservadora. Para este logo, el simbolo debe ocupar aprox. 49-55% del lienzo de 1024px, no 60-65%, para que circulo, squircle y rounded-square no lo corten ni lo vean pegado.
 - YouTube como checkpoint tambien depende del DNS: CleanBrowsing Family puede forzar YouTube Restricted Mode y ocultar comentarios. La correccion preferida es Cloudflare Family como DNS base, manteniendo Accesibilidad como en el checkpoint probado.
@@ -476,7 +495,7 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - Una prueba E2E de idioma manual debe establecer también la marca de preferencia explícita; guardar solo el código de idioma simula una instalación nueva y puede ser reemplazado legítimamente por el idioma del sistema.
 - Cuando una tabla cambia de esquema, revisar funciones `SECURITY DEFINER`, cron y retención que aún la referencian. El job de privacidad debe purgar `public.false_positive_reports` y los eventos técnicos de rate limit; nunca dejar huellas de instalación indefinidamente por depender solo de limpiezas por dispositivo.
 - Un `npm audit --omit=dev` de la candidata encontró alertas altas en el árbol Expo/React Native. No ocultarlas ni usar `npm audit fix --force` sobre el checkpoint: planificar actualización SDK/dependencias con compilación y QA nativos separados antes de beta externa.
-- Para compilar Android fuera de OneDrive en una copia corta, no reutilizar `node_modules` con artefactos Gradle copiados: una instalación limpia `npm ci` evitó bloqueos de `classpath-snapshot`. Conservar el repo principal como fuente de verdad y no modificar la copia vieja `C:\c4j\clean4jesus`.
+- Para compilar Android en una copia corta, no reutilizar `node_modules` con artefactos Gradle copiados: una instalación limpia `npm ci` evitó bloqueos de `classpath-snapshot`. No dejar artefactos de compilación en la ruta sincronizada del repositorio.
 - Gradle 8 en Windows puede rechazar como “not a regular file” el `libc++_shared.so` hard-linked que produce el NDK, aunque Kotlin/CMake hayan compilado. Tras CMake, reemplazar ese enlace solo dentro de los outputs generados por una copia regular y dejar sin seguimiento de estado las tareas nativas/JNI solo en Windows; no alterar el NDK original ni desactivar incremental en macOS/Linux.
 - Lint nativo debe correr además de `assembleDebug`: con `minSdk 24`, la notificación VPN necesita `Notification.Builder` sin canal antes de API 26, el atributo SplashScreen de API 33 debe estar marcado, el nombre de marca no se traduce y `android/local.properties` local escapa la unidad `C\:`. No convertir problemas de código en supresiones globales.
 
@@ -510,6 +529,12 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 
 - Con CAPTCHA de Supabase activo, toda reautenticación destructiva debe obtener un token Turnstile nuevo en el cliente y enviarlo al backend. Un script administrativo no puede fabricar ese token ni reutilizarlo; la eliminación satisfactoria conserva una prueba manual en la app con cuenta desechable, aunque los contratos negativos se automaticen.
 - Las migraciones `20260830120000`, `20260913120000` y `20260913130000` están aplicadas en producción; `report-false-positive`, `accountability`, `accountability-health` y `delete-account` están desplegadas. Las suites remotas positiva y negativa del 16 de septiembre aprobaron. No volver a describir este despliegue como pendiente sin evidencia nueva de deriva.
-- En copias cortas de compilación Windows no copiar `.gradle`, `android/.gradle` ni carpetas `build/` desde otra ruta absoluta: esos metadatos conservan rutas anteriores y rompen la resolución. Regenerarlos en la copia física; el repositorio OneDrive continúa como fuente de verdad.
+- En copias cortas de compilación Windows no copiar `.gradle`, `android/.gradle` ni carpetas `build/` desde otra ruta absoluta: esos metadatos conservan rutas anteriores y rompen la resolución. Regenerarlos en la copia física; la ruta sincronizada del repositorio queda fuera del trabajo de Gradle.
 - La APK `1.3.37 (55)` acredita compilación, lint nativo, firma debug v2, TypeScript y 191 pruebas unitarias; no acredita QA físico ni beta externa. DNS-over-TLS requiere todavía pruebas en Wi-Fi, datos móviles, dominio bloqueado y fallo de upstream en dos fabricantes.
 - En Windows, `expo start --tunnel` requiere `@expo/ngrok` instalado globalmente aunque exista `~/.expo/ngrok.yml`. El error `Cannot read properties of undefined (reading 'body')` puede aparecer antes de Metro cuando falta ese paquete. Confirmar estado oficial de ngrok, instalar el paquete y cerrar el túnel con `Ctrl+C` al terminar; una URL de túnel expone temporalmente Metro y su QR solo se comparte con testers autorizados.
+
+## Regresiones Críticas Android — 21 De Septiembre De 2026
+
+- El callback OAuth puede llegar tanto al navegador autenticado como al router de la app. `exchangeAuthCode` debe deduplicar el mismo `flow:código` en memoria; un inicio de Google correcto nunca puede terminar en el popup genérico de error por un segundo consumo del código. Los registros posteriores de consentimiento son de mejor esfuerzo y no pueden invalidar una sesión ya autenticada.
+- Nu, bancos y billeteras no se inspeccionan ni se bloquean por paquete. Tras completar el requisito inicial de Accesibilidad, Android debe deshabilitar el componente nativo y verificar que no figure en servicios habilitados antes de declarar el Refugio preparado. Sólo una acción explícita de "Abrir Accesibilidad" puede reactivar el componente para una nueva configuración; nunca reactivarlo silenciosamente.
+- La pantalla de interrupción activa no contiene una pausa, respiración, contador ni CTA de 60 segundos. Una prueba de contrato debe impedir que `rescueActionCard`, `renderRescue` o el copy correspondiente reaparezcan.

@@ -6,6 +6,7 @@ export const storageKeys = {
   shieldEnabled: "clean4jesus.shield.enabled",
   shieldState: "clean4jesus.shield.state",
   shieldSetupComplete: "clean4jesus.shield.setupComplete",
+  accessibilityConfigured: "clean4jesus.accessibility.configured",
   dnsSetupConfirmed: "clean4jesus.dnsSetupConfirmed",
   bankingMode: "clean4jesus.bankingMode",
   habits: "clean4jesus.habits",

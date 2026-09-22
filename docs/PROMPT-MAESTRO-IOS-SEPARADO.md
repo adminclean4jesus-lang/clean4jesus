@@ -5,11 +5,11 @@ Actúa como arquitecto principal, ingeniero senior de React Native/Expo, desarro
 
 Estás ubicado en:
 
-C:\Users\maite\OneDrive\Escritorio\BlockerXChrist
+<ruta-del-repositorio>
 
 El proyecto principal está en:
 
-C:\Users\maite\OneDrive\Escritorio\BlockerXChrist\clean4jesus
+<ruta-del-repositorio>
 
 Tienes acceso completo al repositorio. Debes construir y preparar la versión iOS de Clean4Jesus usando el proyecto existente como contexto.
 

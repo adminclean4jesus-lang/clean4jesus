@@ -73,16 +73,16 @@ describe("Phase 1 protection contracts", () => {
     );
   });
 
-  it("keeps the approved interruption hierarchy with reason before rescue and guardian actions", () => {
+  it("keeps interruption focused on the reason and guardian actions without a timed rescue", () => {
     const source = read(
       "android/app/src/main/java/com/clean4jesus/app/InterruptionActivity.kt",
     );
     expect(source.indexOf("content.addView(reasonCard)")).toBeLessThan(
-      source.indexOf("content.addView(rescueActionCard)"),
-    );
-    expect(source.indexOf("content.addView(reasonCard)")).toBeLessThan(
       source.indexOf("content.addView(unlockCard)"),
     );
+    expect(source).not.toContain("rescueActionCard");
+    expect(source).not.toContain("Respirar 60 segundos");
+    expect(source).not.toContain("renderRescue(");
     expect(source).toContain("content.addView(secondaryButton)");
   });
 

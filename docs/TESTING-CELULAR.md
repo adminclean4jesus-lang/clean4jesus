@@ -16,7 +16,7 @@ Usar Expo Go sirve para probar UI, navegacion, habitos, devocional, login mock o
 6. Ejecuta:
 
 ```bash
-cd C:\Users\millo\OneDrive\Escritorio\Clean4Jesus
+cd <ruta-del-repositorio>
 npm run phone
 ```
 

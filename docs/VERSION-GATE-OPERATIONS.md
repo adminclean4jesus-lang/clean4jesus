@@ -43,7 +43,7 @@ Eso significa que la version actual pasa, y cualquier APK anterior a `1.3.6` que
 ### 1. Verificar el cliente
 
 ```powershell
-cd C:\Users\maite\OneDrive\Escritorio\BlockerXChrist\clean4jesus
+cd <ruta-del-repositorio>
 npx tsc --noEmit
 npm run test:unit -- versionGate
 ```
@@ -51,7 +51,7 @@ npm run test:unit -- versionGate
 ### 2. Verificar el gate remoto
 
 ```powershell
-cd C:\Users\maite\OneDrive\Escritorio\BlockerXChrist\clean4jesus
+cd <ruta-del-repositorio>
 node scripts/verify-runtime-version-gate.mjs
 ```
 

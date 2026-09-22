@@ -87,24 +87,7 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun isAccessibilityInterventionEnabled(promise: Promise) {
     try {
-      val enabledServices = Settings.Secure.getString(
-        reactContext.contentResolver,
-        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-      )
-      val expected = "${reactContext.packageName}/${Clean4JesusAccessibilityService::class.java.name}"
-      val colonSplitter = TextUtils.SimpleStringSplitter(':')
-
-      if (enabledServices != null) {
-        colonSplitter.setString(enabledServices)
-        while (colonSplitter.hasNext()) {
-          if (colonSplitter.next().equals(expected, ignoreCase = true)) {
-            promise.resolve(true)
-            return
-          }
-        }
-      }
-
-      promise.resolve(false)
+      promise.resolve(isAccessibilityInterventionEnabled())
     } catch (error: Exception) {
       promise.reject("ACCESSIBILITY_STATUS_FAILED", error)
     }
@@ -113,10 +96,44 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun pauseAccessibilityIntervention(promise: Promise) {
     try {
-      promise.resolve(Clean4JesusAccessibilityService.pauseIfRunning())
+      if (!Clean4JesusAccessibilityService.completeAccessibilitySetup(reactContext)) {
+        promise.resolve(false)
+        return
+      }
+      Handler(Looper.getMainLooper()).postDelayed({
+        promise.resolve(!isAccessibilityInterventionEnabled())
+      }, 350L)
     } catch (error: Exception) {
       promise.reject("ACCESSIBILITY_PAUSE_FAILED", error)
     }
+  }
+
+  @ReactMethod
+  fun prepareAccessibilityIntervention(promise: Promise) {
+    try {
+      promise.resolve(Clean4JesusAccessibilityService.prepareForAccessibilitySetup(reactContext))
+    } catch (error: Exception) {
+      promise.reject("ACCESSIBILITY_PREPARE_FAILED", error)
+    }
+  }
+
+  @ReactMethod
+  fun completeAccessibilitySetup(promise: Promise) {
+    pauseAccessibilityIntervention(promise)
+  }
+
+  private fun isAccessibilityInterventionEnabled(): Boolean {
+    val enabledServices = Settings.Secure.getString(
+      reactContext.contentResolver,
+      Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+    ) ?: return false
+    val expected = "${reactContext.packageName}/${Clean4JesusAccessibilityService::class.java.name}"
+    val colonSplitter = TextUtils.SimpleStringSplitter(':')
+    colonSplitter.setString(enabledServices)
+    while (colonSplitter.hasNext()) {
+      if (colonSplitter.next().equals(expected, ignoreCase = true)) return true
+    }
+    return false
   }
 
   @ReactMethod

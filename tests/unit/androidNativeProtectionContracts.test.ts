@@ -77,13 +77,24 @@ describe("Android native protection contracts", () => {
     expect(interruptionSource).not.toContain("No lee tus mensajes");
   });
 
-  it("does not enable the shield while a native protection layer is pending", () => {
+  it("requires Accessibility once, then preserves base refuge after it is configured", () => {
     const gateSource = readProjectFile("app/index.tsx");
-    const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive || !status.accessibilityActive");
+    const setupService = readProjectFile("src/features/shield/accessibilitySetupService.ts");
+    const storageSource = readProjectFile("src/services/storage.ts");
+    const initialValidation = gateSource.indexOf("(!status.configured && !status.accessibilityActive)");
+    const pauseIndex = gateSource.indexOf("if (configured && accessibilityActive)");
     const enableIndex = gateSource.indexOf("await enableShield()");
 
-    expect(validationIndex).toBeGreaterThan(-1);
-    expect(enableIndex).toBeGreaterThan(validationIndex);
+    expect(storageSource).toContain('accessibilityConfigured: "clean4jesus.accessibility.configured"');
+    expect(setupService).toContain("markAccessibilityConfigured");
+    expect(setupService).toContain("completeAccessibilityInterventionSetup");
+    expect(initialValidation).toBeGreaterThan(-1);
+    expect(pauseIndex).toBeGreaterThan(-1);
+    expect(gateSource).toContain("const paused = await pauseAccessibilityIntervention()");
+    expect(gateSource).toContain("await prepareAccessibilityIntervention()");
+    expect(readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt")).toContain("PREF_ACCESSIBILITY_SETUP_COMPLETED");
+    expect(readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt")).toContain("COMPONENT_ENABLED_STATE_DISABLED");
+    expect(enableIndex).toBeGreaterThan(initialValidation);
   });
 
   it("bounds app usage between accessibility events without widening package access", () => {
@@ -96,6 +107,8 @@ describe("Android native protection contracts", () => {
     expect(serviceConfig).toContain("android:packageNames=");
     expect(serviceConfig).not.toContain("com.google.android.youtube");
     expect(serviceConfig).not.toContain("com.nu.production");
+    expect(source).toContain('"com.nequi"');
+    expect(source).toContain('"com.daviplata"');
   });
 
   it("coalesces expensive accessibility tree scans without delaying typed searches", () => {

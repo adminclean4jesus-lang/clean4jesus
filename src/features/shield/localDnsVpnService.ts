@@ -4,6 +4,8 @@ type Clean4JesusVpnModule = {
   getStatus: () => Promise<boolean>;
   isAccessibilityInterventionEnabled: () => Promise<boolean>;
   pauseAccessibilityIntervention: () => Promise<boolean>;
+  prepareAccessibilityIntervention?: () => Promise<boolean>;
+  completeAccessibilitySetup?: () => Promise<boolean>;
   startDnsVpn: () => Promise<boolean>;
   stopDnsVpn: () => Promise<boolean>;
   syncLanguage?: (language: string) => Promise<boolean>;
@@ -71,6 +73,30 @@ export async function pauseAccessibilityIntervention(): Promise<boolean> {
 
   try {
     return Boolean(await nativeVpn.pauseAccessibilityIntervention());
+  } catch {
+    return false;
+  }
+}
+
+export async function prepareAccessibilityIntervention(): Promise<boolean> {
+  if (Platform.OS !== "android" || !nativeVpn?.prepareAccessibilityIntervention) {
+    return false;
+  }
+
+  try {
+    return Boolean(await nativeVpn.prepareAccessibilityIntervention());
+  } catch {
+    return false;
+  }
+}
+
+export async function completeAccessibilityInterventionSetup(): Promise<boolean> {
+  if (Platform.OS !== "android" || !nativeVpn?.completeAccessibilitySetup) {
+    return false;
+  }
+
+  try {
+    return Boolean(await nativeVpn.completeAccessibilitySetup());
   } catch {
     return false;
   }
