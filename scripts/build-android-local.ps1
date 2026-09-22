@@ -21,6 +21,19 @@ function Stop-Build([string]$message) {
   throw "APK local: $message"
 }
 
+function Get-Sha256([string]$path) {
+  # Some managed PowerShell hosts omit Get-FileHash. Keep the build launcher
+  # self-contained so metadata and delivery verification work everywhere.
+  $stream = [System.IO.File]::OpenRead($path)
+  try {
+    $bytes = [System.Security.Cryptography.SHA256]::Create().ComputeHash($stream)
+    return ($bytes | ForEach-Object { $_.ToString('x2') }) -join ''
+  }
+  finally {
+    $stream.Dispose()
+  }
+}
+
 function Get-Jdk17 {
   $candidates = @(
     $env:JAVA_HOME,
@@ -47,6 +60,24 @@ function Get-AndroidSdk {
   return (Resolve-Path $candidates[0]).Path
 }
 
+function Get-NdkVersion {
+  # Expo projects do not always pin ndkVersion in android/build.gradle. Fall
+  # back to the React Native version catalog that Gradle itself uses.
+  $versionFiles = @(
+    (Join-Path $sourceRoot 'android\build.gradle'),
+    (Join-Path $sourceRoot 'node_modules\react-native\gradle\libs.versions.toml')
+  )
+  foreach ($versionFile in $versionFiles) {
+    if (-not (Test-Path $versionFile)) { continue }
+    $match = Select-String -LiteralPath $versionFile -Pattern 'ndkVersion\s*=\s*["'']([^"'']+)' | Select-Object -First 1
+    if ($match -and $match.Matches.Count -gt 0) {
+      $version = $match.Matches[0].Groups[1].Value
+      if ($version) { return $version }
+    }
+  }
+  Stop-Build 'no pude determinar la versión de NDK desde Android o React Native.'
+}
+
 function Sync-Source {
   $excludedDirectories = @(
     (Join-Path $sourceRoot '.git'),
@@ -61,7 +92,10 @@ function Sync-Source {
     (Join-Path $sourceRoot 'web\landing')
   )
   New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
-  & robocopy $sourceRoot $buildRoot /MIR /FFT /R:2 /W:1 /NFL /NDL /NJH /NJS /NP /XD $excludedDirectories
+  # Keep the persistent Gradle/CMake worktree intact. `/MIR` treats excluded
+  # destination caches as extras and spends minutes deleting them, defeating
+  # the local-build cache policy. Incremental copy updates source files only.
+  & robocopy $sourceRoot $buildRoot /E /XO /FFT /R:2 /W:1 /NFL /NDL /NJH /NJS /NP /XD $excludedDirectories | Out-Null
   if ($LASTEXITCODE -gt 7) { Stop-Build "la sincronización a $buildRoot falló (robocopy $LASTEXITCODE)." }
 }
 
@@ -78,9 +112,15 @@ function Assert-GitHubSource {
 
 function Ensure-Dependencies([string]$lockHash) {
   $needsInstall = -not (Test-Path (Join-Path $buildRoot 'node_modules'))
+  $installedLock = Join-Path $buildRoot 'node_modules\.package-lock.json'
   if (Test-Path $metaPath) {
     $meta = Get-Content $metaPath -Raw | ConvertFrom-Json
     $needsInstall = $needsInstall -or ($meta.lockHash -ne $lockHash)
+  } elseif (Test-Path $installedLock) {
+    # An interrupted shell can leave the metadata write behind even after
+    # `npm ci` has completed. npm's own installed lock is sufficient to reuse
+    # that verified dependency tree once and recreate our lightweight marker.
+    $needsInstall = $false
   }
   if ($needsInstall) {
     Write-Host 'Instalando dependencias porque node_modules no existe o cambió package-lock.json...' -ForegroundColor Yellow
@@ -127,7 +167,7 @@ function Publish-Apk([string]$apkPath) {
   Get-ChildItem -LiteralPath $desktopArtifacts -Filter '*.apk' -File -Recurse -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -notin @($currentApk, $previousApk) } |
     Remove-Item -Force
-  $hash = (Get-FileHash -LiteralPath $currentApk -Algorithm SHA256).Hash
+  $hash = Get-Sha256 $currentApk
   $size = (Get-Item -LiteralPath $currentApk).Length
   Write-Host "APK: $currentApk" -ForegroundColor Green
   Write-Host "Tamaño: $size bytes" -ForegroundColor Green
@@ -145,13 +185,12 @@ $env:JAVA_TOOL_OPTIONS = '-Duser.home=C:\c4j\.user-home'
 $env:ANDROID_USER_HOME = $null
 $env:ANDROID_SDK_HOME = $null
 $env:ANDROID_AVD_HOME = $null
-$ndkVersion = (Select-String -LiteralPath (Join-Path $sourceRoot 'android\build.gradle') -Pattern 'ndkVersion\s*=\s*["'']([^"'']+)' | Select-Object -First 1).Matches.Groups[1].Value
-if (-not $ndkVersion) { Stop-Build 'no pude determinar la versión de NDK desde android/build.gradle.' }
+$ndkVersion = Get-NdkVersion
 $ndk = Join-Path $sdk "ndk\$ndkVersion"
 if (-not (Test-Path $ndk)) { Stop-Build "no encontré NDK $ndkVersion en $ndk." }
 
 Assert-GitHubSource
-$lockHash = (Get-FileHash -LiteralPath (Join-Path $sourceRoot 'package-lock.json') -Algorithm SHA256).Hash
+$lockHash = Get-Sha256 (Join-Path $sourceRoot 'package-lock.json')
 Sync-Source
 Ensure-Dependencies $lockHash
 Ensure-AndroidLocalConfig $sdk $ndk
