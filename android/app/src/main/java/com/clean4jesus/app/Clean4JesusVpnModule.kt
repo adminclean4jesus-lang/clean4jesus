@@ -6,8 +6,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.os.ResultReceiver
-import android.provider.Settings
-import android.text.TextUtils
 import android.content.Context
 import android.net.Uri
 import androidx.work.Constraints
@@ -96,13 +94,7 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun pauseAccessibilityIntervention(promise: Promise) {
     try {
-      if (!Clean4JesusAccessibilityService.completeAccessibilitySetup(reactContext)) {
-        promise.resolve(false)
-        return
-      }
-      Handler(Looper.getMainLooper()).postDelayed({
-        promise.resolve(!isAccessibilityInterventionEnabled())
-      }, 350L)
+      promise.resolve(Clean4JesusAccessibilityService.pauseAccessibilityIntervention())
     } catch (error: Exception) {
       promise.reject("ACCESSIBILITY_PAUSE_FAILED", error)
     }
@@ -119,21 +111,15 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
 
   @ReactMethod
   fun completeAccessibilitySetup(promise: Promise) {
-    pauseAccessibilityIntervention(promise)
+    try {
+      promise.resolve(Clean4JesusAccessibilityService.completeAccessibilitySetup(reactContext))
+    } catch (error: Exception) {
+      promise.reject("ACCESSIBILITY_COMPLETE_FAILED", error)
+    }
   }
 
   private fun isAccessibilityInterventionEnabled(): Boolean {
-    val enabledServices = Settings.Secure.getString(
-      reactContext.contentResolver,
-      Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-    ) ?: return false
-    val expected = "${reactContext.packageName}/${Clean4JesusAccessibilityService::class.java.name}"
-    val colonSplitter = TextUtils.SimpleStringSplitter(':')
-    colonSplitter.setString(enabledServices)
-    while (colonSplitter.hasNext()) {
-      if (colonSplitter.next().equals(expected, ignoreCase = true)) return true
-    }
-    return false
+    return Clean4JesusAccessibilityService.isAccessibilityServiceEnabled(reactContext)
   }
 
   @ReactMethod

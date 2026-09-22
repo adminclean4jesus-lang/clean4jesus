@@ -148,6 +148,10 @@ async function exchangeAuthCodeOnce(code: string, flow: AuthCodeFlow) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error || !data.session || !data.user) {
       if (flow === "oauth") {
+        const existingSession = await supabase.auth.getSession();
+        if (existingSession?.data?.session?.user) {
+          return { isPasswordRecovery: false };
+        }
         throw new AuthServiceError("access_failed", "No pudimos completar el acceso con Google. Intenta nuevamente.");
       }
       throw new AuthServiceError("password_recovery_invalid", "El enlace vencio o ya fue usado. Solicita uno nuevo.");

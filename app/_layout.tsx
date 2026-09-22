@@ -136,6 +136,8 @@ function NavigatorContent({ colors, isDark, showPersistentTabBar }: { colors: Re
           <Stack.Screen name="plans/[id]/day/[day]" options={{ headerShown: false }} />
           <Stack.Screen name="pin-setup" options={{ title: coreFlowText(language, "pin.setup.title") }} />
           <Stack.Screen name="pin-verify" options={{ title: coreFlowText(language, "pin.verify.title") }} />
+          <Stack.Screen name="refuge-setup/vpn" options={{ headerShown: false }} />
+          <Stack.Screen name="refuge-setup/accessibility" options={{ headerShown: false }} />
         </Stack>
         {showPersistentTabBar ? <PersistentTabBar /> : null}
         </AuthProvider>

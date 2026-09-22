@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
+import android.text.TextUtils
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.text.SimpleDateFormat
@@ -76,16 +77,29 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
     fun completeAccessibilitySetup(context: Context): Boolean {
       return try {
+        if (!isAccessibilityServiceEnabled(context)) return false
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
           .edit()
           .putBoolean(PREF_ACCESSIBILITY_SETUP_COMPLETED, true)
           .apply()
-        activeInstance?.disableSelf()
-        setAccessibilityComponentEnabled(context, false)
         true
       } catch (_: Exception) {
         false
       }
+    }
+
+    fun isAccessibilityServiceEnabled(context: Context): Boolean {
+      val enabledServices = Settings.Secure.getString(
+        context.contentResolver,
+        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+      ) ?: return false
+      val expected = ComponentName(context, Clean4JesusAccessibilityService::class.java).flattenToString()
+      val colonSplitter = TextUtils.SimpleStringSplitter(':')
+      colonSplitter.setString(enabledServices)
+      while (colonSplitter.hasNext()) {
+        if (colonSplitter.next().equals(expected, ignoreCase = true)) return true
+      }
+      return false
     }
 
     private fun setAccessibilityComponentEnabled(context: Context, enabled: Boolean) {
@@ -120,6 +134,12 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
     fun scheduleTemporaryRelock(packageName: String, until: Long) {
       activeInstance?.scheduleRelock(packageName, until)
+    }
+
+    fun pauseAccessibilityIntervention(): Boolean {
+      val service = activeInstance ?: return false
+      service.disableSelf()
+      return true
     }
 
     fun flushRiskSignalsIfRunning() {
@@ -343,12 +363,6 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
   override fun onServiceConnected() {
     super.onServiceConnected()
-    val setupCompleted = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-      .getBoolean(PREF_ACCESSIBILITY_SETUP_COMPLETED, false)
-    if (setupCompleted) {
-      disableSelf()
-      return
-    }
     activeInstance = this
     restoreTemporaryRelocks()
     flushRiskSignalsAsync()

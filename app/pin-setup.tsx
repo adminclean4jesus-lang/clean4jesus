@@ -60,7 +60,7 @@ export default function PinSetupScreen() {
       await savePin(pin);
 
       if (after === "shield-setup") {
-        router.replace("/?setup=1");
+        router.replace("/refuge-setup/vpn");
         return;
       }
 

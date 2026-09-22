@@ -29,6 +29,7 @@ export async function signInWithGoogle(language: SupportedLanguage) {
     return { cancelled: true };
   }
   if (result.type !== "success") {
+    if (await hasAuthenticatedSession()) return { cancelled: false };
     throw new Error("No pudimos completar el acceso. Intenta nuevamente.");
   }
 
@@ -40,10 +41,18 @@ export async function signInWithGoogle(language: SupportedLanguage) {
 
   const code = readQueryValue(parsed.queryParams?.code);
   if (!code) {
+    if (await hasAuthenticatedSession()) return { cancelled: false };
     throw new Error("Google no devolvió un código de acceso válido.");
   }
 
-  await exchangeAuthCode(code, "oauth");
+  try {
+    await exchangeAuthCode(code, "oauth");
+  } catch (error) {
+    // Android can deliver the OAuth redirect to both the browser session and
+    // Expo Router. Once either path persisted the session, the second code
+    // exchange is expected to fail and must not become a false user error.
+    if (!(await hasAuthenticatedSession())) throw error;
+  }
   // Authentication is already complete. A telemetry/consent write must never
   // turn a successful Google sign-in into a false error for the user.
   try {
@@ -52,6 +61,15 @@ export async function signInWithGoogle(language: SupportedLanguage) {
     // The acceptance is recorded again on the next authenticated interaction.
   }
   return { cancelled: false };
+}
+
+async function hasAuthenticatedSession(): Promise<boolean> {
+  try {
+    const { data } = await getSupabaseClient().auth.getSession();
+    return Boolean(data.session?.user);
+  } catch {
+    return false;
+  }
 }
 
 function readQueryValue(value: string | string[] | undefined) {

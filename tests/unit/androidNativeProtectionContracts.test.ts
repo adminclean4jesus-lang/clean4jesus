@@ -77,24 +77,41 @@ describe("Android native protection contracts", () => {
     expect(interruptionSource).not.toContain("No lee tus mensajes");
   });
 
-  it("requires Accessibility once, then preserves base refuge after it is configured", () => {
+  it("requires live Accessibility for refuge readiness and never disables it after onboarding", () => {
     const gateSource = readProjectFile("app/index.tsx");
     const setupService = readProjectFile("src/features/shield/accessibilitySetupService.ts");
     const storageSource = readProjectFile("src/services/storage.ts");
-    const initialValidation = gateSource.indexOf("(!status.configured && !status.accessibilityActive)");
-    const pauseIndex = gateSource.indexOf("if (configured && accessibilityActive)");
-    const enableIndex = gateSource.indexOf("await enableShield()");
+    const nativeSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
 
     expect(storageSource).toContain('accessibilityConfigured: "clean4jesus.accessibility.configured"');
     expect(setupService).toContain("markAccessibilityConfigured");
     expect(setupService).toContain("completeAccessibilityInterventionSetup");
-    expect(initialValidation).toBeGreaterThan(-1);
-    expect(pauseIndex).toBeGreaterThan(-1);
-    expect(gateSource).toContain("const paused = await pauseAccessibilityIntervention()");
-    expect(gateSource).toContain("await prepareAccessibilityIntervention()");
-    expect(readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt")).toContain("PREF_ACCESSIBILITY_SETUP_COMPLETED");
-    expect(readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt")).toContain("COMPONENT_ENABLED_STATE_DISABLED");
-    expect(enableIndex).toBeGreaterThan(initialValidation);
+    expect(gateSource).toContain("const protectionReady = pinExists && vpnActive && accessibilityActive");
+    expect(gateSource).not.toContain("pauseAccessibilityIntervention");
+    expect(nativeSource).toContain("if (!isAccessibilityServiceEnabled(context)) return false");
+    const completionMethod = nativeSource.match(/fun completeAccessibilitySetup\([\s\S]*?\n    }\n\n    fun isAccessibilityServiceEnabled/)?.[0] ?? "";
+    expect(completionMethod).not.toContain("disableSelf()");
+    expect(nativeSource).not.toMatch(/override fun onServiceConnected\(\)[\s\S]*?PREF_ACCESSIBILITY_SETUP_COMPLETED[\s\S]*?disableSelf\(\)/);
+  });
+
+  it("routes Android onboarding through separate VPN and Accessibility screens", () => {
+    const gateSource = readProjectFile("app/index.tsx");
+    const pinSource = readProjectFile("app/pin-setup.tsx");
+    const vpnSource = readProjectFile("app/refuge-setup/vpn.tsx");
+    const accessibilitySource = readProjectFile("app/refuge-setup/accessibility.tsx");
+
+    expect(gateSource).toContain('router.replace("/refuge-setup/vpn")');
+    expect(pinSource).toContain('router.replace("/refuge-setup/vpn")');
+    expect(vpnSource).toContain('router.replace("/refuge-setup/accessibility")');
+    expect(accessibilitySource).toContain("openAndroidAccessibilitySettings");
+    expect(accessibilitySource).toContain("await enableShield()");
+  });
+
+  it("keeps every listed financial app outside Accessibility package delivery", () => {
+    const serviceConfig = readProjectFile("android/app/src/main/res/xml/clean4jesus_accessibility_service.xml");
+    for (const bankPackage of ["com.nu.production", "com.nequi", "com.daviplata", "com.bancolombia", "com.bbva", "com.itau", "com.santander"]) {
+      expect(serviceConfig).not.toContain(bankPackage);
+    }
   });
 
   it("bounds app usage between accessibility events without widening package access", () => {

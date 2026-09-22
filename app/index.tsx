@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -17,17 +17,11 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { hasPin } from "@/features/pin/pinService";
-import { getAccessibilityConfigured, markAccessibilityConfigured } from "@/features/shield/accessibilitySetupService";
-import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
-  pauseAccessibilityIntervention,
-  prepareAccessibilityIntervention,
-  startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
 import {
-  enableShield,
   getShieldEnabled,
   prepareShield,
 } from "@/features/shield/shieldService";
@@ -482,62 +476,19 @@ function createIosStyles(colors: ThemeColors) {
 }
 
 function AndroidGateScreen() {
-  type SetupStep = "vpn" | "accessibility" | "complete";
   const router = useRouter();
   const { colors } = useAppAppearance();
   const { language } = useI18n();
   const copy = getSecondaryText(language);
   const styles = useGateStyles();
-  const { setup } = useLocalSearchParams<{ setup?: string }>();
   const [pinReady, setPinReady] = useState(false);
   const [shieldEnabled, setShieldEnabled] = useState(false);
-  const [setupPending, setSetupPending] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
   const [accessibilityReady, setAccessibilityReady] = useState(false);
-  const [accessibilityConfigured, setAccessibilityConfigured] = useState(false);
-  const [setupStep, setSetupStep] = useState<SetupStep>("vpn");
 
   useEffect(() => {
-    void (async () => {
-      let [currentShield, pinExists, vpnActive, accessibilityActive, configured] =
-        await Promise.all([
-          getShieldEnabled(),
-          hasPin(),
-          isLocalDnsVpnActive(),
-          isAccessibilityInterventionActive(),
-          getAccessibilityConfigured(),
-        ]);
-
-      if (!configured && currentShield && pinExists && vpnActive && accessibilityActive) {
-        configured = await markAccessibilityConfigured();
-        accessibilityActive = false;
-      }
-
-      if (configured && accessibilityActive) {
-        const paused = await pauseAccessibilityIntervention();
-        if (paused) accessibilityActive = false;
-      }
-
-      const protectionReady = pinExists && vpnActive && (configured || accessibilityActive);
-      setShieldEnabled(currentShield && protectionReady);
-      setPinReady(pinExists);
-      setVpnReady(vpnActive);
-      setAccessibilityReady(accessibilityActive);
-      setAccessibilityConfigured(configured);
-
-      if (setup === "1" && pinExists && !currentShield) {
-        await prepareShield();
-        setSetupPending(true);
-        setSetupStep(vpnActive ? "accessibility" : "vpn");
-      }
-
-      if (currentShield && protectionReady) {
-        router.replace("/(tabs)");
-      } else if (currentShield) {
-        setSetupPending(true);
-      }
-    })();
-  }, [router, setup]);
+    void refreshProtectionStatus(true);
+  }, [router]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
@@ -546,30 +497,21 @@ function AndroidGateScreen() {
     });
 
     return () => subscription.remove();
-  }, [setupPending]);
+  }, []);
 
-  async function refreshProtectionStatus() {
-    const [pinExists, vpnActive, accessibilityActive, configured] = await Promise.all([
+  async function refreshProtectionStatus(redirectWhenReady = false) {
+    const [currentShield, pinExists, vpnActive, accessibilityActive] = await Promise.all([
+      getShieldEnabled(),
       hasPin(),
       isLocalDnsVpnActive(),
       isAccessibilityInterventionActive(),
-      getAccessibilityConfigured(),
     ]);
+    const protectionReady = pinExists && vpnActive && accessibilityActive;
     setPinReady(pinExists);
     setVpnReady(vpnActive);
     setAccessibilityReady(accessibilityActive);
-    setAccessibilityConfigured(configured);
-    if (setupPending) {
-      setSetupStep(!vpnActive ? "vpn" : configured || accessibilityActive ? "complete" : "accessibility");
-    }
-    return { accessibilityActive, configured, pinExists, vpnActive };
-  }
-
-  async function handleStartVpn() {
-    const vpnActive = await startLocalDnsVpn();
-    setVpnReady(vpnActive);
-    if (vpnActive) setSetupStep("accessibility");
-    return vpnActive;
+    setShieldEnabled(currentShield && protectionReady);
+    if (redirectWhenReady && currentShield && protectionReady) router.replace("/(tabs)");
   }
 
   async function handleActivate() {
@@ -580,34 +522,7 @@ function AndroidGateScreen() {
 
     await prepareShield();
     setShieldEnabled(false);
-    setSetupPending(true);
-    setSetupStep(vpnReady ? "accessibility" : "vpn");
-  }
-
-  async function handleConfirmSetup() {
-    if (!vpnReady) {
-      await handleStartVpn();
-    }
-
-    const status = await refreshProtectionStatus();
-    if (!status.pinExists || !status.vpnActive || (!status.configured && !status.accessibilityActive)) {
-      Alert.alert(copy.setupPending, copy.setupPendingBody);
-      return;
-    }
-
-    if (!status.configured && status.accessibilityActive) {
-      const configured = await markAccessibilityConfigured();
-      if (!configured) {
-        Alert.alert(copy.setupPending, copy.setupPendingBody);
-        return;
-      }
-      setAccessibilityConfigured(configured);
-    }
-
-    const next = await enableShield();
-    setShieldEnabled(next.enabled);
-    setSetupPending(false);
-    router.replace("/(tabs)");
+    router.replace("/refuge-setup/vpn");
   }
 
   return (
@@ -654,8 +569,8 @@ function AndroidGateScreen() {
         <View style={styles.divider} />
         <CheckRow
           label={copy.accessibility}
-          ready={accessibilityReady || accessibilityConfigured}
-          value={accessibilityReady ? copy.active : accessibilityConfigured ? copy.ready : copy.pending}
+          ready={accessibilityReady}
+          value={accessibilityReady ? copy.active : copy.pending}
         />
       </InfoCard>
 
@@ -663,70 +578,17 @@ function AndroidGateScreen() {
         <Text style={styles.blockLabel}>{copy.steps}</Text>
         <Step ready={pinReady} text={copy.stepPin} />
         <Step ready={vpnReady} text={copy.stepVpn} />
-        <Step ready={accessibilityReady || accessibilityConfigured} text={copy.stepAccessibility} />
+        <Step ready={accessibilityReady} text={copy.stepAccessibility} />
       </InfoCard>
 
-      {setupPending ? (
-        <InfoCard tone="outline" style={styles.setupCard}>
-          <View style={styles.setupStepBadge}>
-            <MaterialCommunityIcons
-              color={colors.primaryDark}
-              name={setupStep === "vpn" ? "shield-outline" : setupStep === "accessibility" ? "access-point" : "check-circle-outline"}
-              size={20}
-            />
-          </View>
-          <Text style={styles.setupTitle}>
-            {setupStep === "vpn" ? copy.setupVpnTitle : setupStep === "accessibility" ? copy.setupAccessibilityTitle : copy.setupCompleteTitle}
-          </Text>
-          <Text style={styles.setupBody}>
-            {setupStep === "vpn" ? copy.setupVpnBody : setupStep === "accessibility" ? copy.setupAccessibilityBody : copy.setupCompleteBody}
-          </Text>
-          {setupStep === "vpn" ? (
-            <PrimaryButton label={copy.setupVpnAction} onPress={() => void handleStartVpn()} />
-          ) : setupStep === "accessibility" ? (
-            <>
-              <PrimaryButton label={copy.setupAccessibilityAction} onPress={() => void handleOpenAccessibility()} />
-              <Pressable onPress={() => void handleConfirmSetup()} style={styles.setupSecondaryAction}>
-                <Text style={styles.setupSecondaryText}>{copy.gateConfirm}</Text>
-              </Pressable>
-            </>
-          ) : (
-            <PrimaryButton label={copy.setupCompleteAction} onPress={handleConfirmSetup} />
-          )}
-        </InfoCard>
-      ) : null}
-
-      {!setupPending ? <View style={styles.actions}>
+      <View style={styles.actions}>
         <PrimaryButton
           label={shieldEnabled ? copy.gateEnter : copy.gatePrepare}
-          onPress={handleActivate}
+          onPress={shieldEnabled ? () => router.replace("/(tabs)") : handleActivate}
         />
-        <Pressable
-          onPress={() => void handleOpenAccessibility()}
-          style={styles.secondaryLink}
-        >
-          <MaterialCommunityIcons
-            color={colors.primaryDark}
-            name="access-point"
-            size={16}
-          />
-          <Text style={styles.secondaryLinkText}>{copy.openAccessibility}</Text>
-        </Pressable>
-      </View> : null}
+      </View>
     </Screen>
   );
-
-  async function handleOpenAccessibility() {
-    const prepared = await prepareAccessibilityIntervention();
-    if (!prepared) {
-      Alert.alert(copy.setupPending, copy.setupPendingBody);
-      return;
-    }
-    const opened = await openAndroidAccessibilitySettings();
-    if (!opened) {
-      Alert.alert(copy.setupPending, copy.setupPendingBody);
-    }
-  }
 }
 
 function CheckRow({

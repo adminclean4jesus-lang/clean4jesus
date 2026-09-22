@@ -62,7 +62,9 @@ describe("endurecimiento de Auth movil", () => {
     expect(callback).toContain("isPasswordRecovery ?");
     expect(callback).toContain('mode === "recovery" ? "recovery" : "oauth"');
     expect(service).toContain("pendingAuthCodeExchanges");
+    expect(service).toContain("existingSession?.data?.session?.user");
     expect(socialAuth).toContain('exchangeAuthCode(code, "oauth")');
+    expect(socialAuth).toContain("hasAuthenticatedSession");
     expect(socialAuth).toContain("A telemetry/consent write must never");
     expect(recoveryState).toContain("await clearPasswordRecovery()");
   });

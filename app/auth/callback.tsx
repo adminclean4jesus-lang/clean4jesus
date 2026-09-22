@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { exchangeAuthCode } from "@/features/auth/authService";
+import { getSupabaseClient } from "@/lib/supabase";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { fonts, ThemeColors } from "@/theme";
 import { useI18n } from "@/features/i18n/I18nProvider";
@@ -38,7 +39,17 @@ export default function AuthCallbackScreen() {
     const flow = mode === "recovery" ? "recovery" : "oauth";
     void exchangeAuthCode(code, flow)
       .then(({ isPasswordRecovery }) => router.replace(isPasswordRecovery ? "/auth/reset-password" : "/(tabs)/community"))
-      .catch(() => setError(auxCopy.callbackFailed));
+      .catch(async () => {
+        // The embedded browser may already have consumed this same OAuth code.
+        // If that path created a session, the callback is successful and must
+        // never render the generic failure state.
+        const { data } = await getSupabaseClient().auth.getSession();
+        if (data.session?.user) {
+          router.replace("/(tabs)/community");
+          return;
+        }
+        setError(auxCopy.callbackFailed);
+      });
   }, [auxCopy.callbackFailed, auxCopy.callbackMissing, auxCopy.callbackRejected, code, errorDescription, mode, router]);
 
   return (
