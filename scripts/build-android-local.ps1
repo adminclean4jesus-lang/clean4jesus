@@ -29,8 +29,13 @@ function Get-Jdk17 {
     'C:\Program Files\Java\jdk-17'
   ) | Where-Object { $_ -and (Test-Path (Join-Path $_ 'bin\java.exe')) }
   foreach ($candidate in $candidates) {
-    $version = & (Join-Path $candidate 'bin\java.exe') -version 2>&1 | Out-String
-    if ($version -match 'version "17\.') { return $candidate }
+    # `java -version` writes its normal version banner to stderr. With the
+    # launcher running under `$ErrorActionPreference = Stop`, invoking it here
+    # can falsely abort the APK build before Gradle even starts. The JDK release
+    # file is deterministic and has no stderr side effect.
+    $releaseFile = Join-Path $candidate 'release'
+    $version = if (Test-Path $releaseFile) { Get-Content -LiteralPath $releaseFile -Raw } else { '' }
+    if ($version -match 'JAVA_VERSION="17\.') { return $candidate }
   }
   Stop-Build 'no encontré un JDK 17. Instala JDK 17 o define JAVA_HOME.'
 }
