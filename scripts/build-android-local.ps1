@@ -140,7 +140,9 @@ function Ensure-AndroidLocalConfig([string]$sdk, [string]$ndk) {
   $ndkForGradle = $ndk.Replace('\', '/')
   "sdk.dir=$sdkForGradle`nndk.dir=$ndkForGradle`n" |
     Set-Content -LiteralPath (Join-Path $androidDir 'local.properties') -Encoding ASCII
-  $keystore = Join-Path $androidDir 'debug.keystore'
+  # app/build.gradle resolves `file('debug.keystore')` relative to the app
+  # module, not the Android root.
+  $keystore = Join-Path $androidDir 'app\debug.keystore'
   if (-not (Test-Path $keystore)) {
     $keytool = Join-Path $env:JAVA_HOME 'bin\keytool.exe'
     & $keytool -genkeypair -v -storetype PKCS12 -keystore $keystore -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Android Debug,O=Android,C=US' | Out-Null
