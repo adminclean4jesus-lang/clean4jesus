@@ -77,13 +77,31 @@ describe("Android native protection contracts", () => {
     expect(interruptionSource).not.toContain("No lee tus mensajes");
   });
 
-  it("does not enable the shield while a native protection layer is pending", () => {
+  it("requires VPN and Accessibility before the Android refuge can be enabled", () => {
     const gateSource = readProjectFile("app/index.tsx");
-    const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive || !status.accessibilityActive");
+    const onboardingSource = readProjectFile("app/android-protection.tsx");
+    const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive");
     const enableIndex = gateSource.indexOf("await enableShield()");
 
     expect(validationIndex).toBeGreaterThan(-1);
     expect(enableIndex).toBeGreaterThan(validationIndex);
+    expect(gateSource).toContain("!status.pinExists || !status.vpnActive || !status.accessibilityActive");
+    expect(gateSource).not.toContain("pauseAccessibilityIntervention()");
+    expect(onboardingSource).toContain('"/android-protection?step=accessibility"');
+    expect(onboardingSource).toContain("openAndroidAccessibilitySettings");
+    expect(onboardingSource).toContain("Tus apps bancarias quedan fuera de este alcance");
+  });
+
+  it("keeps Nu and financial apps outside every accessibility action path", () => {
+    const serviceSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+    const configSource = readProjectFile("android/app/src/main/res/xml/clean4jesus_accessibility_service.xml");
+
+    expect(serviceSource).toContain('"com.nu.production"');
+    expect(serviceSource).toContain("trustedFinancialPackagePrefixes");
+    expect(serviceSource).toContain("trustedFinancialKeywords");
+    expect(serviceSource).toMatch(/shouldIgnorePackage\(packageName\)[\s\S]*stopForegroundTracking\(now\)[\s\S]*return/);
+    expect(configSource).not.toContain("com.nu.production");
+    expect(configSource).not.toMatch(/nu|nubank|banco|bank/i);
   });
 
   it("bounds app usage between accessibility events without widening package access", () => {

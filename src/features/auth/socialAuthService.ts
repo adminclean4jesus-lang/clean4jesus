@@ -25,10 +25,17 @@ export async function signInWithGoogle(language: SupportedLanguage) {
   }
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, authCallbackUrl);
-  if (result.type === "cancel" || result.type === "dismiss") {
-    return { cancelled: true };
-  }
+  // Android may report a dismissed browser after the deep link has already
+  // completed the Supabase session. The session is the source of truth: never
+  // show an error after the person has actually signed in.
   if (result.type !== "success") {
+    if (await hasAuthenticatedSession(supabase)) {
+      void recordLegalAcceptance(language, "google_oauth").catch(() => undefined);
+      return { cancelled: false };
+    }
+    if (result.type === "cancel" || result.type === "dismiss") {
+      return { cancelled: true };
+    }
     throw new Error("No pudimos completar el acceso. Intenta nuevamente.");
   }
 
@@ -43,9 +50,27 @@ export async function signInWithGoogle(language: SupportedLanguage) {
     throw new Error("Google no devolvió un código de acceso válido.");
   }
 
-  await exchangeAuthCode(code, "oauth");
-  await recordLegalAcceptance(language, "google_oauth");
+  try {
+    await exchangeAuthCode(code, "oauth");
+  } catch (error) {
+    // A deep link can exchange the one-time code before WebBrowser resolves.
+    // In that case, preserve the valid session instead of reporting a false
+    // sign-in error for an already-used code.
+    if (!(await hasAuthenticatedSession(supabase))) throw error;
+  }
+  // Legal acceptance is recorded as a best-effort audit event. A transient
+  // failure must never turn a completed Google session into a false error.
+  void recordLegalAcceptance(language, "google_oauth").catch(() => undefined);
   return { cancelled: false };
+}
+
+async function hasAuthenticatedSession(supabase: ReturnType<typeof getSupabaseClient>) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return Boolean(data.session);
+  } catch {
+    return false;
+  }
 }
 
 function readQueryValue(value: string | string[] | undefined) {
