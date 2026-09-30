@@ -2,7 +2,18 @@
 
 Guia practica para probar Clean4Jesus en un telefono real.
 
-## Camino recomendado ahora: Expo Go
+## Camino recomendado para QA de protección: APK standalone
+
+Para VPN, PIN, Accesibilidad, interrupción, Nu/bancos y cualquier comportamiento nativo, instala la APK local standalone. No requiere Metro ni QR:
+
+```powershell
+cd C:\Users\millo\Desktop\Clean4Jesus
+npm run build:android:local
+```
+
+Instala `artifacts/apk/current/Clean4Jesus-current.apk`. En Android verifica PIN → VPN → Accesibilidad, confirma que Accesibilidad se pausa al terminar y abre Nu u otro banco. En iOS utiliza la build de TestFlight y valida Family Controls en hardware.
+
+## Modo UI opcional: Expo Go
 
 Usar Expo Go sirve para probar UI, navegacion, habitos, devocional, login mock o Supabase, y flujo general. No sirve para probar modulos nativos propios como VPN Android o Accessibility Service.
 
@@ -16,7 +27,7 @@ Usar Expo Go sirve para probar UI, navegacion, habitos, devocional, login mock o
 6. Ejecuta:
 
 ```bash
-cd C:\Users\millo\OneDrive\Escritorio\Clean4Jesus
+cd C:\Users\millo\Desktop\Clean4Jesus
 npm run phone
 ```
 
@@ -58,7 +69,7 @@ npm run phone
 
 Nota: para builds nativas iOS reales en dispositivo fisico normalmente se necesita cuenta Apple Developer. Para Expo Go no.
 
-## Cuando toque probar bloqueo real
+## Development build con Metro (solo depuración explícita)
 
 El escudo DNS/VPN y Accessibility Service no se pueden validar en Expo Go. Para eso se necesita:
 
@@ -67,10 +78,10 @@ El escudo DNS/VPN y Accessibility Service no se pueden validar en Expo Go. Para 
 3. Modulo nativo Android en `/android`
 4. Pruebas en APK instalado
 
-Comandos vigentes desde la copia física corta de esta candidata (`C:\c4j\beta-1.3.37`):
+Si se requiere depurar JavaScript mediante Metro, usa una copia corta temporal fuera de OneDrive:
 
 ```bash
-cd C:\c4j\beta-1.3.37
+cd C:\c4j
 npm run build:android:local
 npm run dev-client
 ```
@@ -79,15 +90,15 @@ npm run dev-client
 
 Usar este camino para probar Clean4Jesus como app propia en tu Google Pixel 9.
 
-1. Genera la APK de desarrollo en el PC, desde una copia física corta que incluya `node_modules` y `android/`:
+1. Genera la APK standalone desde el repositorio Desktop:
 
 ```bash
-cd C:\c4j\beta-1.3.37
+cd C:\Users\millo\Desktop\Clean4Jesus
 npm run build:android:local
 ```
 
-2. La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`. Verifica versión y firma antes de copiarla a `artifacts/apk/current`; conserva la anterior en `previous`.
-3. Instálala desde el PC con `adb install -r android/app/build/outputs/apk/debug/app-debug.apk` cuando `adb devices -l` muestre el teléfono como `device`, o transfiere el archivo al teléfono e instálalo allí.
+2. La APK queda en `artifacts/apk/current/Clean4Jesus-current.apk`; la rotación de `previous` es automática.
+3. Instálala desde el PC con `adb install -r artifacts/apk/current/Clean4Jesus-current.apk` cuando `adb devices -l` muestre el teléfono como `device`, o transfiere el archivo al teléfono e instálalo allí.
 4. Abre **Clean4Jesus** instalada, no Expo Go.
 5. En el PC, inicia Metro para development build:
 

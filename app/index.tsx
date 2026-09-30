@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   AppState,
@@ -21,8 +21,11 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { WelcomeAuthScreen } from "@/features/onboarding/WelcomeAuthScreen";
 import { hasPin } from "@/features/pin/pinService";
 import {
+  hasCompletedAccessibilityOnboarding,
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
+  markAccessibilityOnboardingCompleted,
+  pauseAccessibilityIntervention,
   startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
@@ -70,6 +73,7 @@ function IosGateScreen() {
     useState(false);
   const [protectionActive, setProtectionActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const restoredIosRefuge = useRef(false);
 
   useEffect(() => {
     void refreshIosState();
@@ -84,9 +88,23 @@ function IosGateScreen() {
 
   async function refreshIosState() {
     try {
-      const status = await iosProtectionService.getProtectionStatus();
+      const [status, selection] = await Promise.all([
+        iosProtectionService.getProtectionStatus(),
+        iosProtectionService.getSelectionSummary(),
+      ]);
+      const hasSavedIosRefuge = status.isAuthorized
+        && status.lastSyncTimestamp > 0
+        && selection.applications + selection.categories + selection.webDomains > 0;
       setFamilyControlsAuthorized(status.isAuthorized);
-      setProtectionActive(status.isEnabled);
+      // DeviceActivity can briefly report as not running after a cold launch.
+      // A previously saved, still-authorized refuge is safe to restore without
+      // making the person request Family Controls a second time.
+      setProtectionActive(status.isEnabled || hasSavedIosRefuge);
+      if (hasSavedIosRefuge && !restoredIosRefuge.current) {
+        restoredIosRefuge.current = true;
+        router.replace("/(tabs)");
+        return;
+      }
     } catch {
       setFamilyControlsAuthorized(false);
       setProtectionActive(false);
@@ -506,24 +524,31 @@ function AndroidGateScreen() {
 
   useEffect(() => {
     void (async () => {
-      const [currentShield, pinExists, vpnActive, accessibilityActive] =
+      const [currentShield, pinExists, vpnActive, accessibilityActive, completedAccessibilityOnboarding] =
         await Promise.all([
           getShieldEnabled(),
           hasPin(),
           isLocalDnsVpnActive(),
           isAccessibilityInterventionActive(),
+          hasCompletedAccessibilityOnboarding(),
         ]);
       if (!pinExists) {
         router.replace("/pin-setup?after=shield-setup");
         return;
       }
-      const protectionReady = pinExists && vpnActive && accessibilityActive;
+      let accessibilityConfigured = completedAccessibilityOnboarding;
+      if (!accessibilityConfigured && accessibilityActive) {
+        await markAccessibilityOnboardingCompleted();
+        await pauseAccessibilityIntervention();
+        accessibilityConfigured = true;
+      }
+      const protectionReady = pinExists && vpnActive && accessibilityConfigured;
       setShieldEnabled(currentShield && protectionReady);
       setPinReady(pinExists);
       setVpnReady(vpnActive);
-      setAccessibilityReady(accessibilityActive);
+      setAccessibilityReady(accessibilityConfigured);
 
-      if (!vpnActive || !accessibilityActive) {
+      if (!vpnActive || !accessibilityConfigured) {
         router.replace(`/android-protection?step=${vpnActive ? "accessibility" : "vpn"}`);
         return;
       }
@@ -551,15 +576,16 @@ function AndroidGateScreen() {
   }, []);
 
   async function refreshProtectionStatus() {
-    const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
+    const [pinExists, vpnActive, accessibilityActive, accessibilityConfigured] = await Promise.all([
       hasPin(),
       isLocalDnsVpnActive(),
       isAccessibilityInterventionActive(),
+      hasCompletedAccessibilityOnboarding(),
     ]);
     setPinReady(pinExists);
     setVpnReady(vpnActive);
-    setAccessibilityReady(accessibilityActive);
-    return { accessibilityActive, pinExists, vpnActive };
+    setAccessibilityReady(accessibilityConfigured);
+    return { accessibilityActive, accessibilityConfigured, pinExists, vpnActive };
   }
 
   async function handleStartVpn() {
@@ -585,9 +611,15 @@ function AndroidGateScreen() {
     }
 
     const status = await refreshProtectionStatus();
-    if (!status.pinExists || !status.vpnActive || !status.accessibilityActive) {
+    if (!status.pinExists || !status.vpnActive || (!status.accessibilityConfigured && !status.accessibilityActive)) {
       Alert.alert(copy.setupPending, copy.setupPendingBody);
       return;
+    }
+
+    if (!status.accessibilityConfigured) {
+      await markAccessibilityOnboardingCompleted();
+      await pauseAccessibilityIntervention();
+      setAccessibilityReady(true);
     }
 
     const next = await enableShield();
@@ -641,7 +673,7 @@ function AndroidGateScreen() {
         <CheckRow
           label={copy.accessibility}
           ready={accessibilityReady}
-          value={accessibilityReady ? copy.active : copy.pending}
+          value={accessibilityReady ? copy.ready : copy.pending}
         />
       </InfoCard>
 

@@ -10,7 +10,13 @@ import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { hasPin } from "@/features/pin/pinService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import { enableShield } from "@/features/shield/shieldService";
-import { isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
+import {
+  isAccessibilityInterventionActive,
+  isLocalDnsVpnActive,
+  markAccessibilityOnboardingCompleted,
+  pauseAccessibilityIntervention,
+  startLocalDnsVpn,
+} from "@/features/shield/localDnsVpnService";
 import { fonts, ThemeColors } from "@/theme";
 
 type SetupStep = "vpn" | "accessibility";
@@ -62,6 +68,8 @@ export default function AndroidProtectionScreen() {
         Alert.alert("Aún falta un paso", "Activa la VPN local y Accesibilidad para terminar de preparar tu refugio.");
         return;
       }
+      await markAccessibilityOnboardingCompleted();
+      await pauseAccessibilityIntervention();
       await enableShield();
       router.replace("/(tabs)");
     } finally {
@@ -84,7 +92,7 @@ export default function AndroidProtectionScreen() {
         <View style={styles.icon}><MaterialCommunityIcons color={colors.primaryDark} name={accessibilityStep ? "access-point" : "shield-outline"} size={30} /></View>
         {accessibilityStep ? <>
           <Text style={styles.cardTitle}>En Ajustes de Android</Text>
-          <Text style={styles.cardBody}>1. Toca “Accesibilidad”.{"\n"}2. Elige Clean4Jesus.{"\n"}3. Activa “Usar Clean4Jesus” y vuelve aquí.</Text>
+          <Text style={styles.cardBody}>1. Toca “Accesibilidad”.{"\n"}2. Elige Clean4Jesus.{"\n"}3. Activa “Usar Clean4Jesus” y vuelve aquí. Al terminar queda configurada y se pausa para que tus apps bancarias sigan funcionando.</Text>
           <PrimaryButton disabled={busy} label="Abrir Accesibilidad" onPress={() => void openAndroidAccessibilitySettings()} />
           <PrimaryButton disabled={busy || !accessibilityReady} label="Entrar a Clean4Jesus" onPress={() => void finish()} />
         </> : <>

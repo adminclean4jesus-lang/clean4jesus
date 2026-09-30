@@ -6,6 +6,7 @@ Lee estos documentos antes de trabajar en el proyecto:
 2. `VERSION-HISTORY.md` — estado y cambios por versión.
 3. `ROADMAP-BETA-PLAYSTORE.md` — prioridades actuales y criterios de release.
 4. `README.md` — instalación y orientación general del repositorio.
+5. `REPOSITORY-OPERATIONS.md` — rutas oficiales, artefactos, builds y QA local.
 
 ## Operación y producto
 
@@ -17,6 +18,7 @@ Lee estos documentos antes de trabajar en el proyecto:
 - `PALABRA-CONTENT-ARCHITECTURE.md`, `DEVOTIONAL-CONTENT-PIPELINE.md`, `I18N-MIGRATION.md` e `I18N-EDITORIAL-REVIEW.md` — contenido e idiomas.
 - `RESEARCH-EVIDENCE-PROTOCOL.md` — uso responsable de investigación sensible.
 - `BACKLOG-SCRUM.md` — tablero versionado con estados, responsables, dependencias y stoppers.
+- `REPOSITORY-OPERATIONS.md` — fuente de verdad Desktop, reglas de Git, artefactos y comandos de verificación.
 - `EQUIPO-VIRTUAL-CLEAN4JESUS.md` — cómo convocar el consejo experto.
 - `BETA-OWNER-ACTIONS-2026-09-13.md` — tareas concretas del titular para desplegar, probar en dispositivos y cerrar la beta.
 - `IOS-APP-STORE-PREPARATION.md` — ficha, privacidad y TestFlight de la candidata vigente.

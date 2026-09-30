@@ -48,6 +48,11 @@ yarn-error.*
 
 # local artifacts
 artifacts/
+/*.apk
+/*.aab
+/*.ipa
+/*.zip
+/tmp-gradle-*.log
 
 # generated tooling and local signing material
 .wrangler/

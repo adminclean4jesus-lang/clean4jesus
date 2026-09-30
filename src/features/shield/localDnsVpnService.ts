@@ -1,5 +1,7 @@
 import { NativeModules, Platform } from "react-native";
 
+import { getJson, setJson, storageKeys } from "@/services/storage";
+
 type Clean4JesusVpnModule = {
   getStatus: () => Promise<boolean>;
   isAccessibilityInterventionEnabled: () => Promise<boolean>;
@@ -74,6 +76,14 @@ export async function pauseAccessibilityIntervention(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function hasCompletedAccessibilityOnboarding(): Promise<boolean> {
+  return getJson(storageKeys.accessibilityOnboardingCompleted, false);
+}
+
+export async function markAccessibilityOnboardingCompleted(): Promise<void> {
+  await setJson(storageKeys.accessibilityOnboardingCompleted, true);
 }
 
 export async function syncNativeLanguage(language: string): Promise<boolean> {

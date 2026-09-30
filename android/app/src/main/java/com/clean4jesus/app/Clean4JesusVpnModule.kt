@@ -113,7 +113,7 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun pauseAccessibilityIntervention(promise: Promise) {
     try {
-      promise.resolve(Clean4JesusAccessibilityService.pauseIfRunning())
+      promise.resolve(Clean4JesusAccessibilityService.pauseForBankCompatibility(reactContext))
     } catch (error: Exception) {
       promise.reject("ACCESSIBILITY_PAUSE_FAILED", error)
     }

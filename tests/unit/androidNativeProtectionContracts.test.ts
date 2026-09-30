@@ -77,19 +77,32 @@ describe("Android native protection contracts", () => {
     expect(interruptionSource).not.toContain("No lee tus mensajes");
   });
 
-  it("requires VPN and Accessibility before the Android refuge can be enabled", () => {
+  it("requires Accessibility during onboarding, then pauses it for banking compatibility", () => {
     const gateSource = readProjectFile("app/index.tsx");
     const onboardingSource = readProjectFile("app/android-protection.tsx");
-    const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive");
+    const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive || (!status.accessibilityConfigured && !status.accessibilityActive)");
     const enableIndex = gateSource.indexOf("await enableShield()");
 
     expect(validationIndex).toBeGreaterThan(-1);
     expect(enableIndex).toBeGreaterThan(validationIndex);
-    expect(gateSource).toContain("!status.pinExists || !status.vpnActive || !status.accessibilityActive");
-    expect(gateSource).not.toContain("pauseAccessibilityIntervention()");
+    expect(gateSource).toContain("hasCompletedAccessibilityOnboarding");
+    expect(gateSource).toContain("markAccessibilityOnboardingCompleted");
+    expect(gateSource).toContain("pauseAccessibilityIntervention()");
     expect(onboardingSource).toContain('"/android-protection?step=accessibility"');
     expect(onboardingSource).toContain("openAndroidAccessibilitySettings");
-    expect(onboardingSource).toContain("Tus apps bancarias quedan fuera de este alcance");
+    expect(onboardingSource).toContain("apps bancarias sigan funcionando");
+    expect(onboardingSource).toContain("await pauseAccessibilityIntervention()");
+  });
+
+  it("persists a one-time compatibility pause so a legacy enabled service also turns itself off", () => {
+    const serviceSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+    const moduleSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt");
+
+    expect(serviceSource).toContain('PREF_DISABLE_AFTER_ONBOARDING = "disable_after_onboarding"');
+    expect(serviceSource).toContain("fun pauseForBankCompatibility(context: Context): Boolean");
+    expect(serviceSource).toContain("preferences.getBoolean(PREF_DISABLE_AFTER_ONBOARDING, false)");
+    expect(serviceSource).toContain("disableSelf()");
+    expect(moduleSource).toContain("Clean4JesusAccessibilityService.pauseForBankCompatibility(reactContext)");
   });
 
   it("keeps Nu and financial apps outside every accessibility action path", () => {

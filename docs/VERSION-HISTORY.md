@@ -1,5 +1,20 @@
 # Clean4Jesus Version History
 
+## Candidata local 1.3.46 — Android 59 / iOS 35 — 2026-09-29
+
+### Incluye
+
+- Recuperación de PIN pendiente, confirmado o vencido después de reinstalar o volver a iniciar sesión.
+- Callback Google idempotente: no muestra error si el navegador ya completó la sesión.
+- Onboarding Android separado en PIN, VPN y Accesibilidad; Accesibilidad se pausa al terminar para compatibilidad bancaria.
+- iOS conserva Family Controls al volver a abrir y permite **Bloquear** por aplicación mediante límite de cero minutos.
+
+### Pendiente de cierre
+
+- Versionar y aplicar migraciones de PIN junto con la Edge Function `accountability` antes de afirmar recuperación remota.
+- QA físico Android para Nu y otro banco; QA iOS para Family Controls y bloqueo de cero minutos.
+- No se declara beta externa aprobada sin evidencia de estos recorridos y revisión de dependencias.
+
 ## Candidata local 1.3.38 — Android 56 / iOS 27 — 2026-09-16
 
 - El PIN de protección ya se configura mediante una persona de confianza: el titular ingresa su correo, confirma desde el navegador y recibe un PIN aleatorio de ocho dígitos por correo. La aplicación solo sincroniza el hash confirmado al dispositivo.

@@ -52,16 +52,16 @@ export function PersistentTabBar() {
                   router.replace(item.href);
                 }
               }}
-              android_ripple={{ color: "rgba(26,35,126,0.08)", borderless: false }}
+              android_ripple={{ color: "rgba(217,164,65,0.16)", borderless: false }}
               style={[
                 styles.item,
                 TAB_POSITION_STYLES[index],
-                active && { backgroundColor: colors.surfaceAlt },
+                active && { backgroundColor: colors.accentSoft },
               ]}
               testID={`persistent-tab-${item.key}`}
             >
               <MaterialCommunityIcons
-                color={active ? colors.primaryDark : colors.muted}
+                color={active ? colors.partial : colors.muted}
                 name={item.icon}
                 size={22}
               />
@@ -69,7 +69,7 @@ export function PersistentTabBar() {
                 allowFontScaling={false}
                 maxFontSizeMultiplier={1}
                 numberOfLines={1}
-                style={[styles.label, { color: active ? colors.primaryDark : colors.muted }, active && styles.labelActive]}
+                style={[styles.label, { color: active ? colors.partial : colors.muted }, active && styles.labelActive]}
                 testID={`persistent-tab-label-${item.key}`}
               >
                 {uiText(language, item.key === "refugio" ? "tabs.refuge" : item.key === "palabra" ? "tabs.word" : item.key === "comunidad" ? "tabs.community" : "tabs.profile")}
@@ -120,11 +120,12 @@ const styles = StyleSheet.create({
   },
   item: {
     alignItems: "center",
-    bottom: 0,
+    bottom: 7,
+    borderRadius: 999,
     justifyContent: "center",
+    paddingVertical: 6,
     position: "absolute",
-    paddingVertical: 7,
-    top: 0,
+    top: 7,
   },
   label: {
     fontFamily: fonts.label,

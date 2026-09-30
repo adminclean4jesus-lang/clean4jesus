@@ -34,8 +34,12 @@ export default function AuthCallbackScreen() {
       return;
     }
 
-    void exchangeAuthCode(code)
-      .then(({ isPasswordRecovery }) => router.replace(isPasswordRecovery ? "/auth/reset-password" : "/(tabs)/community"))
+    // Recovery is determined only by Supabase's PASSWORD_RECOVERY event in
+    // authService. This route always uses OAuth's idempotent completion path,
+    // so a browser deep link that already exchanged the code cannot surface a
+    // false error.
+    void exchangeAuthCode(code, "oauth")
+      .then(({ isPasswordRecovery }) => router.replace(isPasswordRecovery ? "/auth/reset-password" : "/"))
       .catch(() => setError(auxCopy.callbackFailed));
   }, [auxCopy.callbackFailed, auxCopy.callbackMissing, auxCopy.callbackRejected, code, errorDescription, router]);
 
@@ -46,7 +50,7 @@ export default function AuthCallbackScreen() {
       </View>
       <Text style={styles.title}>{error ? copy.linkUnavailable : copy.callbackVerifying}</Text>
       <Text style={styles.body}>{error ?? copy.callbackBody}</Text>
-      {error ? <PrimaryButton label={copy.backCommunity} onPress={() => router.replace("/(tabs)/community")} /> : <ActivityIndicator color={colors.primary} />}
+      {error ? <PrimaryButton label="Volver al acceso" onPress={() => router.replace("/")} /> : <ActivityIndicator color={colors.primary} />}
     </View>
   );
 }

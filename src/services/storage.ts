@@ -1,4 +1,4 @@
-﻿import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const storageKeys = {
   pin: "clean4jesus.pin",
@@ -6,6 +6,7 @@ export const storageKeys = {
   shieldEnabled: "clean4jesus.shield.enabled",
   shieldState: "clean4jesus.shield.state",
   shieldSetupComplete: "clean4jesus.shield.setupComplete",
+  accessibilityOnboardingCompleted: "clean4jesus.accessibility.onboardingCompleted.v1",
   dnsSetupConfirmed: "clean4jesus.dnsSetupConfirmed",
   bankingMode: "clean4jesus.bankingMode",
   habits: "clean4jesus.habits",

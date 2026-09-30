@@ -141,8 +141,17 @@ function repairLegacyEncoding(value: string) {
     .replaceAll("Â ", " ").replaceAll("â€™", "’").replaceAll("â€“", "–").replaceAll("â€”", "—").replaceAll("â€œ", "“").replaceAll("â€\u009d", "”");
 }
 
+const optionalAccessibilityRefugeBody: Record<SupportedLanguage, string> = {
+  es: "El PIN y la VPN local forman la protección base. Accesibilidad es una capa opcional para interrupciones visibles y nunca se activa por defecto.",
+  en: "The PIN and local VPN form the base protection. Accessibility is optional for visible interruptions and is never enabled by default.",
+  fr: "Le PIN et le VPN local forment la protection de base. L’Accessibilité reste facultative pour les interruptions visibles et n’est jamais activée par défaut.",
+  pt: "O PIN e a VPN local formam a proteção base. A Acessibilidade é opcional para interrupções visíveis e nunca é ativada por padrão.",
+};
+
 export function uiText(language: SupportedLanguage, key: UiTextKey, variables: Record<string, string | number> = {}) {
-  let value = repairLegacyEncoding(strings[language][key] ?? (language === "pt" ? strings.en[key] : strings.es[key]));
+  let value = key === "refuge.body"
+    ? optionalAccessibilityRefugeBody[language]
+    : repairLegacyEncoding(strings[language][key] ?? (language === "pt" ? strings.en[key] : strings.es[key]));
   for (const [name, replacement] of Object.entries(variables)) value = value.replace(`{${name}}`, String(replacement));
   return value;
 }

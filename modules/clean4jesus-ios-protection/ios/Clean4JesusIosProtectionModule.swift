@@ -60,6 +60,7 @@ private struct PerAppEditorCopy {
   let help: String
   let apps: String
   let dailyTime: String
+  let block: String
   let categories: String
   let categoriesHelp: String
   let privacy: String
@@ -71,10 +72,10 @@ private struct PerAppEditorCopy {
       ? (Locale.preferredLanguages.first?.split(separator: "-").first.map(String.init) ?? "es")
       : requestedLanguage
     switch language {
-    case "en": return .init(title: "Limits per app", help: "Choose a different time for each app. Usage resets every day.", apps: "Selected apps", dailyTime: "Daily time", categories: "Categories and sites", categoriesHelp: "For different times, choose apps one by one. Categories and sites do not receive an individual limit.", privacy: "Apple keeps your selections private. Clean4Jesus does not send this information.", cancel: "Cancel", save: "Save")
-    case "fr": return .init(title: "Limites par app", help: "Choisissez un temps différent pour chaque app. L’usage est réinitialisé chaque jour.", apps: "Apps choisies", dailyTime: "Temps quotidien", categories: "Catégories et sites", categoriesHelp: "Pour des temps différents, choisissez les apps une par une. Les catégories et sites n’ont pas de limite individuelle.", privacy: "Apple garde vos sélections privées. Clean4Jesus n’envoie pas ces informations.", cancel: "Annuler", save: "Enregistrer")
-    case "pt": return .init(title: "Limites por app", help: "Escolha um tempo diferente para cada app. O uso reinicia todos os dias.", apps: "Apps escolhidos", dailyTime: "Tempo diário", categories: "Categorias e sites", categoriesHelp: "Para tempos diferentes, escolha os apps um a um. Categorias e sites não recebem limite individual.", privacy: "A Apple mantém suas seleções privadas. O Clean4Jesus não envia essas informações.", cancel: "Cancelar", save: "Salvar")
-    default: return .init(title: "Límites por aplicación", help: "Elige un tiempo distinto para cada app. El uso se reinicia cada día.", apps: "Apps elegidas", dailyTime: "Tiempo diario", categories: "Categorías y sitios", categoriesHelp: "Para usar tiempos distintos, elige las apps una por una. Las categorías y sitios no reciben un límite individual.", privacy: "Apple mantiene privadas tus selecciones. Clean4Jesus no envía esta información.", cancel: "Cancelar", save: "Guardar")
+    case "en": return .init(title: "Limits per app", help: "Choose a different time for each app. Usage resets every day.", apps: "Selected apps", dailyTime: "Daily time", block: "Block", categories: "Categories and sites", categoriesHelp: "For different times, choose apps one by one. Categories and sites do not receive an individual limit.", privacy: "Apple keeps your selections private. Clean4Jesus does not send this information.", cancel: "Cancel", save: "Save")
+    case "fr": return .init(title: "Limites par app", help: "Choisissez un temps différent pour chaque app. L’usage est réinitialisé chaque jour.", apps: "Apps choisies", dailyTime: "Temps quotidien", block: "Bloquer", categories: "Catégories et sites", categoriesHelp: "Pour des temps différents, choisissez les apps une par une. Les catégories et sites n’ont pas de limite individuelle.", privacy: "Apple garde vos sélections privées. Clean4Jesus n’envoie pas ces informations.", cancel: "Annuler", save: "Enregistrer")
+    case "pt": return .init(title: "Limites por app", help: "Escolha um tempo diferente para cada app. O uso reinicia todos os dias.", apps: "Apps escolhidos", dailyTime: "Tempo diário", block: "Bloquear", categories: "Categorias e sites", categoriesHelp: "Para tempos diferentes, escolha os apps um a um. Categorias e sites não recebem limite individual.", privacy: "A Apple mantém suas seleções privadas. O Clean4Jesus não envia essas informações.", cancel: "Cancelar", save: "Salvar")
+    default: return .init(title: "Límites por aplicación", help: "Elige un tiempo distinto para cada app. El uso se reinicia cada día.", apps: "Apps elegidas", dailyTime: "Tiempo diario", block: "Bloquear", categories: "Categorías y sitios", categoriesHelp: "Para usar tiempos distintos, elige las apps una por una. Las categorías y sitios no reciben un límite individual.", privacy: "Apple mantiene privadas tus selecciones. Clean4Jesus no envía esta información.", cancel: "Cancelar", save: "Guardar")
     }
   }
 }
@@ -88,7 +89,7 @@ private struct PerAppLimitEditorScreen: View {
   let webDomainCount: Int
   let onCancel: () -> Void
   let onSave: ([StoredApplicationLimit]) -> Void
-  private let options = [15, 30, 60, 120]
+  private let options = [0, 15, 30, 60, 120]
   private var copy: PerAppEditorCopy { .forLanguage(language) }
 
   var body: some View {
@@ -107,10 +108,10 @@ private struct PerAppLimitEditorScreen: View {
                 .font(.headline)
               Picker(copy.dailyTime, selection: $rule.minutes) {
                 ForEach(options, id: \.self) { minutes in
-                  Text("\(minutes) min").tag(minutes)
+                  Text(minutes == 0 ? copy.block : "\(minutes) min").tag(minutes)
                 }
               }
-              .pickerStyle(.segmented)
+              .pickerStyle(.menu)
             }
             .padding(.vertical, 8)
           }
@@ -298,7 +299,12 @@ public class Clean4JesusIosProtectionModule: Module {
           let domainsReady = self.settingsStore.shield.webDomains ==
             (selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens)
           let filterReady = self.settingsStore.webContent.blockedByFilter == .auto()
-          isEnabled = configured && selected && monitoringReady && categoriesReady && domainsReady && filterReady
+          let immediateBlocks = Set(self.synchronizedPerAppLimits(for: selection)
+            .filter { $0.enabled && $0.minutes == 0 }
+            .map(\.token))
+          let immediateBlocksReady = immediateBlocks.isEmpty ||
+            (self.settingsStore.shield.applications?.isSuperset(of: immediateBlocks) == true)
+          isEnabled = configured && selected && monitoringReady && categoriesReady && domainsReady && filterReady && immediateBlocksReady
           statusString = isEnabled ? "protection_active" : configured ? "protection_limited" : "permission_granted"
         } else if authStatus == .denied {
           statusString = "permission_denied"
@@ -364,6 +370,7 @@ public class Clean4JesusIosProtectionModule: Module {
               if self.userDefaults?.bool(forKey: "shieldEnabled") == true {
                 try self.startPerAppLimitMonitoring(rules: rules)
                 self.settingsStore.shield.applications = nil
+                self.applyImmediateAppBlocks(rules)
                 self.userDefaults?.set(Date().timeIntervalSince1970, forKey: "lastConfigTimestamp")
               }
               promise.resolve([
@@ -443,6 +450,7 @@ public class Clean4JesusIosProtectionModule: Module {
                 try self.startPerAppLimitMonitoring(rules: rules)
                 self.settingsStore.clearAllSettings()
                 self.applyNonApplicationShield(selection)
+                self.applyImmediateAppBlocks(rules)
               }
               try self.saveSelection(selection)
               if wasEnabled {
@@ -482,6 +490,7 @@ public class Clean4JesusIosProtectionModule: Module {
         try self.startPerAppLimitMonitoring(rules: rules)
         self.settingsStore.clearAllSettings()
         self.applyNonApplicationShield(selection)
+        self.applyImmediateAppBlocks(rules)
       } catch {
         self.activityCenter.stopMonitoring([self.dailyActivityName])
         self.settingsStore.clearAllSettings()
@@ -523,6 +532,7 @@ public class Clean4JesusIosProtectionModule: Module {
         try self.startPerAppLimitMonitoring(rules: rules)
         self.settingsStore.clearAllSettings()
         self.applyNonApplicationShield(selection)
+        self.applyImmediateAppBlocks(rules)
       } catch {
         self.activityCenter.stopMonitoring([self.dailyActivityName])
         self.settingsStore.clearAllSettings()
@@ -576,6 +586,13 @@ public class Clean4JesusIosProtectionModule: Module {
     self.settingsStore.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
     self.settingsStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
     self.settingsStore.webContent.blockedByFilter = .auto()
+  }
+
+  private func applyImmediateAppBlocks(_ rules: [StoredApplicationLimit]) {
+    let blocked = Set(rules
+      .filter { $0.enabled && $0.minutes == 0 }
+      .map(\.token))
+    self.settingsStore.shield.applications = blocked.isEmpty ? nil : blocked
   }
 
   private func loadPerAppLimits() -> [StoredApplicationLimit] {

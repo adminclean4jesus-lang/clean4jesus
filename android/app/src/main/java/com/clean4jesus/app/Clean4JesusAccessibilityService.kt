@@ -35,6 +35,7 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_GUARDIAN_PIN = "guardian_pin"
     const val PREF_APP_LANGUAGE = "app_language"
     const val PREF_WHATSAPP_PROTECTION_ENABLED = "whatsapp_protection_enabled"
+    const val PREF_DISABLE_AFTER_ONBOARDING = "disable_after_onboarding"
     private const val PREF_APP_USAGE_PREFIX = "app_usage_"
     private const val MAX_TRACKED_EVENT_GAP_MS = 15_000L
     private const val FULL_TREE_SCAN_INTERVAL_MS = 800L
@@ -58,9 +59,12 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     private const val RISK_COOLDOWN_MS = 6 * 60 * 60_000L
     private var activeInstance: Clean4JesusAccessibilityService? = null
 
-    fun pauseIfRunning(): Boolean {
-      val service = activeInstance ?: return false
-      service.disableSelf()
+    fun pauseForBankCompatibility(context: Context): Boolean {
+      context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .edit()
+        .putBoolean(PREF_DISABLE_AFTER_ONBOARDING, true)
+        .commit()
+      activeInstance?.disableSelf()
       return true
     }
 
@@ -295,6 +299,12 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
   override fun onServiceConnected() {
     super.onServiceConnected()
+    val preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    if (preferences.getBoolean(PREF_DISABLE_AFTER_ONBOARDING, false)) {
+      preferences.edit().remove(PREF_DISABLE_AFTER_ONBOARDING).apply()
+      disableSelf()
+      return
+    }
     activeInstance = this
     restoreTemporaryRelocks()
     flushRiskSignalsAsync()

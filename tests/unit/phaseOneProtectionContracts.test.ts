@@ -40,6 +40,32 @@ describe("Phase 1 protection contracts", () => {
     expect(source).toContain("syncConfirmedGuardianPin()");
   });
 
+  it("recovers a pending, confirmed, or expired guardian PIN request instead of restarting setup", () => {
+    const source = read("app/pin-setup.tsx");
+    const client = read("src/features/pin/guardianPinService.ts");
+    const backend = read("supabase/functions/accountability/index.ts");
+    const migration = read("supabase/migrations/20260926174500_guardian_pin_status_recovery_v1.sql");
+
+    expect(source).toContain('nextStatus.status === "confirmed"');
+    expect(source).toContain("setStatusUnavailable(true)");
+    expect(source).toContain("La solicitud de PIN venció");
+    expect(source).toContain("formatExpiry(status?.expiresAt)");
+    expect(source).toContain("Tu PIN ya está protegido");
+    expect(client).toContain("guardianEmail");
+    expect(backend).toContain("guardianEmail: request?.guardian_email ?? null");
+    expect(migration).toContain("guardian_email text");
+    expect(migration).toContain("request.status = 'pending' and request.expires_at <= now()");
+  });
+
+  it("does not impose a product-level daily cap when retrying guardian PIN delivery", () => {
+    const migration = read("supabase/migrations/20260929110000_remove_guardian_pin_daily_limit_v1.sql");
+    const setup = read("app/pin-setup.tsx");
+
+    expect(migration).not.toContain("guardian_pin_request_rate_limited");
+    expect(migration).not.toContain("count(*)");
+    expect(setup).not.toContain("tres solicitudes en 24 horas");
+  });
+
   it("rolls back a guardian request when the email provider rejects delivery", () => {
     const backend = read("supabase/functions/accountability/index.ts");
     const rollback = read("supabase/migrations/20260918143000_guardian_pin_delivery_rollback_v2.sql");

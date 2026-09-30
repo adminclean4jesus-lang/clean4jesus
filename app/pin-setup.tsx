@@ -24,15 +24,29 @@ export default function PinSetupScreen() {
   const [pinExists, setPinExists] = useState(false);
   const [status, setStatus] = useState<GuardianPinRequestStatus | null>(null);
   const [busy, setBusy] = useState(true);
+  const [statusUnavailable, setStatusUnavailable] = useState(false);
+  const [restoreError, setRestoreError] = useState(false);
+  const [replacingPin, setReplacingPin] = useState(false);
 
   const refresh = useCallback(async () => {
     setBusy(true);
+    setStatusUnavailable(false);
+    setRestoreError(false);
     try {
-      const [exists, nextStatus] = await Promise.all([hasPin(), getGuardianPinRequestStatus()]);
+      let exists = await hasPin();
+      const nextStatus = await getGuardianPinRequestStatus();
+      if (!exists && nextStatus.status === "confirmed") {
+        try {
+          exists = await syncConfirmedGuardianPin();
+        } catch {
+          setRestoreError(true);
+        }
+      }
       setPinExists(exists);
       setStatus(nextStatus);
     } catch {
       setStatus(null);
+      setStatusUnavailable(true);
     } finally {
       setBusy(false);
     }
@@ -60,6 +74,7 @@ export default function PinSetupScreen() {
         return;
       }
       setStatus(await requestGuardianPin(email));
+      setReplacingPin(false);
       Alert.alert("Correo enviado", "Tu persona de confianza debe confirmar el correo. El PIN se generará y llegará únicamente a esa persona.");
     } catch (error) {
       if (error instanceof GuardianPinError && error.code === "sign_in_required") {
@@ -73,7 +88,7 @@ export default function PinSetupScreen() {
       } else if (error instanceof GuardianPinError && error.code === "email_delivery_failed") {
         Alert.alert("El correo fue rechazado", "El proveedor no pudo entregar la solicitud. No se creó ningún PIN ni quedó una solicitud pendiente. Inténtalo de nuevo en unos minutos.");
       } else if (error instanceof GuardianPinError && error.code === "rate_limited") {
-        Alert.alert("Límite de seguridad", "Ya alcanzaste el límite de tres solicitudes en 24 horas. Inténtalo de nuevo mañana.");
+        Alert.alert("No pudimos enviar el correo", "El proveedor pidió esperar un momento antes de reintentar. No se creó ninguna solicitud.");
       } else {
         Alert.alert("No pudimos enviar el correo", "Comprueba la conexión y la dirección. No se creó ningún PIN.");
       }
@@ -86,11 +101,13 @@ export default function PinSetupScreen() {
     setBusy(true);
     try {
       if (await syncConfirmedGuardianPin()) {
-        Alert.alert("PIN protegido", "Tu persona de confianza ya tiene el PIN. La protección quedó configurada.", [{ text: "Continuar", onPress: continueAfterSetup }]);
+        setPinExists(true);
+        setRestoreError(false);
+        Alert.alert("PIN protegido", "Tu PIN ya está activo en este teléfono.");
         return;
       }
       await refresh();
-      Alert.alert("Aún pendiente", "La persona elegida todavía debe confirmar el correo.");
+      Alert.alert("Aún pendiente", "La persona elegida todavía debe confirmar el correo. No necesitas crear otra solicitud.");
     } catch {
       Alert.alert("No pudimos verificar", "Comprueba tu conexión e inténtalo de nuevo.");
     } finally {
@@ -111,6 +128,13 @@ export default function PinSetupScreen() {
   }
 
   const pending = status?.status === "pending";
+  const confirmed = status?.status === "confirmed";
+  const expired = status?.status === "expired";
+  const canRequestReplacement = !busy
+    && !statusUnavailable
+    && !confirmed
+    && !pending
+    && (!pinExists || Boolean(currentPin));
   return (
     <Screen>
       <View style={styles.progressRow}>
@@ -138,23 +162,52 @@ export default function PinSetupScreen() {
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.form}>
           <View style={styles.icon}><MaterialCommunityIcons color={colors.primaryDark} name="shield-account-outline" size={24} /></View>
-          {pending ? <>
+          {busy && !status ? <>
+            <Text style={styles.cardTitle}>Recuperando tu PIN protegido</Text>
+            <Text style={styles.body}>Estamos verificando si ya hay una solicitud pendiente o un PIN activo en tu cuenta.</Text>
+          </> : statusUnavailable ? <>
+            <Text style={styles.cardTitle}>No pudimos verificar tu PIN</Text>
+            <Text style={styles.body}>No crearemos una solicitud nueva hasta recuperar el estado seguro de tu cuenta. Comprueba tu conexión e inténtalo de nuevo.</Text>
+            <PrimaryButton disabled={busy} label="Reintentar" onPress={() => void refresh()} />
+          </> : pinExists && !replacingPin ? <>
+            <Text style={styles.cardTitle}>Tu PIN ya está protegido</Text>
+            <Text style={styles.body}>Ya existe un PIN activo para esta cuenta. No necesitas volver a escribir el correo de tu persona de confianza.</Text>
+            <PrimaryButton disabled={busy} label="Continuar" onPress={continueAfterSetup} />
+            <PrimaryButton disabled={busy} label="Cambiar PIN o persona" onPress={() => setReplacingPin(true)} variant="ghost" />
+          </> : confirmed ? <>
+            <Text style={styles.cardTitle}>Tu persona ya confirmó</Text>
+            <Text style={styles.body}>{restoreError ? "El PIN está confirmado, pero este teléfono no pudo activarlo todavía. Vuelve a intentarlo con conexión." : "Estamos activando el PIN confirmado en este teléfono."}</Text>
+            <PrimaryButton disabled={busy} label={restoreError ? "Activar este teléfono" : "Revisar PIN activo"} onPress={() => void checkConfirmation()} />
+          </> : pending ? <>
             <Text style={styles.cardTitle}>Esperando confirmación</Text>
-            <Text style={styles.body}>El enlace expira el {status?.expiresAt ? new Date(status.expiresAt).toLocaleString() : "pronto"}. Cuando esa persona confirme, recibirá el PIN en su correo.</Text>
+            <Text style={styles.body}>La solicitud a {status?.guardianEmail ?? "tu persona de confianza"} sigue activa. {formatExpiry(status?.expiresAt)}. Cuando confirme, el PIN quedará disponible sin que tengas que iniciar el proceso otra vez.</Text>
             <PrimaryButton disabled={busy} label="Ya confirmó: revisar" onPress={() => void checkConfirmation()} />
             <PrimaryButton disabled={busy} label="Cancelar solicitud" onPress={() => void cancel()} variant="ghost" />
           </> : <>
-            <Text style={styles.cardTitle}>{pinExists ? "Envía un nuevo PIN protegido" : "¿Quién guardará el PIN?"}</Text>
+            <Text style={styles.cardTitle}>{replacingPin ? "Cambia tu PIN protegido" : expired ? "La solicitud de PIN venció" : "¿Quién guardará el PIN?"}</Text>
+            {expired ? <Text style={styles.body}>La solicitud anterior {status?.guardianEmail ? `para ${status.guardianEmail} ` : ""}venció. Puedes enviar una nueva cuando quieras.</Text> : null}
             <Text style={styles.body}>Solo compartiremos el PIN con esta dirección después de que acepte acompañarte. Puede rechazar o ignorar la solicitud.</Text>
-            {pinExists ? <TextInput accessibilityLabel="PIN actual" caretHidden inputMode="numeric" keyboardType="number-pad" maxLength={pinLength} onChangeText={(value) => setCurrentPin(normalizePinInput(value))} placeholder="PIN actual" placeholderTextColor={colors.mutedDark} secureTextEntry style={styles.input} value={currentPin} /> : null}
+            {replacingPin ? <TextInput accessibilityLabel="PIN actual" caretHidden inputMode="numeric" keyboardType="number-pad" maxLength={pinLength} onChangeText={(value) => setCurrentPin(normalizePinInput(value))} placeholder="PIN actual" placeholderTextColor={colors.mutedDark} secureTextEntry style={styles.input} value={currentPin} /> : null}
             <TextInput accessibilityLabel="Correo de la persona de confianza" autoCapitalize="none" autoComplete="email" keyboardType="email-address" onChangeText={setEmail} placeholder="persona@correo.com" placeholderTextColor={colors.mutedDark} style={styles.input} value={email} />
-            <PrimaryButton disabled={busy || !email.trim() || (pinExists && !currentPin)} label={busy ? "Preparando..." : "Enviar solicitud"} onPress={() => void send()} />
+            <PrimaryButton disabled={!canRequestReplacement || !email.trim()} label={busy ? "Preparando..." : expired ? "Enviar nueva solicitud" : "Enviar solicitud"} onPress={() => void send()} />
           </>}
         </Card.Content>
       </Card>
       <Text style={styles.footnote}>El PIN no aparecerá en este teléfono ni se guardará como texto. Para cambiarlo después, necesitarás el PIN vigente.</Text>
     </Screen>
   );
+}
+
+function formatExpiry(expiresAt: string | null | undefined) {
+  if (!expiresAt) return "El enlace vence pronto";
+  const expires = new Date(expiresAt);
+  const remainingMs = expires.getTime() - Date.now();
+  if (remainingMs <= 0) return `El enlace venció el ${expires.toLocaleString()}`;
+  const remainingMinutes = Math.ceil(remainingMs / 60_000);
+  const remaining = remainingMinutes < 60
+    ? `${remainingMinutes} min`
+    : `${Math.ceil(remainingMinutes / 60)} h`;
+  return `Vence el ${expires.toLocaleString()} (faltan aprox. ${remaining})`;
 }
 
 function ProgressStep({ active = false, complete = false, label, number }: { active?: boolean; complete?: boolean; label: string; number: string }) {

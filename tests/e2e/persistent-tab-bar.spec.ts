@@ -16,6 +16,7 @@ test("la navegacion persistente conserva cuatro destinos legibles", async ({ pag
   test.setTimeout(120_000);
 
   await page.addInitScript((shieldState) => {
+    localStorage.setItem("clean4jesus.e2e.authenticated", "true");
     localStorage.setItem("clean4jesus.languagePreference", JSON.stringify("es"));
     localStorage.setItem("clean4jesus.shield.enabled", "true");
     localStorage.setItem("clean4jesus.shield.state", shieldState);
@@ -96,6 +97,7 @@ test("el footer y los planes hacen fit en anchos Android comunes", async ({ page
   test.setTimeout(120_000);
 
   await page.addInitScript((shieldState) => {
+    localStorage.setItem("clean4jesus.e2e.authenticated", "true");
     localStorage.setItem("clean4jesus.languagePreference", JSON.stringify("es"));
     localStorage.setItem("clean4jesus.shield.enabled", "true");
     localStorage.setItem("clean4jesus.shield.state", shieldState);

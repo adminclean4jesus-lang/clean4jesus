@@ -30,6 +30,19 @@ describe("iOS per-app limits and Shield contracts", () => {
     expect(monitorSource).toContain("shieldedApplications.insert(rule.token)");
   });
 
+  it("offers an immediate per-app block without calling it a daily limit", () => {
+    const moduleSource = read("modules/clean4jesus-ios-protection/ios/Clean4JesusIosProtectionModule.swift");
+    const monitorSource = read("targets/DeviceActivityMonitor/DeviceActivityMonitorExtension.swift");
+
+    expect(moduleSource).toContain("private let options = [0, 15, 30, 60, 120]");
+    expect(moduleSource).toContain("Text(minutes == 0 ? copy.block");
+    expect(moduleSource).toContain("applyImmediateAppBlocks");
+    expect(moduleSource).toContain('$0.enabled && $0.minutes == 0');
+    expect(moduleSource).not.toContain("Bloquear todo el día");
+    expect(monitorSource).toContain("applyImmediateBlocks(defaults: defaults)");
+    expect(monitorSource).toContain('$0.enabled && $0.minutes == 0');
+  });
+
   it("counts a selected app's use from the start of today's active interval", () => {
     const moduleSource = read("modules/clean4jesus-ios-protection/ios/Clean4JesusIosProtectionModule.swift");
 
@@ -38,14 +51,17 @@ describe("iOS per-app limits and Shield contracts", () => {
     expect(moduleSource).toContain("iOS 16–17.3 do not expose includesPastActivity");
   });
 
-  it("uses a branded shield icon and one honest close action", () => {
+  it("uses a branded, high-contrast shield and one honest close action", () => {
     const configurationSource = read("targets/ShieldConfiguration/ShieldConfigurationExtension.swift");
     const actionSource = read("targets/ShieldAction/ShieldActionExtension.swift");
     const targetConfig = read("targets/ShieldConfiguration/expo-target.config.js");
 
     expect(configurationSource).toContain("makeClean4JesusMark");
     expect(configurationSource).toContain("Tu límite de hoy se cumplió");
-    expect(configurationSource).toContain('UIImage(named: "Clean4JesusOfficialMark")');
+    expect(configurationSource).toContain("backgroundBlurStyle: .systemMaterialLight");
+    expect(configurationSource).toContain("icon: makeClean4JesusMark()");
+    expect(configurationSource).toContain("primaryButtonLabel: ShieldConfiguration.Label(text: primaryLabel, color: .white)");
+    expect(configurationSource).toContain("primaryButtonBackgroundColor: UIColor(red: 0.027, green: 0.122, blue: 0.322, alpha: 1.0)");
     expect(targetConfig).toContain('Clean4JesusOfficialMark: "../../assets/android-icon-foreground.png"');
     expect(configurationSource).toContain("secondaryButtonLabel: nil");
     expect(configurationSource).not.toContain('UIImage(named: "AppIcon")');

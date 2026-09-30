@@ -52,7 +52,7 @@ set role = excluded.role, active = true;
 Autorizar Wrangler una sola vez:
 
 ```powershell
-cd C:\Users\maite\OneDrive\Escritorio\BlockerXChrist\clean4jesus
+cd C:\Users\millo\Desktop\Clean4Jesus
 npx wrangler login
 ```
 
