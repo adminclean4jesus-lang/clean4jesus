@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { type ColorValue, Text } from "react-native";
 
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { useI18n } from "@/features/i18n/I18nProvider";
@@ -9,7 +9,7 @@ import { fonts } from "@/theme";
 import { AppLoadingExperience } from "@/components/AppLoadingExperience";
 import { useShieldGate } from "@/features/shield/useShieldGate";
 
-function TabLabel({ color, text }: { color: string; text: string }) {
+function TabLabel({ color, text }: { color: ColorValue; text: string }) {
   return (
     <Text
         adjustsFontSizeToFit

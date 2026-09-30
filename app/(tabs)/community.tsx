@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 

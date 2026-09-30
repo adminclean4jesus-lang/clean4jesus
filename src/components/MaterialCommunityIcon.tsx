@@ -1,4 +1,5 @@
 import { ComponentProps } from "react";
+import { type ColorValue } from "react-native";
 import Svg, { Circle, Line, Path, Polyline, Rect } from "react-native-svg";
 
 // This compatibility component deliberately keeps the existing call sites while
@@ -8,7 +9,7 @@ import Svg, { Circle, Line, Path, Polyline, Rect } from "react-native-svg";
 const glyphMap: Record<string, number> = {};
 
 type IconProps = Omit<ComponentProps<typeof Svg>, "color" | "height" | "width"> & {
-  color?: string;
+  color?: ColorValue;
   name: string;
   size?: number;
 };
