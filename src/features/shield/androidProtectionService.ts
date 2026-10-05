@@ -27,6 +27,9 @@ export async function openAndroidAccessibilitySettings(): Promise<void> {
     return;
   }
 
+  const { prepareAccessibilityInterventionSetup } = await import("@/features/shield/localDnsVpnService");
+  await prepareAccessibilityInterventionSetup();
+
   try {
     const IntentLauncher = await import("expo-intent-launcher");
     await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.ACCESSIBILITY_SETTINGS);

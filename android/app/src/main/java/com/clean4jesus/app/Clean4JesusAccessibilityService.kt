@@ -35,7 +35,9 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_GUARDIAN_PIN = "guardian_pin"
     const val PREF_APP_LANGUAGE = "app_language"
     const val PREF_WHATSAPP_PROTECTION_ENABLED = "whatsapp_protection_enabled"
-    const val PREF_DISABLE_AFTER_ONBOARDING = "disable_after_onboarding"
+    // Migration-only key from the retired manual pause flow. It is cleared when
+    // Accessibility reconnects or the onboarding screen is opened.
+    private const val LEGACY_PREF_DISABLE_AFTER_ONBOARDING = "disable_after_onboarding"
     private const val PREF_APP_USAGE_PREFIX = "app_usage_"
     private const val MAX_TRACKED_EVENT_GAP_MS = 15_000L
     private const val FULL_TREE_SCAN_INTERVAL_MS = 800L
@@ -59,13 +61,19 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     private const val RISK_COOLDOWN_MS = 6 * 60 * 60_000L
     private var activeInstance: Clean4JesusAccessibilityService? = null
 
-    fun pauseForBankCompatibility(context: Context): Boolean {
+    fun prepareForUserSetup(context: Context): Boolean =
       context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         .edit()
-        .putBoolean(PREF_DISABLE_AFTER_ONBOARDING, true)
+        .remove(LEGACY_PREF_DISABLE_AFTER_ONBOARDING)
         .commit()
-      activeInstance?.disableSelf()
-      return true
+
+    fun isServiceEnabled(context: Context): Boolean {
+      val enabledServices = Settings.Secure.getString(
+        context.contentResolver,
+        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+      ) ?: return false
+      val expected = "${context.packageName}/${Clean4JesusAccessibilityService::class.java.name}"
+      return enabledServices.split(':').any { it.equals(expected, ignoreCase = true) }
     }
 
     fun getUsageSnapshot(context: Context, packageName: String, now: Long = System.currentTimeMillis()): Long {
@@ -262,6 +270,14 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     if (event == null) return
     val packageName = event.packageName?.toString() ?: return
     val now = System.currentTimeMillis()
+    if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && isFinancialPackage(packageName)) {
+      stopForegroundTracking(now)
+      // Disable before the bank is resumed. The bridge itself is guarded against the
+      // burst of duplicate window events Android can send during this handoff.
+      BankCompatibilityBridge.beginBankSession(this, packageName)
+      disableSelf()
+      return
+    }
     if (shouldIgnorePackage(packageName)) {
       stopForegroundTracking(now)
       return
@@ -299,13 +315,9 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
   override fun onServiceConnected() {
     super.onServiceConnected()
-    val preferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    if (preferences.getBoolean(PREF_DISABLE_AFTER_ONBOARDING, false)) {
-      preferences.edit().remove(PREF_DISABLE_AFTER_ONBOARDING).apply()
-      disableSelf()
-      return
-    }
+    prepareForUserSetup(this)
     activeInstance = this
+    BankCompatibilityBridge.clearReturnPrompt(this)
     restoreTemporaryRelocks()
     flushRiskSignalsAsync()
   }
@@ -443,6 +455,14 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     if (trustedFinancialPackagePrefixes.any { normalized.startsWith(it) }) return true
     return trustedMediaKeywords.any { normalized.contains(it) } ||
       trustedFinancialKeywords.any { normalized.contains(it) }
+  }
+
+  private fun isFinancialPackage(packageName: String): Boolean {
+    val normalized = packageName.lowercase()
+    if (normalized == "com.nu.production") return true
+    if (trustedPackagePrefixes.any { normalized.startsWith(it) && (it.contains("nu") || it.contains("nubank")) }) return true
+    if (trustedFinancialPackagePrefixes.any { normalized.startsWith(it) }) return true
+    return trustedFinancialKeywords.any { normalized.contains(it) }
   }
 
   private fun String.containsSignal(signal: String): Boolean {

@@ -11,6 +11,9 @@ import android.os.ParcelFileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.InetSocketAddress
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.net.ssl.SNIHostName
@@ -21,8 +24,6 @@ class Clean4JesusVpnService : VpnService() {
   private var vpnInterface: ParcelFileDescriptor? = null
   private var worker: Thread? = null
   private val running = AtomicBoolean(false)
-  private var consecutiveDnsFailures = 0
-
   companion object {
     const val ACTION_START = "com.clean4jesus.app.VPN_START"
     const val ACTION_STOP = "com.clean4jesus.app.VPN_STOP"
@@ -35,12 +36,33 @@ class Clean4JesusVpnService : VpnService() {
     private const val FAMILY_DNS_HOSTNAME = "family.cloudflare-dns.com"
     private const val DNS_OVER_TLS_PORT = 853
     private const val DNS_OVER_TLS_TIMEOUT_MS = 2500
-    private const val MAX_CONSECUTIVE_DNS_FAILURES = 3
+    private const val DNS_UDP_PORT = 53
+    private const val DNS_UDP_TIMEOUT_MS = 2500
+    private const val VPN_PREFS_NAME = "clean4jesus.vpn"
+    private const val PREF_DESIRED_ENABLED = "desired_enabled"
 
     @Volatile
     private var active = false
 
     fun isActive(): Boolean = active
+
+    fun shouldAutoStart(context: Context): Boolean {
+      if (VpnService.prepare(context) != null) return false
+      val preferences = context.getSharedPreferences(VPN_PREFS_NAME, Context.MODE_PRIVATE)
+      return if (preferences.contains(PREF_DESIRED_ENABLED)) {
+        preferences.getBoolean(PREF_DESIRED_ENABLED, false)
+      } else {
+        // Migrate users who already approved the VPN before this preference existed.
+        true
+      }
+    }
+
+    fun setDesiredEnabled(context: Context, enabled: Boolean) {
+      context.getSharedPreferences(VPN_PREFS_NAME, Context.MODE_PRIVATE)
+        .edit()
+        .putBoolean(PREF_DESIRED_ENABLED, enabled)
+        .apply()
+    }
 
     private fun setActive(value: Boolean) {
       active = value
@@ -50,11 +72,13 @@ class Clean4JesusVpnService : VpnService() {
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     when (intent?.action) {
       ACTION_STOP -> {
+        setDesiredEnabled(this, false)
         stopVpn()
         stopSelf()
         return START_NOT_STICKY
       }
       else -> {
+        setDesiredEnabled(this, true)
         startForeground(NOTIFICATION_ID, buildNotification())
         startVpn()
       }
@@ -69,6 +93,7 @@ class Clean4JesusVpnService : VpnService() {
   }
 
   override fun onRevoke() {
+    setDesiredEnabled(this, false)
     stopVpn()
     stopSelf()
     super.onRevoke()
@@ -92,7 +117,6 @@ class Clean4JesusVpnService : VpnService() {
 
     vpnInterface = descriptor
     running.set(true)
-    consecutiveDnsFailures = 0
     setActive(true)
 
     worker = Thread({ runDnsProxy(descriptor) }, "Clean4JesusDnsVpn").apply {
@@ -103,7 +127,6 @@ class Clean4JesusVpnService : VpnService() {
 
   private fun stopVpn() {
     running.set(false)
-    consecutiveDnsFailures = 0
     setActive(false)
 
     try {
@@ -159,15 +182,8 @@ class Clean4JesusVpnService : VpnService() {
     val dnsPayloadOffset = udpOffset + 8
     val dnsPayloadLength = udpLength - 8
     val dnsResponse = forwardDnsOverTls(packet, dnsPayloadOffset, dnsPayloadLength)
-    if (dnsResponse == null) {
-      consecutiveDnsFailures += 1
-      if (consecutiveDnsFailures >= MAX_CONSECUTIVE_DNS_FAILURES) {
-        stopVpn()
-        stopSelf()
-      }
-      return null
-    }
-    consecutiveDnsFailures = 0
+      ?: forwardDnsOverUdp(packet, dnsPayloadOffset, dnsPayloadLength)
+      ?: return null
 
     return buildUdpIpv4Response(
       original = packet,
@@ -237,6 +253,37 @@ class Clean4JesusVpnService : VpnService() {
           tcpSocket.close()
         } catch (_: Exception) {
         }
+      }
+    }
+    return null
+  }
+
+  /**
+   * Some mobile and Wi-Fi networks block DNS-over-TLS on port 853. Keep the
+   * family filter and tunnel alive by falling back to the same protected
+   * Cloudflare Family resolvers over UDP instead of stopping the VPN.
+   */
+  private fun forwardDnsOverUdp(packet: ByteArray, offset: Int, length: Int): ByteArray? {
+    if (length <= 0 || length > 4096) return null
+
+    for (upstreamAddress in FAMILY_DNS_UPSTREAMS) {
+      val socket = DatagramSocket()
+      try {
+        if (!protect(socket)) continue
+        socket.soTimeout = DNS_UDP_TIMEOUT_MS
+        val address = InetAddress.getByName(upstreamAddress)
+        socket.send(DatagramPacket(packet, offset, length, address, DNS_UDP_PORT))
+
+        val response = ByteArray(4096)
+        val responsePacket = DatagramPacket(response, response.size)
+        socket.receive(responsePacket)
+        if (responsePacket.length > 0) {
+          return response.copyOf(responsePacket.length)
+        }
+      } catch (_: Exception) {
+        if (!running.get()) return null
+      } finally {
+        socket.close()
       }
     }
     return null

@@ -1,13 +1,13 @@
 package com.clean4jesus.app
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.os.ResultReceiver
 import android.provider.Settings
-import android.text.TextUtils
 import android.content.Context
 import android.net.Uri
 import androidx.work.Constraints
@@ -56,6 +56,7 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun stopDnsVpn(promise: Promise) {
     try {
+      Clean4JesusVpnService.setDesiredEnabled(reactContext, false)
       reactContext.startService(Intent(reactContext, Clean4JesusVpnService::class.java).apply {
         action = Clean4JesusVpnService.ACTION_STOP
       })
@@ -67,7 +68,36 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
 
   @ReactMethod
   fun getStatus(promise: Promise) {
-    promise.resolve(Clean4JesusVpnService.isActive())
+    if (Clean4JesusVpnService.isActive()) {
+      promise.resolve(true)
+      return
+    }
+    if (!Clean4JesusVpnService.shouldAutoStart(reactContext)) {
+      promise.resolve(false)
+      return
+    }
+
+    val intent = Intent(reactContext, Clean4JesusVpnService::class.java).apply {
+      action = Clean4JesusVpnService.ACTION_START
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      reactContext.startForegroundService(intent)
+    } else {
+      reactContext.startService(intent)
+    }
+    waitForVpnRecovery(promise, 0)
+  }
+
+  private fun waitForVpnRecovery(promise: Promise, attempt: Int) {
+    if (Clean4JesusVpnService.isActive()) {
+      promise.resolve(true)
+      return
+    }
+    if (attempt >= 30) {
+      promise.resolve(false)
+      return
+    }
+    Handler(Looper.getMainLooper()).postDelayed({ waitForVpnRecovery(promise, attempt + 1) }, 100L)
   }
 
   @ReactMethod
@@ -87,35 +117,18 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun isAccessibilityInterventionEnabled(promise: Promise) {
     try {
-      val enabledServices = Settings.Secure.getString(
-        reactContext.contentResolver,
-        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-      )
-      val expected = "${reactContext.packageName}/${Clean4JesusAccessibilityService::class.java.name}"
-      val colonSplitter = TextUtils.SimpleStringSplitter(':')
-
-      if (enabledServices != null) {
-        colonSplitter.setString(enabledServices)
-        while (colonSplitter.hasNext()) {
-          if (colonSplitter.next().equals(expected, ignoreCase = true)) {
-            promise.resolve(true)
-            return
-          }
-        }
-      }
-
-      promise.resolve(false)
+      promise.resolve(Clean4JesusAccessibilityService.isServiceEnabled(reactContext))
     } catch (error: Exception) {
       promise.reject("ACCESSIBILITY_STATUS_FAILED", error)
     }
   }
 
   @ReactMethod
-  fun pauseAccessibilityIntervention(promise: Promise) {
+  fun prepareAccessibilityInterventionSetup(promise: Promise) {
     try {
-      promise.resolve(Clean4JesusAccessibilityService.pauseForBankCompatibility(reactContext))
+      promise.resolve(Clean4JesusAccessibilityService.prepareForUserSetup(reactContext))
     } catch (error: Exception) {
-      promise.reject("ACCESSIBILITY_PAUSE_FAILED", error)
+      promise.reject("ACCESSIBILITY_SETUP_PREPARE_FAILED", error)
     }
   }
 

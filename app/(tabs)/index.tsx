@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ProgressBar } from "react-native-paper";
 
@@ -13,7 +13,8 @@ import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { recordFall } from "@/features/habits/habitService";
 import { hasPin } from "@/features/pin/pinService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
-import { isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
+import { hasCompletedAccessibilityOnboarding, isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
+import { useFocusEffect } from "expo-router";
 import { iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
 import { useShieldGate } from "@/features/shield/useShieldGate";
 import { useI18n } from "@/features/i18n/I18nProvider";
@@ -57,6 +58,10 @@ export default function HomeScreen() {
     void refreshHomeState();
   }, []);
 
+  useFocusEffect(useCallback(() => {
+    void refreshHomeState();
+  }, []));
+
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
@@ -92,14 +97,15 @@ export default function HomeScreen() {
         setPinReady(pinExists);
         setFamilyControlsReady(status.isAuthorized);
       } else {
-        const [pinExists, vpnActive, accessibilityActive] = await Promise.all([
+        const [pinExists, vpnActive, accessibilityConfigured, accessibilityActive] = await Promise.all([
           hasPin(),
           isLocalDnsVpnActive(),
+          hasCompletedAccessibilityOnboarding(),
           isAccessibilityInterventionActive(),
         ]);
         setPinReady(pinExists);
         setVpnReady(vpnActive);
-        setAccessibilityReady(accessibilityActive);
+        setAccessibilityReady(accessibilityConfigured);
       }
     } catch {
       setPinReady(false);

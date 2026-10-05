@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
+import { OfficialBrandMark } from "@/components/OfficialBrandMark";
 import { coreFlowText } from "@/features/i18n/coreFlowText";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { fonts } from "@/theme";
@@ -36,9 +37,7 @@ export function AppHeader({
             <MaterialCommunityIcons color={colors.primaryDark} name="arrow-left" size={20} />
           </Pressable>
         ) : null}
-        <View style={[styles.iconMark, { backgroundColor: colors.primaryDark, borderColor: colors.primaryDark }]}>
-          <MaterialCommunityIcons color="#FFFFFF" name={icon} size={16} />
-        </View>
+        <OfficialBrandMark size={30} />
         <Text numberOfLines={1} style={[styles.brand, { color: colors.text }]}>
           Clean4Jesus
         </Text>
@@ -66,14 +65,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     minWidth: 0,
-  },
-  iconMark: {
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1,
-    height: 30,
-    justifyContent: "center",
-    width: 30,
   },
   backButton: {
     alignItems: "center",

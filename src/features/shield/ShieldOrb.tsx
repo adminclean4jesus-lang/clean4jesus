@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { OfficialBrandMark } from "@/components/OfficialBrandMark";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { ThemeColors } from "@/theme";
 
@@ -10,14 +10,12 @@ type ShieldOrbProps = { enabled: boolean };
 export function ShieldOrb({ enabled }: ShieldOrbProps) {
   const { colors } = useAppAppearance();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const shieldColor = enabled ? colors.primaryDark : "#A0AAB5";
-
   return (
     <View style={styles.wrap}>
       {enabled ? <View style={styles.ring} /> : null}
       <View style={styles.orb}>
         <View style={styles.innerGlow}>
-          <MaterialCommunityIcons color={shieldColor} name="shield-cross" size={48} />
+          <OfficialBrandMark size={52} style={!enabled ? styles.disabledMark : undefined} />
         </View>
       </View>
     </View>
@@ -53,5 +51,6 @@ function createStyles(colors: ThemeColors) {
     justifyContent: "center",
     width: 68,
   },
+  disabledMark: { opacity: 0.42 },
   });
 }

@@ -5,7 +5,7 @@ import { getJson, setJson, storageKeys } from "@/services/storage";
 type Clean4JesusVpnModule = {
   getStatus: () => Promise<boolean>;
   isAccessibilityInterventionEnabled: () => Promise<boolean>;
-  pauseAccessibilityIntervention: () => Promise<boolean>;
+  prepareAccessibilityInterventionSetup: () => Promise<boolean>;
   startDnsVpn: () => Promise<boolean>;
   stopDnsVpn: () => Promise<boolean>;
   syncLanguage?: (language: string) => Promise<boolean>;
@@ -19,7 +19,11 @@ export async function isLocalDnsVpnActive(): Promise<boolean> {
   }
 
   try {
-    return Boolean(await nativeVpn.getStatus());
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (await nativeVpn.getStatus()) return true;
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    return false;
   } catch {
     return false;
   }
@@ -66,13 +70,13 @@ export async function isAccessibilityInterventionActive(): Promise<boolean> {
   }
 }
 
-export async function pauseAccessibilityIntervention(): Promise<boolean> {
+export async function prepareAccessibilityInterventionSetup(): Promise<boolean> {
   if (Platform.OS !== "android" || !nativeVpn) {
     return false;
   }
 
   try {
-    return Boolean(await nativeVpn.pauseAccessibilityIntervention());
+    return Boolean(await nativeVpn.prepareAccessibilityInterventionSetup());
   } catch {
     return false;
   }

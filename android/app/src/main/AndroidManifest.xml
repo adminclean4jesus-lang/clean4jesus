@@ -26,6 +26,7 @@
     <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="devotional-reminders"/>
     <activity android:name=".InterruptionActivity" android:excludeFromRecents="true" android:exported="false" android:screenOrientation="portrait" android:theme="@style/AppTheme"/>
     <activity android:name=".Clean4JesusVpnPermissionActivity" android:excludeFromRecents="true" android:exported="false" android:theme="@style/AppTheme"/>
+    <activity android:name=".BankReturnActivity" android:excludeFromRecents="true" android:exported="false" android:launchMode="singleTask" android:theme="@style/Theme.Clean4Jesus.BankReturn"/>
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>

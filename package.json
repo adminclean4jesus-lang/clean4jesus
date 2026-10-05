@@ -1,6 +1,6 @@
 {
   "name": "clean4jesus",
-  "version": "1.3.46",
+  "version": "1.3.53",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -11,6 +11,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
     "@supabase/supabase-js": "2.110.5",
+    "abort-controller": "3.0.0",
     "clean4jesus-ios-protection": "file:./modules/clean4jesus-ios-protection",
     "expo": "^57.0.9",
     "expo-build-properties": "~57.0.22",
@@ -37,13 +38,14 @@
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-paper": "^5.15.3",
-    "react-native-reanimated": "3.19.5",
+    "react-native-reanimated": "4.6.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-url-polyfill": "4.0.0",
     "react-native-web": "^0.21.2",
-    "react-native-webview": "13.16.1"
+    "react-native-webview": "13.16.1",
+    "react-native-worklets": "0.12.2"
   },
   "devDependencies": {
     "@bacons/apple-targets": "^5.0.0",
@@ -57,7 +59,8 @@
   "expo": {
     "install": {
       "exclude": [
-        "react-native-reanimated"
+        "react-native-reanimated",
+        "react-native-worklets"
       ]
     },
     "doctor": {
@@ -78,7 +81,7 @@
     "eas:login": "npx eas-cli login",
     "eas:whoami": "npx eas-cli whoami",
     "prebuild:android": "expo prebuild --platform android",
-    "build:android:local": "cd android && gradlew.bat :app:assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --max-workers=1 && cd .. && node scripts/rotate-local-android-apk.mjs",
+    "build:android:local": "cd android && gradlew.bat :app:assembleRelease -PreactNativeArchitectures=arm64-v8a --build-cache && cd .. && node scripts/rotate-local-android-apk.mjs",
     "artifacts:android:rotate": "node scripts/rotate-local-android-apk.mjs",
     "test:repository-hygiene": "node scripts/verify-repository-hygiene.mjs",
     "test:unit": "vitest run tests/unit",

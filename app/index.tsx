@@ -25,7 +25,6 @@ import {
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
   markAccessibilityOnboardingCompleted,
-  pauseAccessibilityIntervention,
   startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
@@ -537,10 +536,11 @@ function AndroidGateScreen() {
         return;
       }
       let accessibilityConfigured = completedAccessibilityOnboarding;
-      if (!accessibilityConfigured && accessibilityActive) {
-        await markAccessibilityOnboardingCompleted();
-        await pauseAccessibilityIntervention();
-        accessibilityConfigured = true;
+      if (accessibilityActive) {
+        if (!accessibilityConfigured) {
+          await markAccessibilityOnboardingCompleted();
+          accessibilityConfigured = true;
+        }
       }
       const protectionReady = pinExists && vpnActive && accessibilityConfigured;
       setShieldEnabled(currentShield && protectionReady);
@@ -618,7 +618,6 @@ function AndroidGateScreen() {
 
     if (!status.accessibilityConfigured) {
       await markAccessibilityOnboardingCompleted();
-      await pauseAccessibilityIntervention();
       setAccessibilityReady(true);
     }
 

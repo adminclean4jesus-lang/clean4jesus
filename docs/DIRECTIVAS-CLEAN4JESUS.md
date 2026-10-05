@@ -526,9 +526,33 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - El script rota de forma automática los dos únicos APK permitidos: `current/Clean4Jesus-current.apk` y `previous/Clean4Jesus-previous.apk`; nunca dejar APK, AAB o IPA sueltos en la raíz.
 - Una development build con Metro es solo para depuración explícita. Esta regla reemplaza cualquier instrucción anterior que presente QR o `assembleDebug` como camino normal de entrega.
 
-## Compatibilidad Con Banca Android (Regla Vigente, 29 De Septiembre De 2026)
+## Eficiencia Y Hermes En Builds Android (30 De Septiembre De 2026)
+
+- Mantener el daemon y la caché Gradle para APKs locales: no usar `--no-daemon`, no limitar los workers a uno ni ejecutar `gradlew clean` en builds normales. Conservar `reactNativeArchitectures=arm64-v8a` para la APK de beta.
+- Prevalidar `npx expo export --platform android` antes de assembleRelease cuando se haya reparado o cambiado el árbol JS; esto detecta resolución Metro sin gastar tiempo de compilación nativa.
+- Con React Native 0.86+, no fijar Hermes a la ruta antigua `react-native/sdks/hermesc`. Permitir `detectOSAwareHermesCommand` de React Native Gradle Plugin para que seleccione el binario de `hermes-compiler`; validar el bytecode en release, porque el export JS por sí solo no prueba Hermes.
+- Desde Expo SDK 55, mantener `MainApplication.kt` en el patrón `ExpoReactHostFactory` de la plantilla SDK vigente; `ReactNativeHostWrapper` ya no forma parte de Expo y deja fallar Kotlin después de gastar el bundle. Conservar paquetes manuales dentro de `packageList`.
+- `npm ci --legacy-peer-deps` puede reconstruir `node_modules` si Metro falla resolviendo paquetes que están instalados; preserva el lockfile, pero invalida tareas nativas ligadas a archivos de dependencias. Hacerlo solo cuando la evidencia señale instalación inconsistente, luego prevalidar Metro y completar un único build local.
+
+## Compatibilidad Con Banca Android (Regla Reemplazada El 4 De Octubre De 2026)
 
 - El onboarding sí guía y requiere la configuración manual de Accesibilidad después de VPN.
-- Al terminar el onboarding, Clean4Jesus pausa su propio `AccessibilityService` con `disableSelf()` para compatibilidad bancaria. PIN y VPN DNS local quedan activos; Accesibilidad queda registrada como configurada, no activa.
-- Navegadores y redes sociales son la única superficie observada. Bancos, billeteras, apps financieras, YouTube y servicios sensibles quedan fuera antes de leer texto, contar uso o abrir una interrupción. Resolver casos por allowlist de categoría, no por excepciones improvisadas.
-- La QA de toda APK candidata incluye completar PIN → VPN → Accesibilidad, confirmar la pausa posterior, abrir Nu y otro banco y comprobar que PIN/VPN siguen activos.
+- Accesibilidad permanece activa después del onboarding. Al abrir una app financiera, Clean4Jesus identifica únicamente su paquete, pausa su propio `AccessibilityService` antes de inspeccionar nodos y mantiene PIN y VPN activos.
+- Navegadores y redes sociales son la única superficie cuyo contenido puede observarse. Bancos, billeteras, apps financieras, YouTube y servicios sensibles nunca se leen, cuentan ni interrumpen; resolver la clasificación por categoría de paquete, no por excepciones de texto.
+- La QA de toda APK candidata incluye completar PIN → VPN → Accesibilidad, confirmar que la pantalla de interrupción sigue disponible, abrir Nu y otro banco, comprobar la pausa bancaria y validar el aviso `Volver al Refugio`.
+
+## Estado Android Y Splash Oficial (3 De Octubre De 2026)
+
+- El estado mostrado en Refugio debe refrescarse cada vez que la pestaña recupera foco. VPN representa el estado nativo real; Accesibilidad representa la configuración obligatoria ya completada aunque el servicio esté pausado por compatibilidad bancaria.
+- Al terminar Accesibilidad, no navegar al Refugio hasta que Android confirme que `disableSelf()` retiró realmente el servicio de la lista de servicios habilitados. Esta verificación evita que Nu y otros bancos detecten Accesibilidad todavía activa.
+- El flujo PIN → VPN → Accesibilidad debe avanzar automáticamente al volver de Ajustes cuando ambas capas están confirmadas. Si la VPN dejó de estar activa, ofrecer una recuperación visible hacia el paso VPN y nunca dejar al usuario atrapado.
+- El splash nativo Android y las superficies de marca usan el logo oficial. Queda prohibido entregar recursos plantilla de Android o escudos reconstruidos cuando existe el activo oficial.
+- Una transición breve entre Wi-Fi y datos móviles no debe apagar la VPN por tres fallos DNS aislados; conservar un umbral acotado que tolere la transición y siga fallando de forma visible ante una indisponibilidad sostenida.
+
+## Puente Bancario Android (4 De Octubre De 2026)
+
+- Accesibilidad permanece activa después del onboarding para conservar la pantalla de interrupción. Solo se pausa al detectar por paquete una aplicación financiera y siempre antes de inspeccionar texto o nodos de esa aplicación.
+- La VPN local permanece activa durante la sesión bancaria. Al terminar, el aviso aprobado usa el título `Todo listo por aquí`, el texto `Ya puedes volver a tu experiencia habitual en Clean4Jesus.` y el CTA `Volver al Refugio`; no anunciar una brecha técnica ni afirmar que Android reactivó Accesibilidad automáticamente.
+- Android exige confirmación manual para volver a habilitar Accesibilidad. El CTA abre los ajustes del sistema y el aviso desaparece únicamente cuando el servicio se conecta de nuevo.
+- El retorno usa una Activity nativa translúcida como puente: queda detrás de la app bancaria y reaparece al cerrarla. Si Android no restaura esa tarea, abrir Clean4Jesus muestra el mismo popup pendiente. No depender de notificaciones, `PACKAGE_USAGE_STATS`, overlays ni `SYSTEM_ALERT_WINDOW` para este flujo.
+- El puente no puede mostrar el retorno hasta confirmar que su Activity pasó realmente a segundo plano por la app bancaria. El mensaje guía con `Volver al Refugio` → elegir Clean4Jesus → activar `Usar Clean4Jesus` → regresar, sin describir una brecha técnica ni usar lenguaje de desprotección.

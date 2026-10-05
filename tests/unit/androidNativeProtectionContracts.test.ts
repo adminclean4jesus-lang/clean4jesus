@@ -30,6 +30,9 @@ describe("Android native protection contracts", () => {
     expect(permissionSource).toContain("RESULT_VPN_INACTIVE");
     expect(serviceSource).toContain("@Volatile\n    private var active = false");
     expect(serviceSource).not.toContain("PREF_ACTIVE");
+    expect(serviceSource).toContain('PREF_DESIRED_ENABLED = "desired_enabled"');
+    expect(moduleSource).toContain("Clean4JesusVpnService.shouldAutoStart(reactContext)");
+    expect(moduleSource).toContain("waitForVpnRecovery");
     expect(bridgeSource).toMatch(/startDnsVpn\(\)[\s\S]*nativeVpn\.getStatus\(\)/);
   });
 
@@ -64,7 +67,8 @@ describe("Android native protection contracts", () => {
     expect(settingsSource).toContain('router.push("/pin-setup")');
     expect(settingsSource).toContain('router.push("/pin-verify?action=disable-whatsapp-protection")');
     expect(readProjectFile("app/pin-verify.tsx")).toContain('action === "disable-whatsapp-protection"');
-    expect(readProjectFile("android/app/src/main/res/xml/clean4jesus_accessibility_service.xml")).toContain("com.whatsapp,com.whatsapp.w4b");
+    expect(serviceSource).toContain('"com.whatsapp"');
+    expect(serviceSource).toContain('"com.whatsapp.w4b"');
   });
 
   it("uses the dedicated monochrome notification icon and honest on-device privacy copy", () => {
@@ -77,7 +81,7 @@ describe("Android native protection contracts", () => {
     expect(interruptionSource).not.toContain("No lee tus mensajes");
   });
 
-  it("requires Accessibility during onboarding, then pauses it for banking compatibility", () => {
+  it("requires Accessibility during onboarding and keeps it active until a bank is detected", () => {
     const gateSource = readProjectFile("app/index.tsx");
     const onboardingSource = readProjectFile("app/android-protection.tsx");
     const validationIndex = gateSource.indexOf("!status.pinExists || !status.vpnActive || (!status.accessibilityConfigured && !status.accessibilityActive)");
@@ -87,22 +91,64 @@ describe("Android native protection contracts", () => {
     expect(enableIndex).toBeGreaterThan(validationIndex);
     expect(gateSource).toContain("hasCompletedAccessibilityOnboarding");
     expect(gateSource).toContain("markAccessibilityOnboardingCompleted");
-    expect(gateSource).toContain("pauseAccessibilityIntervention()");
+    expect(gateSource).not.toContain("await pauseAccessibilityIntervention()");
     expect(onboardingSource).toContain('"/android-protection?step=accessibility"');
     expect(onboardingSource).toContain("openAndroidAccessibilitySettings");
-    expect(onboardingSource).toContain("apps bancarias sigan funcionando");
-    expect(onboardingSource).toContain("await pauseAccessibilityIntervention()");
+    expect(onboardingSource).toContain("compatibilidad al abrir una app bancaria");
+    expect(onboardingSource).not.toContain("await pauseAccessibilityIntervention()");
+    expect(onboardingSource).toContain("OfficialBrandMark");
+    expect(onboardingSource).toContain("Volver a activar VPN");
+    expect(readProjectFile("src/features/shield/androidProtectionService.ts")).toContain("await prepareAccessibilityInterventionSetup()");
   });
 
-  it("persists a one-time compatibility pause so a legacy enabled service also turns itself off", () => {
+  it("pauses only when a financial package opens and offers the approved return CTA", () => {
+    const serviceSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+    const bridgeSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/BankCompatibilityBridge.kt");
+    const returnActivity = readProjectFile("android/app/src/main/java/com/clean4jesus/app/BankReturnActivity.kt");
+    const mainActivity = readProjectFile("android/app/src/main/java/com/clean4jesus/app/MainActivity.kt");
+    const xmlSource = readProjectFile("android/app/src/main/res/xml/clean4jesus_accessibility_service.xml");
+    const bankBranch = serviceSource.split("isFinancialPackage(packageName)")[1]?.split("if (shouldIgnorePackage")[0];
+
+    expect(xmlSource).not.toContain("android:packageNames");
+    expect(bankBranch).toContain("BankCompatibilityBridge.beginBankSession");
+    expect(bankBranch).toContain("disableSelf()");
+    expect(bankBranch).not.toContain("rootInActiveWindow");
+    expect(bridgeSource).toContain("BankReturnActivity::class.java");
+    expect(returnActivity).toContain('text = "Todo listo por aquí"');
+    expect(returnActivity).toContain('text = "Volver al Refugio"');
+    expect(returnActivity).toContain('3. Activa “Usar Clean4Jesus” y regresa.');
+    expect(returnActivity).toContain("Settings.ACTION_ACCESSIBILITY_SETTINGS");
+    expect(returnActivity).toContain("reopenBank()");
+    expect(returnActivity).toContain("BankCompatibilityBridge.markBankBridgeDeparted(this)");
+    expect(returnActivity).toContain("if (returnOnly || leftForBank)");
+    expect(returnActivity).toContain("Intent.FLAG_ACTIVITY_NEW_TASK");
+    expect(bridgeSource).toContain('putBoolean(PREF_BANK_BRIDGE_DEPARTED, false)');
+    expect(bridgeSource).toContain('if (preferences.getBoolean(PREF_BANK_SESSION_PENDING, false)) return false');
+    expect(bridgeSource).toContain('fun beginBankSession(context: Context, packageName: String): Boolean');
+    expect(bridgeSource).toContain("preferences.getBoolean(PREF_BANK_BRIDGE_DEPARTED, false)");
+    expect(mainActivity).toContain("BankCompatibilityBridge.shouldShowPendingReturn(this)");
+  });
+
+  it("removes the legacy pause API and clears its old marker on reconnect", () => {
     const serviceSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
     const moduleSource = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnModule.kt");
 
-    expect(serviceSource).toContain('PREF_DISABLE_AFTER_ONBOARDING = "disable_after_onboarding"');
-    expect(serviceSource).toContain("fun pauseForBankCompatibility(context: Context): Boolean");
-    expect(serviceSource).toContain("preferences.getBoolean(PREF_DISABLE_AFTER_ONBOARDING, false)");
-    expect(serviceSource).toContain("disableSelf()");
-    expect(moduleSource).toContain("Clean4JesusAccessibilityService.pauseForBankCompatibility(reactContext)");
+    expect(serviceSource).toContain('LEGACY_PREF_DISABLE_AFTER_ONBOARDING = "disable_after_onboarding"');
+    expect(serviceSource).not.toContain("fun pauseForBankCompatibility(context: Context): Boolean");
+    expect(serviceSource).not.toContain("isBankCompatibilityPauseRequested");
+    expect(serviceSource).toContain("fun prepareForUserSetup(context: Context): Boolean");
+    expect(serviceSource).toContain(".remove(LEGACY_PREF_DISABLE_AFTER_ONBOARDING)");
+    expect(moduleSource).not.toContain("pauseAccessibilityIntervention");
+    expect(moduleSource).toContain("prepareAccessibilityInterventionSetup");
+    expect(moduleSource).toContain("isServiceEnabled(reactContext)");
+  });
+
+  it("shows persisted Accessibility setup and refreshes native status whenever Refugio regains focus", () => {
+    const homeSource = readProjectFile("app/(tabs)/index.tsx");
+    expect(homeSource).toContain("hasCompletedAccessibilityOnboarding()");
+    expect(homeSource).toContain("useFocusEffect");
+    expect(homeSource).toContain("isAccessibilityInterventionActive()");
+    expect(homeSource).not.toContain("await pauseAccessibilityIntervention()");
   });
 
   it("keeps Nu and financial apps outside every accessibility action path", () => {
@@ -124,9 +170,8 @@ describe("Android native protection contracts", () => {
     expect(source).toContain("MAX_TRACKED_EVENT_GAP_MS = 15_000L");
     expect(source).toContain("elapsed.coerceAtMost(MAX_TRACKED_EVENT_GAP_MS)");
     expect(source).toContain("coerceIn(0L, MAX_TRACKED_EVENT_GAP_MS)");
-    expect(serviceConfig).toContain("android:packageNames=");
-    expect(serviceConfig).not.toContain("com.google.android.youtube");
-    expect(serviceConfig).not.toContain("com.nu.production");
+    expect(serviceConfig).not.toContain("android:packageNames=");
+    expect(source.indexOf("isFinancialPackage(packageName)")).toBeLessThan(source.indexOf("rootInActiveWindow"));
   });
 
   it("coalesces expensive accessibility tree scans without delaying typed searches", () => {
@@ -150,12 +195,15 @@ describe("Android native protection contracts", () => {
     expect(usageMethod).not.toContain("SystemClock.elapsedRealtime()");
   });
 
-  it("fails visibly when both family DNS upstreams are unavailable", () => {
+  it("keeps the VPN alive and falls back to protected family DNS when DoT is unavailable", () => {
     const source = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnService.kt");
 
     expect(source).toContain('listOf("1.1.1.3", "1.0.0.3")');
-    expect(source).toContain("MAX_CONSECUTIVE_DNS_FAILURES = 3");
-    expect(source).toMatch(/consecutiveDnsFailures >= MAX_CONSECUTIVE_DNS_FAILURES[\s\S]*stopVpn\(\)[\s\S]*stopSelf\(\)/);
+    expect(source).toContain("forwardDnsOverUdp");
+    expect(source).toContain("protect(socket)");
+    expect(source).toContain("DNS_UDP_PORT = 53");
+    expect(source).not.toContain("MAX_CONSECUTIVE_DNS_FAILURES");
+    expect(source).not.toMatch(/dnsResponse == null[\s\S]{0,300}stopSelf\(\)/);
   });
 
   it("keeps temporary unlock scoped to the exact package and refreshes reused interruptions", () => {
