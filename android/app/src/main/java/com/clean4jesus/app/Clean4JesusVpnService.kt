@@ -8,13 +8,14 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.InetSocketAddress
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
 import java.net.Socket
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SSLSocket
@@ -36,8 +37,10 @@ class Clean4JesusVpnService : VpnService() {
     private const val FAMILY_DNS_HOSTNAME = "family.cloudflare-dns.com"
     private const val DNS_OVER_TLS_PORT = 853
     private const val DNS_OVER_TLS_TIMEOUT_MS = 2500
-    private const val DNS_UDP_PORT = 53
-    private const val DNS_UDP_TIMEOUT_MS = 2500
+    private const val DNS_OVER_HTTPS_PORT = 443
+    private const val DNS_OVER_HTTPS_TIMEOUT_MS = 2500
+    private const val DNS_OVER_HTTPS_PATH = "/dns-query"
+    private const val MAX_DNS_RESPONSE_LENGTH = 0xffff
     private const val VPN_PREFS_NAME = "clean4jesus.vpn"
     private const val PREF_DESIRED_ENABLED = "desired_enabled"
 
@@ -182,7 +185,7 @@ class Clean4JesusVpnService : VpnService() {
     val dnsPayloadOffset = udpOffset + 8
     val dnsPayloadLength = udpLength - 8
     val dnsResponse = forwardDnsOverTls(packet, dnsPayloadOffset, dnsPayloadLength)
-      ?: forwardDnsOverUdp(packet, dnsPayloadOffset, dnsPayloadLength)
+      ?: forwardDnsOverHttps(packet, dnsPayloadOffset, dnsPayloadLength)
       ?: return null
 
     return buildUdpIpv4Response(
@@ -259,32 +262,99 @@ class Clean4JesusVpnService : VpnService() {
   }
 
   /**
-   * Some mobile and Wi-Fi networks block DNS-over-TLS on port 853. Keep the
-   * family filter and tunnel alive by falling back to the same protected
-   * Cloudflare Family resolvers over UDP instead of stopping the VPN.
+   * Some mobile and Wi-Fi networks block DNS-over-TLS on port 853. The fallback
+   * remains encrypted: DNS-over-HTTPS uses TLS on 443 with SNI and hostname
+   * validation against Cloudflare Family. The raw protected socket prevents the
+   * local VPN from capturing its own upstream request.
    */
-  private fun forwardDnsOverUdp(packet: ByteArray, offset: Int, length: Int): ByteArray? {
-    if (length <= 0 || length > 4096) return null
+  private fun forwardDnsOverHttps(packet: ByteArray, offset: Int, length: Int): ByteArray? {
+    if (length <= 0 || length > MAX_DNS_RESPONSE_LENGTH) return null
 
     for (upstreamAddress in FAMILY_DNS_UPSTREAMS) {
-      val socket = DatagramSocket()
+      val tcpSocket = Socket()
       try {
-        if (!protect(socket)) continue
-        socket.soTimeout = DNS_UDP_TIMEOUT_MS
-        val address = InetAddress.getByName(upstreamAddress)
-        socket.send(DatagramPacket(packet, offset, length, address, DNS_UDP_PORT))
+        if (!protect(tcpSocket)) continue
+        tcpSocket.connect(InetSocketAddress(upstreamAddress, DNS_OVER_HTTPS_PORT), DNS_OVER_HTTPS_TIMEOUT_MS)
+        tcpSocket.soTimeout = DNS_OVER_HTTPS_TIMEOUT_MS
 
-        val response = ByteArray(4096)
-        val responsePacket = DatagramPacket(response, response.size)
-        socket.receive(responsePacket)
-        if (responsePacket.length > 0) {
-          return response.copyOf(responsePacket.length)
+        val tlsSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+        val tlsSocket = (tlsSocketFactory.createSocket(
+          tcpSocket,
+          FAMILY_DNS_HOSTNAME,
+          DNS_OVER_HTTPS_PORT,
+          true,
+        ) as SSLSocket)
+
+        tlsSocket.use { socket ->
+          socket.soTimeout = DNS_OVER_HTTPS_TIMEOUT_MS
+          socket.sslParameters = socket.sslParameters.apply {
+            endpointIdentificationAlgorithm = "HTTPS"
+            serverNames = listOf(SNIHostName(FAMILY_DNS_HOSTNAME))
+          }
+          socket.startHandshake()
+
+          val output = BufferedOutputStream(socket.outputStream)
+          output.write(
+            (
+              "POST $DNS_OVER_HTTPS_PATH HTTP/1.1\\r\\n" +
+                "Host: $FAMILY_DNS_HOSTNAME\\r\\n" +
+                "Content-Type: application/dns-message\\r\\n" +
+                "Accept: application/dns-message\\r\\n" +
+                "Content-Length: $length\\r\\n" +
+                "Connection: close\\r\\n\\r\\n"
+              ).toByteArray(StandardCharsets.US_ASCII),
+          )
+          output.write(packet, offset, length)
+          output.flush()
+
+          val input = BufferedInputStream(socket.inputStream)
+          val statusLine = readHttpLine(input) ?: return null
+          if (!statusLine.startsWith("HTTP/") || !statusLine.contains(" 200 ")) return null
+
+          var contentLength = -1
+          var dnsMessageContentType = false
+          while (true) {
+            val header = readHttpLine(input) ?: return null
+            if (header.isEmpty()) break
+            val separator = header.indexOf(':')
+            if (separator <= 0) continue
+            val name = header.substring(0, separator).trim().lowercase()
+            val value = header.substring(separator + 1).trim()
+            when (name) {
+              "content-length" -> contentLength = value.toIntOrNull() ?: return null
+              "content-type" -> dnsMessageContentType = value.lowercase().startsWith("application/dns-message")
+            }
+          }
+          if (!dnsMessageContentType || contentLength <= 0 || contentLength > MAX_DNS_RESPONSE_LENGTH) return null
+
+          val response = ByteArray(contentLength)
+          var bytesRead = 0
+          while (bytesRead < contentLength) {
+            val count = input.read(response, bytesRead, contentLength - bytesRead)
+            if (count < 0) return null
+            bytesRead += count
+          }
+          return response
         }
       } catch (_: Exception) {
         if (!running.get()) return null
       } finally {
-        socket.close()
+        try {
+          tcpSocket.close()
+        } catch (_: Exception) {
+        }
       }
+    }
+    return null
+  }
+
+  private fun readHttpLine(input: BufferedInputStream): String? {
+    val line = ByteArrayOutputStream()
+    while (line.size() < 8192) {
+      val next = input.read()
+      if (next < 0) return null
+      if (next == '\n'.code) return line.toString(StandardCharsets.US_ASCII.name()).trimEnd('\r')
+      line.write(next)
     }
     return null
   }

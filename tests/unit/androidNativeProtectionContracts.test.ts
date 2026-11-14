@@ -195,13 +195,17 @@ describe("Android native protection contracts", () => {
     expect(usageMethod).not.toContain("SystemClock.elapsedRealtime()");
   });
 
-  it("keeps the VPN alive and falls back to protected family DNS when DoT is unavailable", () => {
+  it("keeps the VPN encrypted when DoT is unavailable by falling back to DoH", () => {
     const source = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusVpnService.kt");
 
     expect(source).toContain('listOf("1.1.1.3", "1.0.0.3")');
-    expect(source).toContain("forwardDnsOverUdp");
-    expect(source).toContain("protect(socket)");
-    expect(source).toContain("DNS_UDP_PORT = 53");
+    expect(source).toContain("forwardDnsOverHttps");
+    expect(source).toContain('DNS_OVER_HTTPS_PATH = "/dns-query"');
+    expect(source).toContain("Content-Type: application/dns-message");
+    expect(source).toContain("endpointIdentificationAlgorithm = \"HTTPS\"");
+    expect(source).toContain("protect(tcpSocket)");
+    expect(source).not.toContain("forwardDnsOverUdp");
+    expect(source).not.toContain("DNS_UDP_PORT");
     expect(source).not.toContain("MAX_CONSECUTIVE_DNS_FAILURES");
     expect(source).not.toMatch(/dnsResponse == null[\s\S]{0,300}stopSelf\(\)/);
   });
