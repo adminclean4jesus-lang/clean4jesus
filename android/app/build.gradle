@@ -3,6 +3,16 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+def localPlaySigningProperties = new Properties()
+def localPlaySigningFile = rootProject.file('.play-signing.properties')
+if (localPlaySigningFile.exists()) {
+    localPlaySigningFile.withInputStream { stream ->
+        localPlaySigningProperties.load(stream)
+    }
+}
+def releaseSigningValue = { String name ->
+    project.findProperty(name) ?: localPlaySigningProperties.getProperty(name)
+}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -107,12 +117,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        if (project.hasProperty('CLEAN4JESUS_RELEASE_STORE_FILE')) {
+        if (releaseSigningValue('CLEAN4JESUS_RELEASE_STORE_FILE')) {
             release {
-                storeFile file(project.property('CLEAN4JESUS_RELEASE_STORE_FILE'))
-                storePassword project.property('CLEAN4JESUS_RELEASE_STORE_PASSWORD')
-                keyAlias project.property('CLEAN4JESUS_RELEASE_KEY_ALIAS')
-                keyPassword project.property('CLEAN4JESUS_RELEASE_KEY_PASSWORD')
+                storeFile file(releaseSigningValue('CLEAN4JESUS_RELEASE_STORE_FILE'))
+                storePassword releaseSigningValue('CLEAN4JESUS_RELEASE_STORE_PASSWORD')
+                keyAlias releaseSigningValue('CLEAN4JESUS_RELEASE_KEY_ALIAS')
+                keyPassword releaseSigningValue('CLEAN4JESUS_RELEASE_KEY_PASSWORD')
             }
         }
     }
@@ -123,7 +133,7 @@ android {
         release {
             // Release signing is supplied through Gradle properties or EAS secrets.
             // Never commit the keystore or its passwords to the repository.
-            if (project.hasProperty('CLEAN4JESUS_RELEASE_STORE_FILE')) {
+            if (releaseSigningValue('CLEAN4JESUS_RELEASE_STORE_FILE')) {
                 signingConfig signingConfigs.release
             } else {
                 // Local standalone beta APKs remain installable without EAS

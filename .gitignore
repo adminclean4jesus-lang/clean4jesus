@@ -58,6 +58,7 @@ artifacts/
 .wrangler/
 *.log
 android/app/debug.keystore
+android/.play-signing.properties
 
 # local AI / editor metadata
 .claude/
