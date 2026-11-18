@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "clean4jesus-guardian-confirm",
+  "compatibility_date": "2026-09-21",
+  "assets": { "directory": "./workers/guardian-confirm", "html_handling": "auto-trailing-slash", "not_found_handling": "404-page" },
+  "routes": [{ "pattern": "clean4jesus.com/guardian/confirm*", "zone_name": "clean4jesus.com" }],
+  "observability": { "enabled": true, "head_sampling_rate": 0.1 }
+}

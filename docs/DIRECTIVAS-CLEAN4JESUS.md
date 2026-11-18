@@ -579,3 +579,9 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - La VPN de la versión 70 se mantuvo activa mientras el usuario navegaba y cargaba YouTube; aún se requieren pruebas prolongadas y con otras redes y dispositivos. Esta observación no es una garantía de compatibilidad completa.
 - Pendiente validar Google Wallet/NFC en la versión 71, la pantalla de interrupción tras usar Nu, y el funcionamiento de Nu con otros dispositivos y actualizaciones. No afirmar que esos puntos están cerrados.
 - Paquete: `artifacts/play/Clean4Jesus-1.3.58-71-release.aab`; SHA-256 `56DDD3792C8BB8AF93D47AEF8C1FC0C376404BC2CEF7CA150493A7268409803D`.
+
+## Integración del checkpoint Android (18 de noviembre de 2026)
+
+- Al integrar la rama principal con la candidata 71, conservar su base Expo 57 y el flujo Android probado; la rama principal contenía rutas antiguas de configuración incompatibles. Mantener la landing vigente de la rama principal y verificarla con `scripts/verify-current-landing.mjs`.
+- El callback distingue recuperación y OAuth; solo un evento `PASSWORD_RECOVERY` autoriza el cambio de contraseña. Los intercambios simultáneos del mismo código comparten una operación; una sesión existente solo resuelve un intercambio fallido de OAuth, no uno de recuperación.
+- La integración de código no implica que una nueva compilación haya sido probada en teléfonos. La evidencia del Pixel corresponde a la versión 71 previa a esta integración.

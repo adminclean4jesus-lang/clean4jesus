@@ -45,6 +45,11 @@ yarn-error.*
 
 # generated native folders
 /ios
+/android/build/
+/android/app/build/
+/android/.gradle-user-home/
+/.gradle-local/
+**/.cxx/
 
 # local artifacts
 artifacts/

@@ -34,6 +34,8 @@ export type AuthServiceErrorCode =
 
 export type AuthCodeFlow = "oauth" | "recovery";
 
+const pendingAuthCodeExchanges = new Map<string, Promise<{ isPasswordRecovery: boolean }>>();
+
 export class AuthServiceError extends Error {
   constructor(public readonly code: AuthServiceErrorCode, legacyMessage: string = code) {
     super(legacyMessage);
@@ -118,7 +120,21 @@ export async function requestPasswordReset(email: string, captchaToken?: string)
   }
 }
 
-export async function exchangeAuthCode(code: string, flow: AuthCodeFlow = "recovery") {
+export function exchangeAuthCode(code: string, flow: AuthCodeFlow = "recovery") {
+  const exchangeKey = `${flow}:${code}`;
+  const pendingExchange = pendingAuthCodeExchanges.get(exchangeKey);
+  if (pendingExchange) return pendingExchange;
+
+  const exchange = exchangeAuthCodeOnce(code, flow);
+  pendingAuthCodeExchanges.set(exchangeKey, exchange);
+  void exchange.then(
+    () => pendingAuthCodeExchanges.delete(exchangeKey),
+    () => pendingAuthCodeExchanges.delete(exchangeKey),
+  );
+  return exchange;
+}
+
+async function exchangeAuthCodeOnce(code: string, flow: AuthCodeFlow) {
   const supabase = getSupabaseClient();
   let recoveryUserId: string | null = null;
   const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {

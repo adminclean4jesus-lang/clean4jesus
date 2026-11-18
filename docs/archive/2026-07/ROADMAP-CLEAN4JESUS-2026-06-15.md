@@ -215,7 +215,7 @@ Fecha: 2026-06-28
 Hecho en esta sesion:
 
 - Se instalo JDK 17 en la maquina para resolver la ausencia de Java en el entorno local.
-- Se creo una ruta corta temporal para evitar el error de longitud de archivos de Gradle/Ninja en OneDrive.
+- Se creo una ruta corta temporal para evitar el error de longitud de archivos de Gradle/Ninja en la ruta sincronizada del checkout local.
 - Se genero con exito un APK local debug en `C:\\c4j\\android\\app\\build\\outputs\\apk\\debug\\app-debug.apk`.
 
 ### Sesion 12. Allowlist Por Prefijo Para Apps Confiables

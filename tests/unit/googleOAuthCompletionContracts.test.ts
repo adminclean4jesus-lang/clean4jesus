@@ -13,8 +13,8 @@ describe("Google OAuth completion contract", () => {
     expect(source).toMatch(/result\.type !== "success"[\s\S]*hasAuthenticatedSession\(supabase\)[\s\S]*return \{ cancelled: false \}/);
     expect(source).toMatch(/catch \(error\)[\s\S]*hasAuthenticatedSession\(supabase\)[\s\S]*throw error/);
     expect(source).toContain('void recordLegalAcceptance(language, "google_oauth").catch(() => undefined)');
-    expect(callback).toContain('exchangeAuthCode(code, "oauth")');
-    expect(callback).not.toContain('mode === "recovery"');
+    expect(callback).toContain('mode === "recovery" ? "recovery" : "oauth"');
+    expect(callback).toContain('exchangeAuthCode(code, flow)');
     expect(authService).toMatch(/flow === "oauth"[\s\S]*supabase\.auth\.getSession\(\)[\s\S]*current\?\.data\?\.session\?\.user/);
   });
 });

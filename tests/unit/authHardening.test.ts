@@ -53,13 +53,19 @@ describe("endurecimiento de Auth movil", () => {
   it("solo abre reset tras PASSWORD_RECOVERY y consume una autorizacion de un uso", () => {
     const service = read("src/features/auth/authService.ts");
     const callback = read("app/auth/callback.tsx");
+    const socialAuth = read("src/features/auth/socialAuthService.ts");
     const recoveryState = read("src/features/auth/recoveryState.ts");
 
     expect(service).toContain('event === "PASSWORD_RECOVERY"');
     expect(service).toContain("hasPasswordRecoveryAuthorization");
     expect(service).toContain("await clearPasswordRecovery()");
     expect(callback).toContain("isPasswordRecovery ?");
-    expect(callback).not.toContain('mode === "recovery"');
+    expect(callback).toContain('mode === "recovery" ? "recovery" : "oauth"');
+    expect(service).toContain("pendingAuthCodeExchanges");
+    expect(service).toContain("current?.data?.session?.user");
+    expect(socialAuth).toContain('exchangeAuthCode(code, "oauth")');
+    expect(socialAuth).toContain("hasAuthenticatedSession");
+    expect(socialAuth).toContain('void recordLegalAcceptance(language, "google_oauth").catch(() => undefined)');
     expect(recoveryState).toContain("await clearPasswordRecovery()");
   });
 
