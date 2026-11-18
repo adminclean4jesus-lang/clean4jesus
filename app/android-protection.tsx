@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Notifications from "expo-notifications";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AppState, StyleSheet, Text, View } from "react-native";
 
@@ -83,6 +84,10 @@ export default function AndroidProtectionScreen() {
       }
       await markAccessibilityOnboardingCompleted();
       await enableShield();
+      const notificationPermission = await Notifications.getPermissionsAsync();
+      if (!notificationPermission.granted) {
+        await Notifications.requestPermissionsAsync();
+      }
       router.replace("/(tabs)");
     } finally {
       finishingRef.current = false;
@@ -106,7 +111,7 @@ export default function AndroidProtectionScreen() {
         <View style={styles.icon}><MaterialCommunityIcons color={colors.primaryDark} name={accessibilityStep ? "access-point" : "shield-outline"} size={30} /></View>
         {accessibilityStep ? <>
           <Text style={styles.cardTitle}>En Ajustes de Android</Text>
-          <Text style={styles.cardBody}>1. Toca “Accesibilidad”.{"\n"}2. Elige Clean4Jesus.{"\n"}3. Activa “Usar Clean4Jesus” y vuelve aquí. Clean4Jesus cuidará automáticamente la compatibilidad al abrir una app bancaria.</Text>
+          <Text style={styles.cardBody}>1. Toca “Accesibilidad”.{"\n"}2. Elige Clean4Jesus.{"\n"}3. Activa “Usar Clean4Jesus” y vuelve aquí. Clean4Jesus cuidará automáticamente la compatibilidad al abrir una app bancaria.{"\n\n"}Al terminar, permite los avisos: Android los usará para guiarte de vuelta al Refugio.</Text>
           <PrimaryButton disabled={busy} label="Abrir Accesibilidad" onPress={() => void openAndroidAccessibilitySettings()} />
           <PrimaryButton disabled={busy || !accessibilityReady} label="Entrar a Clean4Jesus" onPress={() => void finish()} />
           {!vpnReady ? <PrimaryButton disabled={busy} label="Volver a activar VPN" onPress={() => router.replace("/android-protection?step=vpn")} variant="ghost" /> : null}

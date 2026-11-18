@@ -95,6 +95,8 @@ describe("Android native protection contracts", () => {
     expect(onboardingSource).toContain('"/android-protection?step=accessibility"');
     expect(onboardingSource).toContain("openAndroidAccessibilitySettings");
     expect(onboardingSource).toContain("compatibilidad al abrir una app bancaria");
+    expect(onboardingSource).toContain("Notifications.requestPermissionsAsync()");
+    expect(onboardingSource).toContain("guiarte de vuelta al Refugio");
     expect(onboardingSource).not.toContain("await pauseAccessibilityIntervention()");
     expect(onboardingSource).toContain("OfficialBrandMark");
     expect(onboardingSource).toContain("Volver a activar VPN");
@@ -114,11 +116,18 @@ describe("Android native protection contracts", () => {
     expect(bankBranch).toContain("disableSelf()");
     expect(bankBranch).not.toContain("rootInActiveWindow");
     expect(bridgeSource).toContain("BankReturnActivity::class.java");
+    expect(bridgeSource).toContain('RETURN_CHANNEL_ID = "clean4jesus-refuge-return"');
+    expect(bridgeSource).toContain('setContentTitle("Todo listo por aquí")');
+    expect(bridgeSource).toContain('setContentText("Toca para volver al Refugio y continuar.")');
+    expect(bridgeSource).toContain("Notification.VISIBILITY_PRIVATE");
+    expect(bridgeSource).toContain("cancel(RETURN_NOTIFICATION_ID)");
     expect(returnActivity).toContain('text = "Todo listo por aquí"');
     expect(returnActivity).toContain('text = "Volver al Refugio"');
     expect(returnActivity).toContain('3. Activa “Usar Clean4Jesus” y regresa.');
     expect(returnActivity).toContain("Settings.ACTION_ACCESSIBILITY_SETTINGS");
     expect(returnActivity).toContain("reopenBank()");
+    expect(returnActivity).toContain("Intent.FLAG_ACTIVITY_NEW_TASK.inv()");
+    expect(returnActivity).toContain("Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED.inv()");
     expect(returnActivity).toContain("BankCompatibilityBridge.markBankBridgeDeparted(this)");
     expect(returnActivity).toContain("if (returnOnly || leftForBank)");
     expect(returnActivity).toContain("Intent.FLAG_ACTIVITY_NEW_TASK");
@@ -201,13 +210,29 @@ describe("Android native protection contracts", () => {
     expect(source).toContain('listOf("1.1.1.3", "1.0.0.3")');
     expect(source).toContain("forwardDnsOverHttps");
     expect(source).toContain('DNS_OVER_HTTPS_PATH = "/dns-query"');
+    expect(source).toContain(String.raw`HTTP/1.1\r\n`);
+    expect(source).not.toContain(String.raw`HTTP/1.1\\r\\n`);
+    expect(source).toContain("ArrayBlockingQueue<Runnable>(128)");
+    expect(source).toContain("packetBuffer.copyOf(length)");
+    expect(source).toContain("synchronized(outputLock)");
     expect(source).toContain("Content-Type: application/dns-message");
     expect(source).toContain("endpointIdentificationAlgorithm = \"HTTPS\"");
     expect(source).toContain("protect(tcpSocket)");
+    expect(source.match(/tcpSocket\.bind\(InetSocketAddress\(0\)\)[\s\S]*?protect\(tcpSocket\)[\s\S]*?tcpSocket\.connect/g)).toHaveLength(2);
     expect(source).not.toContain("forwardDnsOverUdp");
     expect(source).not.toContain("DNS_UDP_PORT");
-    expect(source).not.toContain("MAX_CONSECUTIVE_DNS_FAILURES");
+    expect(source).toContain("MAX_CONSECUTIVE_DNS_FAILURES");
     expect(source).not.toMatch(/dnsResponse == null[\s\S]{0,300}stopSelf\(\)/);
+  });
+
+  it("does not treat Google Wallet as a banking session and exposes Nu for launch", () => {
+    const service = readProjectFile("android/app/src/main/java/com/clean4jesus/app/Clean4JesusAccessibilityService.kt");
+    const manifest = readProjectFile("android/app/src/main/AndroidManifest.xml");
+    const financialClassifier = service.match(/private fun isFinancialPackage\([\s\S]*?\n  }/)?.[0] ?? "";
+    expect(financialClassifier).toMatch(/com\.google\.android\.apps\.walletnfcrel[\s\S]*?return false/);
+    expect(financialClassifier.indexOf("walletnfcrel")).toBeLessThan(financialClassifier.indexOf("com.nu.production"));
+    expect(financialClassifier).toMatch(/com\.nu\.production"\) return false/);
+    expect(manifest).toContain('<package android:name="com.nu.production"/>');
   });
 
   it("keeps temporary unlock scoped to the exact package and refreshes reused interruptions", () => {

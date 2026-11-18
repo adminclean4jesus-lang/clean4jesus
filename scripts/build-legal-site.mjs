@@ -51,7 +51,7 @@ for (const [slug, title, source] of pages) {
 
 await writeFile(path.join(output, "robots.txt"), "User-agent: *\nAllow: /\nSitemap: https://legal.clean4jesus.com/sitemap.xml\n", "utf8");
 await writeFile(path.join(output, "sitemap.xml"), sitemap(), "utf8");
-await writeFile(path.join(output, "_headers"), "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n  Content-Security-Policy: default-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n", "utf8");
+await writeFile(path.join(output, "_headers"), "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n", "utf8");
 await applyBranding();
 
 function markdownToHtml(markdown) {
@@ -170,15 +170,22 @@ function documentHtml(title, content, links) {
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="${escapeHtml(title)} de Clean4Jesus">
   <title>${escapeHtml(title)} | Clean4Jesus</title>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});</script>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KN36ZCP2');</script>
+  <!-- End Google Tag Manager -->
   <style>
     :root{color-scheme:light;--ink:#101a17;--muted:#63716c;--line:#dce3df;--blue:#11195b;--paper:#fff;--wash:#f6f8f7;--gold:#f4aa24}*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65}header{background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}.bar{align-items:center;display:flex;gap:24px;justify-content:space-between;margin:auto;max-width:1080px;padding:16px 24px}.brand{color:var(--blue);font-size:18px;font-weight:800;text-decoration:none}.brand span{color:var(--gold)}nav{display:flex;flex-wrap:wrap;gap:8px 18px}nav a{color:var(--muted);font-size:13px;text-decoration:none}main{background:var(--paper);border:1px solid var(--line);border-radius:8px;margin:40px auto;max-width:820px;padding:clamp(26px,6vw,64px)}h1{font-size:clamp(32px,6vw,52px);letter-spacing:0;line-height:1.05;margin:0 0 28px}h2{border-top:1px solid var(--line);font-size:23px;letter-spacing:0;margin:38px 0 12px;padding-top:30px}h3{font-size:18px;margin-top:28px}p,li{font-size:16px}p{margin:0 0 16px}ul{padding-left:22px}strong{font-weight:750}code{background:#eef1f5;border-radius:4px;padding:2px 5px}table{border-collapse:collapse;display:block;margin:24px 0;overflow-x:auto;width:100%}th,td{border:1px solid var(--line);font-size:14px;padding:10px;text-align:left;vertical-align:top}.lede{color:var(--muted);font-size:20px;max-width:640px}.cards{display:grid;gap:12px;margin-top:32px}.card{align-items:center;border:1px solid var(--line);border-left:4px solid var(--gold);color:var(--ink);display:flex;font-size:17px;font-weight:700;justify-content:space-between;padding:18px;text-decoration:none}.card:hover{border-color:var(--blue)}footer{color:var(--muted);font-size:13px;margin:0 auto 40px;max-width:820px;padding:0 24px}@media(max-width:720px){.bar{align-items:flex-start;flex-direction:column}nav{display:none}main{border-left:0;border-radius:0;border-right:0;margin:20px 0;padding:28px 22px}}
   </style>
 </head>
 <body>
-  <header><div class="bar"><a class="brand" href="/">Clean<span>4</span>Jesus</a><nav aria-label="Legal">${links}</nav></div></header>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KN36ZCP2" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <aside id="analytics-consent" aria-label="Preferencias de medición" hidden style="background:#11195b;bottom:16px;box-shadow:0 12px 32px rgba(17,25,91,.28);color:#fff;left:16px;max-width:540px;padding:20px;position:fixed;right:16px;z-index:50"><p style="color:#e1e7f7;font-size:13px;margin:0">Usamos medición anónima para mejorar este sitio. Puedes aceptar o rechazarla. Lee la <a style="color:#f4aa24" href="/privacidad">Política de Privacidad</a>.</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px"><button type="button" data-analytics-choice="granted">Aceptar medición</button><button type="button" data-analytics-choice="denied">Rechazar</button></div></aside>  <header><div class="bar"><a class="brand" href="/">Clean<span>4</span>Jesus</a><nav aria-label="Legal">${links}</nav></div></header>
   <main>${content}</main>
   <footer>© 2026 Clean4Jesus · Responsable: Emmanuel López, Colombia · soporte@clean4jesus.com</footer>
-</body>
+   <script>(()=>{const key='clean4jesus.analytics-consent.v1',banner=document.getElementById('analytics-consent'),saved=localStorage.getItem(key),apply=(value)=>{gtag('consent','update',{analytics_storage:value,ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});localStorage.setItem(key,value);banner.hidden=true};if(saved==='granted'||saved==='denied')apply(saved);else banner.hidden=false;banner.addEventListener('click',(event)=>{const choice=event.target.dataset.analyticsChoice;if(choice)apply(choice)})})();</script></body>
 </html>`;
 }
 

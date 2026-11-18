@@ -57,6 +57,13 @@ describe("Phase 1 protection contracts", () => {
     expect(migration).toContain("request.status = 'pending' and request.expires_at <= now()");
   });
 
+  it("publishes an unauthenticated capability contract before release builds", () => {
+    const backend = read("supabase/functions/accountability/index.ts");
+    expect(backend).toContain('body.operation === "capabilities"');
+    expect(backend).toContain('apiVersion: 2, guardianPin: true, service: "accountability"');
+    expect(backend.indexOf('body.operation === "capabilities"')).toBeLessThan(backend.indexOf('request.headers.get("Authorization")'));
+  });
+
   it("does not impose a product-level daily cap when retrying guardian PIN delivery", () => {
     const migration = read("supabase/migrations/20260929110000_remove_guardian_pin_daily_limit_v1.sql");
     const setup = read("app/pin-setup.tsx");

@@ -1,5 +1,14 @@
 # Directivas Clean4Jesus
 
+## Regresión Android reportada — 18 de noviembre de 2026
+
+- En Pixel 9 se reprodujo que `VpnService.protect(Socket)` devuelve falso cuando el socket aún no tiene descriptor. Para DoH y DoT, llamar `bind(InetSocketAddress(0))` antes de `protect` y conectar después. La prueba aislada confirmó HTTPS 200 y respuesta TLS tras el cambio; falta validar la app completa.
+- En el mismo Pixel, la prueba aislada de `getLaunchIntentForPackage("com.nu.production")` falló sin declarar visibilidad del paquete y funcionó después de añadirlo a `<queries>`. El flujo completo de entrada/salida de Nu aún requiere prueba física.
+
+- La VPN sigue afectando la conectividad en pruebas reales; no declarar solucionada ni publicar otra candidata como verificada hasta reproducir y probar DNS, bloqueo y navegación en el Pixel con Wi‑Fi y datos.
+- No activar el puente bancario por abrir Google Wallet ni por un pago NFC. La exclusión específica y la visibilidad de Nu requieren prueba física del evento y no garantizan por sí solas un retorno correcto.
+- El regreso guiado no debe interrumpir la sesión bancaria ni afirmar que Accesibilidad se reactiva automáticamente. Las restricciones del sistema y la confirmación manual deben respetarse.
+
 ## Checkpoint De Validacion Temprana De Demanda - 2026-09-15
 
 - La lista de espera alcanzó ocho personas interesadas tras la campaña pública. Esto valida interés inicial y debe tratarse como una señal de demanda, no como autorización para abrir la beta externa.
@@ -556,3 +565,17 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - Android exige confirmación manual para volver a habilitar Accesibilidad. El CTA abre los ajustes del sistema y el aviso desaparece únicamente cuando el servicio se conecta de nuevo.
 - El retorno usa una Activity nativa translúcida como puente: queda detrás de la app bancaria y reaparece al cerrarla. Si Android no restaura esa tarea, abrir Clean4Jesus muestra el mismo popup pendiente. No depender de notificaciones, `PACKAGE_USAGE_STATS`, overlays ni `SYSTEM_ALERT_WINDOW` para este flujo.
 - El puente no puede mostrar el retorno hasta confirmar que su Activity pasó realmente a segundo plano por la app bancaria. El mensaje guía con `Volver al Refugio` → elegir Clean4Jesus → activar `Usar Clean4Jesus` → regresar, sin describir una brecha técnica ni usar lenguaje de desprotección.
+
+
+## Prueba limitada de Nu (18 de noviembre de 2026)
+
+- El usuario observó Nu funcionando con Accesibilidad activa cuando la aplicación ya estaba en segundo plano. Probar únicamente en dispositivo la convivencia desde un inicio en frío sin apagar el servicio automáticamente para `com.nu.production`; Nu sigue excluido de lectura, seguimiento e interrupciones. Esto no demuestra compatibilidad bancaria estable y no autoriza una distribución general sin prueba física, incluida la advertencia de seguridad de Nu. Las demás aplicaciones financieras conservan la pausa existente.
+
+
+## Mega checkpoint Android: Nu y Accesibilidad (18 de noviembre de 2026)
+
+- Versión de prueba interna instalada en Pixel 9: 1.3.58 (código 71), confirmada en el dispositivo. El usuario informa tres pruebas satisfactorias: Nu funcionó sin bloquearse y Accesibilidad permaneció activa, incluyendo apertura desde cero. No asumir que esta evidencia cubre todos los teléfonos, bancos o versiones de Nu.
+- En 71, `com.nu.production` no activa la pausa bancaria; el paquete permanece excluido del análisis, seguimiento e interrupciones. No restaurar su desactivación automática sin volver a investigar y probar. La pausa para otras apps financieras sigue vigente.
+- La VPN de la versión 70 se mantuvo activa mientras el usuario navegaba y cargaba YouTube; aún se requieren pruebas prolongadas y con otras redes y dispositivos. Esta observación no es una garantía de compatibilidad completa.
+- Pendiente validar Google Wallet/NFC en la versión 71, la pantalla de interrupción tras usar Nu, y el funcionamiento de Nu con otros dispositivos y actualizaciones. No afirmar que esos puntos están cerrados.
+- Paquete: `artifacts/play/Clean4Jesus-1.3.58-71-release.aab`; SHA-256 `56DDD3792C8BB8AF93D47AEF8C1FC0C376404BC2CEF7CA150493A7268409803D`.

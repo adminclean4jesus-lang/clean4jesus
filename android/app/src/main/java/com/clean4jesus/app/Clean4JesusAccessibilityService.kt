@@ -459,7 +459,11 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
   private fun isFinancialPackage(packageName: String): Boolean {
     val normalized = packageName.lowercase()
-    if (normalized == "com.nu.production") return true
+    // Contactless payments are not a bank-app session: never interrupt Wallet.
+    if (normalized == "com.google.android.apps.walletnfcrel" ||
+        normalized.startsWith("com.google.android.apps.walletnfcrel.")) return false
+    // Trial: do not stop accessibility for Nu; it remains excluded from scanning.
+    if (normalized == "com.nu.production") return false
     if (trustedPackagePrefixes.any { normalized.startsWith(it) && (it.contains("nu") || it.contains("nubank")) }) return true
     if (trustedFinancialPackagePrefixes.any { normalized.startsWith(it) }) return true
     return trustedFinancialKeywords.any { normalized.contains(it) }

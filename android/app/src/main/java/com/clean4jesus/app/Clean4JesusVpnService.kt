@@ -3,26 +3,32 @@ package com.clean4jesus.app
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 
 class Clean4JesusVpnService : VpnService() {
-  private var vpnInterface: ParcelFileDescriptor? = null
+  @Volatile private var vpnInterface: ParcelFileDescriptor? = null
   private var worker: Thread? = null
   private val running = AtomicBoolean(false)
   companion object {
@@ -31,6 +37,9 @@ class Clean4JesusVpnService : VpnService() {
 
     private const val CHANNEL_ID = "clean4jesus_vpn"
     private const val NOTIFICATION_ID = 4104
+    private const val FAILURE_NOTIFICATION_ID = 4105
+    private const val MAX_CONSECUTIVE_DNS_FAILURES = 5
+    private const val MIN_DNS_FAILURE_DURATION_MS = 30_000L
     private const val VPN_ADDRESS = "10.10.10.2"
     private const val VPN_DNS = "10.10.10.1"
     private val FAMILY_DNS_UPSTREAMS = listOf("1.1.1.3", "1.0.0.3")
@@ -150,19 +159,96 @@ class Clean4JesusVpnService : VpnService() {
     val input = FileInputStream(descriptor.fileDescriptor)
     val output = FileOutputStream(descriptor.fileDescriptor)
     val packetBuffer = ByteArray(32767)
+    var consecutiveFailures = 0
+    var firstFailureAt = 0L
+    val failureLock = Any()
+    val outputLock = Any()
+    val executor = ThreadPoolExecutor(
+      8, 8, 0L, TimeUnit.MILLISECONDS,
+      ArrayBlockingQueue<Runnable>(128),
+      ThreadPoolExecutor.DiscardPolicy()
+    )
 
+    try {
     while (running.get()) {
       try {
         val length = input.read(packetBuffer)
         if (length <= 0) continue
-
-        val response = handleDnsPacket(packetBuffer, length)
-        if (response != null) {
-          output.write(response)
+        if (!isDnsQueryPacket(packetBuffer, length)) continue
+        val packet = packetBuffer.copyOf(length)
+        executor.execute {
+          if (running.get() && vpnInterface === descriptor) {
+            val response = handleDnsPacket(packet, packet.size)
+            if (!running.get() || vpnInterface !== descriptor) return@execute
+            if (response != null) {
+              synchronized(failureLock) {
+                consecutiveFailures = 0
+                firstFailureAt = 0L
+              }
+              try {
+                synchronized(outputLock) {
+                  if (running.get() && vpnInterface === descriptor) output.write(response)
+                }
+              } catch (_: Exception) {}
+            } else {
+              synchronized(failureLock) {
+                val now = SystemClock.elapsedRealtime()
+                if (consecutiveFailures == 0) firstFailureAt = now
+                consecutiveFailures++
+                if (running.get() && vpnInterface === descriptor &&
+                    consecutiveFailures >= MAX_CONSECUTIVE_DNS_FAILURES &&
+                    now - firstFailureAt >= MIN_DNS_FAILURE_DURATION_MS) {
+                  setDesiredEnabled(this, false)
+                  stopVpn()
+                  notifyDnsFailure()
+                  stopSelf()
+                }
+              }
+            }
+          }
         }
       } catch (_: Exception) {
         if (!running.get()) break
       }
+    }
+    } finally {
+      executor.shutdownNow()
+    }
+  }
+
+  private fun isDnsQueryPacket(packet: ByteArray, length: Int): Boolean {
+    if (length < 28 || (packet[0].toInt() ushr 4 and 0x0f) != 4) return false
+    val headerLength = (packet[0].toInt() and 0x0f) * 4
+    return headerLength >= 20 && length >= headerLength + 8 &&
+      (packet[9].toInt() and 0xff) == 17 &&
+      readShort(packet, headerLength + 2) == 53
+  }
+
+  private fun notifyDnsFailure() {
+    try {
+      createNotificationChannel()
+      val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+      val pendingIntent = launchIntent?.let {
+        PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+      }
+      val language = getSharedPreferences(Clean4JesusAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
+        .getString(Clean4JesusAccessibilityService.PREF_APP_LANGUAGE, "es")
+      val message = when (language) {
+        "en" -> "DNS protection is off because the secure connection failed. Open Clean4Jesus to retry."
+        "fr" -> "La protection DNS est désactivée après un échec de connexion. Ouvrez Clean4Jesus pour réessayer."
+        "pt" -> "A proteção DNS está desativada por falha de conexão. Abra o Clean4Jesus para tentar novamente."
+        else -> "La protección DNS está desactivada por un fallo de conexión. Abre Clean4Jesus para intentarlo de nuevo."
+      }
+      val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL_ID) else Notification.Builder(this)
+      val notification = builder.setSmallIcon(R.drawable.notification_icon)
+        .setContentTitle("Clean4Jesus")
+        .setContentText(message)
+        .setStyle(Notification.BigTextStyle().bigText(message))
+        .setAutoCancel(true)
+      if (pendingIntent != null) notification.setContentIntent(pendingIntent)
+      getSystemService(NotificationManager::class.java).notify(FAILURE_NOTIFICATION_ID, notification.build())
+    } catch (_: SecurityException) {
+      // Status remains inactive even when Android blocks notifications.
     }
   }
 
@@ -184,8 +270,8 @@ class Clean4JesusVpnService : VpnService() {
 
     val dnsPayloadOffset = udpOffset + 8
     val dnsPayloadLength = udpLength - 8
-    val dnsResponse = forwardDnsOverTls(packet, dnsPayloadOffset, dnsPayloadLength)
-      ?: forwardDnsOverHttps(packet, dnsPayloadOffset, dnsPayloadLength)
+    val dnsResponse = forwardDnsOverHttps(packet, dnsPayloadOffset, dnsPayloadLength)
+      ?: forwardDnsOverTls(packet, dnsPayloadOffset, dnsPayloadLength)
       ?: return null
 
     return buildUdpIpv4Response(
@@ -207,6 +293,9 @@ class Clean4JesusVpnService : VpnService() {
     for (upstreamAddress in FAMILY_DNS_UPSTREAMS) {
       val tcpSocket = Socket()
       try {
+        // Android creates the underlying descriptor lazily. Bind before protect()
+        // so the VPN can exempt a real socket before it connects.
+        tcpSocket.bind(InetSocketAddress(0))
         if (!protect(tcpSocket)) continue
         tcpSocket.connect(InetSocketAddress(upstreamAddress, DNS_OVER_TLS_PORT), DNS_OVER_TLS_TIMEOUT_MS)
         tcpSocket.soTimeout = DNS_OVER_TLS_TIMEOUT_MS
@@ -236,15 +325,15 @@ class Clean4JesusVpnService : VpnService() {
           val input = socket.inputStream
           val high = input.read()
           val low = input.read()
-          if (high < 0 || low < 0) return null
+          if (high < 0 || low < 0) throw IOException("Incomplete DNS response")
           val responseLength = (high shl 8) or low
-          if (responseLength <= 0) return null
+          if (responseLength <= 0) throw IOException("Invalid DNS response length")
 
           val response = ByteArray(responseLength)
           var bytesRead = 0
           while (bytesRead < responseLength) {
             val count = input.read(response, bytesRead, responseLength - bytesRead)
-            if (count < 0) return null
+            if (count <= 0) throw IOException("Incomplete DNS response")
             bytesRead += count
           }
           return response
@@ -273,6 +362,8 @@ class Clean4JesusVpnService : VpnService() {
     for (upstreamAddress in FAMILY_DNS_UPSTREAMS) {
       val tcpSocket = Socket()
       try {
+        // protect() must run after descriptor creation and before connect().
+        tcpSocket.bind(InetSocketAddress(0))
         if (!protect(tcpSocket)) continue
         tcpSocket.connect(InetSocketAddress(upstreamAddress, DNS_OVER_HTTPS_PORT), DNS_OVER_HTTPS_TIMEOUT_MS)
         tcpSocket.soTimeout = DNS_OVER_HTTPS_TIMEOUT_MS
@@ -296,42 +387,42 @@ class Clean4JesusVpnService : VpnService() {
           val output = BufferedOutputStream(socket.outputStream)
           output.write(
             (
-              "POST $DNS_OVER_HTTPS_PATH HTTP/1.1\\r\\n" +
-                "Host: $FAMILY_DNS_HOSTNAME\\r\\n" +
-                "Content-Type: application/dns-message\\r\\n" +
-                "Accept: application/dns-message\\r\\n" +
-                "Content-Length: $length\\r\\n" +
-                "Connection: close\\r\\n\\r\\n"
+              "POST $DNS_OVER_HTTPS_PATH HTTP/1.1\r\n" +
+                "Host: $FAMILY_DNS_HOSTNAME\r\n" +
+                "Content-Type: application/dns-message\r\n" +
+                "Accept: application/dns-message\r\n" +
+                "Content-Length: $length\r\n" +
+                "Connection: close\r\n\r\n"
               ).toByteArray(StandardCharsets.US_ASCII),
           )
           output.write(packet, offset, length)
           output.flush()
 
           val input = BufferedInputStream(socket.inputStream)
-          val statusLine = readHttpLine(input) ?: return null
-          if (!statusLine.startsWith("HTTP/") || !statusLine.contains(" 200 ")) return null
+          val statusLine = readHttpLine(input) ?: throw IOException("Missing HTTP status")
+          if (!statusLine.startsWith("HTTP/") || !statusLine.contains(" 200 ")) throw IOException("DNS-over-HTTPS request failed")
 
           var contentLength = -1
           var dnsMessageContentType = false
           while (true) {
-            val header = readHttpLine(input) ?: return null
+            val header = readHttpLine(input) ?: throw IOException("Incomplete HTTP headers")
             if (header.isEmpty()) break
             val separator = header.indexOf(':')
             if (separator <= 0) continue
             val name = header.substring(0, separator).trim().lowercase()
             val value = header.substring(separator + 1).trim()
             when (name) {
-              "content-length" -> contentLength = value.toIntOrNull() ?: return null
+              "content-length" -> contentLength = value.toIntOrNull() ?: throw IOException("Invalid content length")
               "content-type" -> dnsMessageContentType = value.lowercase().startsWith("application/dns-message")
             }
           }
-          if (!dnsMessageContentType || contentLength <= 0 || contentLength > MAX_DNS_RESPONSE_LENGTH) return null
+          if (!dnsMessageContentType || contentLength <= 0 || contentLength > MAX_DNS_RESPONSE_LENGTH) throw IOException("Invalid DNS-over-HTTPS response")
 
           val response = ByteArray(contentLength)
           var bytesRead = 0
           while (bytesRead < contentLength) {
             val count = input.read(response, bytesRead, contentLength - bytesRead)
-            if (count < 0) return null
+            if (count <= 0) throw IOException("Incomplete DNS-over-HTTPS response")
             bytesRead += count
           }
           return response

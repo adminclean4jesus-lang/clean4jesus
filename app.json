@@ -3,12 +3,12 @@
     "name": "Clean4Jesus",
     "slug": "clean4jesus",
     "scheme": "clean4jesus",
-    "version": "1.3.53",
+    "version": "1.3.58",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
-      "versionCode": 66,
+      "versionCode": 71,
       "package": "com.clean4jesus.app",
       "adaptiveIcon": {
         "backgroundColor": "#02174B",
@@ -98,6 +98,11 @@
     ],
     "extra": {
       "router": {},
+      "authCaptcha": {
+        "enabled": true,
+        "siteKey": "0x4AAAAAAD3Tva_JqHFsBK0_",
+        "challengeUrl": "https://verify.clean4jesus.com/turnstile/"
+      },
       "supabase": {
         "url": "https://moqlovsxklxcpihvheyc.supabase.co",
         "publishableKey": "sb_publishable_33LHr0SmYA5RIpa5HWpE_A_Yv35VcDt"

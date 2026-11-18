@@ -19,8 +19,13 @@ describe("CAPTCHA de Auth", () => {
   it("no activa proteccion si la configuracion externa esta incompleta", () => {
     const config = read("src/features/auth/captchaConfig.ts");
     const gate = read("src/features/auth/CommunityAuthGate.tsx");
+    const appConfig = JSON.parse(read("app.json"));
 
-    expect(config).toContain('EXPO_PUBLIC_AUTH_CAPTCHA_ENABLED === "true"');
+    expect(config).toContain("Constants.expoConfig?.extra?.authCaptcha");
+    expect(config).toContain('enabledFromEnvironment !== "false"');
+    expect(appConfig.expo.extra.authCaptcha.enabled).toBe(true);
+    expect(appConfig.expo.extra.authCaptcha.siteKey).toMatch(/^0x4[A-Za-z0-9_-]{10,}$/);
+    expect(appConfig.expo.extra.authCaptcha.challengeUrl).toBe("https://verify.clean4jesus.com/turnstile/");
     expect(gate).toContain("captchaConfigurationError");
     expect(read("src/features/auth/TurnstileChallengeModal.native.tsx")).toContain("onHttpError");
     expect(read("src/features/auth/TurnstileChallengeModal.native.tsx")).toContain("copy.retry");
