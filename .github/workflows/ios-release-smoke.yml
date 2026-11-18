@@ -34,7 +34,9 @@ jobs:
       - name: Install locked dependencies
         # NODE_ENV=production is correct for the app bundle, but this gate also
         # needs the pinned TypeScript and Vitest dev tools before Xcode starts.
-        run: npm ci --include=dev
+        # The lockfile was generated with legacy peer resolution; npm ci must
+        # use the same mode or npm 10 rejects the locked dependency tree.
+        run: npm ci --include=dev --legacy-peer-deps
 
       # Keep these separate so the GitHub API identifies the exact failed gate
       # even when the credential used to monitor Actions cannot read raw logs.
