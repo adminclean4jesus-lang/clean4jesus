@@ -9,11 +9,17 @@ const corsHeaders = {
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const pushTokenPattern = /^(ExponentPushToken|ExpoPushToken)\[[A-Za-z0-9_-]+\]$/;
-const BRAND_LOGO_URL = "https://clean4jesus.com/brand-mark.png";
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+
+  const body = await readObject(request);
+  if (!body || typeof body.operation !== "string") return json({ error: "invalid_request" }, 400);
+  if (body.operation === "capabilities") {
+    if (!hasOnlyKeys(body, ["operation"])) return json({ error: "invalid_request" }, 400);
+    return json({ apiVersion: 2, guardianPin: true, service: "accountability" }, 200);
+  }
 
   const authorization = request.headers.get("Authorization");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -27,9 +33,6 @@ Deno.serve(async (request) => {
   });
   const { data: userData, error: userError } = await client.auth.getUser();
   if (userError || !userData.user) return json({ error: "invalid_session" }, 401);
-
-  const body = await readObject(request);
-  if (!body || typeof body.operation !== "string") return json({ error: "invalid_request" }, 400);
 
   if (body.operation === "create") {
     if (!hasOnlyKeys(body, ["operation", "consentVersion"]) || body.consentVersion !== 1) {
@@ -121,8 +124,11 @@ Deno.serve(async (request) => {
     });
     if (error) return databaseError(error);
     const request = data?.[0];
-    const confirmationBaseUrl = (Deno.env.get("GUARDIAN_CONFIRMATION_URL") ?? "https://clean4jesus.com/guardian/confirm").replace(/\/$/, "");
-    const confirmationUrl = `${confirmationBaseUrl}?token=${encodeURIComponent(token)}`;
+    const metadata = userData.user.user_metadata ?? {};
+    const candidate = [metadata.full_name, metadata.name, metadata.display_name]
+      .find((value): value is string => typeof value === "string" && value.trim().length > 0);
+    const ownerLabel = (candidate?.trim() || userData.user.email?.split("@")[0] || "Una persona de Clean4Jesus").slice(0, 100);
+    const confirmationUrl = `https://pin.clean4jesus.com/?token=${encodeURIComponent(token)}`;
     try {
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -130,8 +136,8 @@ Deno.serve(async (request) => {
         body: JSON.stringify({
           from, to: [body.email.trim().toLowerCase()],
           subject: "Confirma tu acompañamiento en Clean4Jesus",
-          text: `${guardianOwnerLabel(userData.user)} te eligió como persona de confianza en Clean4Jesus. Si aceptas guardar su PIN de protección, confirma aquí: ${confirmationUrl}. No necesitas descargar una aplicación. Este enlace expira en 24 horas.`,
-          html: guardianConfirmationEmail(confirmationUrl, guardianOwnerLabel(userData.user)),
+          text: `${ownerLabel} te eligió como persona de confianza en Clean4Jesus. Si aceptas guardar su PIN de protección, confirma aquí: ${confirmationUrl}. No necesitas descargar una aplicación. Este enlace expira en 24 horas.`,
+          html: guardianConfirmationEmail(confirmationUrl, ownerLabel),
         }),
       });
       if (!response.ok) {
@@ -152,7 +158,12 @@ Deno.serve(async (request) => {
     const { data, error } = await client.rpc("get_my_guardian_pin_request", { p_include_pin_hash: body.includePinHash === true });
     if (error) return databaseError(error);
     const request = data?.[0];
-    return json({ status: request?.status ?? "none", expiresAt: request?.expires_at ?? null, ...(body.includePinHash === true && request?.pin_hash ? { pinHash: request.pin_hash } : {}) }, 200);
+    return json({
+      status: request?.status ?? "none",
+      expiresAt: request?.expires_at ?? null,
+      guardianEmail: request?.guardian_email ?? null,
+      ...(body.includePinHash === true && request?.pin_hash ? { pinHash: request.pin_hash } : {}),
+    }, 200);
   }
 
   if (body.operation === "cancelGuardianPin") {
@@ -322,19 +333,9 @@ async function sha256Hex(value: string) {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function guardianOwnerLabel(user: { email?: string | null; user_metadata?: Record<string, unknown> }) {
-  const displayName = user.user_metadata?.display_name;
-  if (typeof displayName === "string" && displayName.trim()) return displayName.trim();
-  return user.email?.split("@")[0] || "Una persona de Clean4Jesus";
-}
-
 function guardianConfirmationEmail(url: string, ownerLabel: string) {
-  const sender = escapeHtml(ownerLabel);
-  return `<div style="background:#f4f6fa;padding:28px 12px;font-family:Arial,sans-serif;color:#102a63"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="600" style="max-width:600px;background:#fff;border-radius:24px;overflow:hidden"><tr><td style="background:#0d2860;padding:32px;text-align:center"><img src="${BRAND_LOGO_URL}" width="56" height="56" alt="Logo oficial de Clean4Jesus" style="display:block;margin:0 auto 14px"/><div style="color:#fff;font-size:26px;font-weight:700">Clean4Jesus</div></td></tr><tr><td style="padding:34px"><p style="color:#b07b1f;font-size:12px;font-weight:700;letter-spacing:1.2px;margin:0 0 12px">ACOMPAÑAMIENTO DE CONFIANZA</p><h1 style="font-size:25px;margin:0 0 16px">${sender} te eligió como persona de confianza</h1><p style="font-size:16px;line-height:1.6">Al confirmar, recibirás un PIN de protección para acompañar esta decisión. No necesitas descargar una aplicación.</p><p style="font-size:16px;line-height:1.6">Acepta solo si quieres asumir este acompañamiento. Puedes ignorar este correo si no deseas hacerlo.</p><p style="margin:28px 0"><a href="${url}" style="background:#d99a20;color:#102a63;padding:14px 22px;border-radius:12px;text-decoration:none;font-weight:700">Confirmar acompañamiento</a></p><p style="font-size:13px;color:#52627e">Este enlace vence en 24 horas. Que Cristo guíe cada decisión.</p></td></tr></table></td></tr></table></div>`;
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
+  const safeName = ownerLabel.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
+  return `<div style="background:#f4f6fa;padding:24px 12px;font-family:Arial,sans-serif;color:#102a63"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff"><tr><td bgcolor="#0d2860" align="center" style="padding:32px;background-color:#0d2860"><img src="https://pin.clean4jesus.com/brand-mark.png" width="56" height="56" alt="Logo de Clean4Jesus" style="display:block;margin:0 auto 14px;border:0"/><div style="color:#ffffff;font-size:26px;font-weight:700">Clean4Jesus</div></td></tr><tr><td style="padding:30px;color:#102a63"><h1 style="font-size:24px;line-height:1.3;margin:0 0 16px;color:#102a63">${safeName} te eligió como persona de confianza</h1><p style="font-size:16px;line-height:1.6">Al confirmar, recibirás un PIN de protección para acompañar a ${safeName}. No necesitas descargar una aplicación.</p><p style="font-size:16px;line-height:1.6">Acepta solo si quieres acompañar esta decisión. Puedes ignorar este correo.</p><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="#0d2860" align="center" style="border-radius:12px;background-color:#0d2860"><a href="${url}" style="display:inline-block;padding:16px 22px;color:#ffffff;text-decoration:none;font-size:16px;line-height:22px;font-weight:700">Confirmar acompañamiento</a></td></tr></table><p style="font-size:13px;line-height:1.5;color:#52627e">Este enlace vence en 24 horas. Que Cristo guíe cada decisión.</p></td></tr></table></td></tr></table></div>`;
 }
 
 function databaseError(error: { code?: string; message: string }) {

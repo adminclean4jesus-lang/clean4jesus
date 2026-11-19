@@ -14,12 +14,14 @@ import { Screen } from "@/components/Screen";
 import { fonts, ThemeColors } from "@/theme";
 import { useI18n } from "@/features/i18n/I18nProvider";
 import { uiText } from "@/features/i18n/uiText";
+import { getLegalAccessText } from "@/features/legal/legalAccessText";
 
 export default function PerfilScreen() {
   const router = useRouter();
   const { colors } = useAppAppearance();
   const { user } = useAuth();
-  const { language } = useI18n();
+  const { language, t } = useI18n();
+  const legalCopy = getLegalAccessText(language);
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const userId = user?.id ?? null;
@@ -106,23 +108,53 @@ export default function PerfilScreen() {
         </View>
         <MaterialCommunityIcons color={colors.muted} name="chevron-right" size={22} />
       </Pressable>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionLabel}>{t(language, "settings.section.protection")}</Text>
+        <Text style={styles.sectionHint}>{t(language, "settings.status.readyBody")}</Text>
+      </View>
+      <InfoCard style={styles.actionGroup} tone="outline">
+        <ProfileActionRow icon="shield-lock-outline" label={t(language, "settings.row.appProtection")} onPress={() => router.push("/app-protection")} />
+        <View style={styles.rowDivider} />
+        <ProfileActionRow icon="account-heart-outline" label={t(language, "settings.row.trustedPerson")} onPress={() => router.push("/trusted-person")} />
+        <View style={styles.rowDivider} />
+        <ProfileActionRow icon="image-outline" label={t(language, "settings.row.interruption")} onPress={() => router.push("/interruption-settings")} />
+      </InfoCard>
+
+      <InfoCard style={styles.actionGroup} tone="outline">
+        <ProfileActionRow icon="shield-account-outline" label={legalCopy.privacy} onPress={() => router.push("/legal")} />
+        <View style={styles.rowDivider} />
+        <ProfileActionRow icon="file-document-outline" label={legalCopy.terms} onPress={() => router.push("/legal")} />
+      </InfoCard>
     </Screen>
+  );
+}
+
+function ProfileActionRow({ icon, label, onPress }: { icon: keyof typeof MaterialCommunityIcons.glyphMap; label: string; onPress: () => void }) {
+  const { colors } = useAppAppearance();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={styles.actionRow}>
+      <MaterialCommunityIcons color={colors.primaryDark} name={icon} size={21} />
+      <Text style={styles.actionLabel}>{label}</Text>
+      <MaterialCommunityIcons color={colors.muted} name="chevron-right" size={21} />
+    </Pressable>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     gearButton: { alignItems: "center", borderRadius: 14, borderWidth: 1, height: 42, justifyContent: "center", width: 42 },
-    hero: { gap: 0, padding: 18 },
-    heroRow: { alignItems: "center", flexDirection: "row", gap: 15 },
-    avatarPressable: { height: 78, position: "relative", width: 78 },
-    avatarImage: { backgroundColor: colors.surfaceAlt, borderRadius: 39, height: 78, width: 78 },
-    avatarInitial: { backgroundColor: colors.primaryDark, borderRadius: 39, color: "#FFFFFF", fontFamily: fonts.display, fontSize: 29, height: 78, lineHeight: 78, overflow: "hidden", textAlign: "center", width: 78 },
+    hero: { gap: 0, padding: 24 },
+    heroRow: { alignItems: "center", gap: 15 },
+    avatarPressable: { height: 96, position: "relative", width: 96 },
+    avatarImage: { backgroundColor: colors.surfaceAlt, borderRadius: 48, height: 96, width: 96 },
+    avatarInitial: { backgroundColor: colors.primaryDark, borderRadius: 48, color: "#FFFFFF", fontFamily: fonts.display, fontSize: 34, height: 96, lineHeight: 96, overflow: "hidden", textAlign: "center", width: 96 },
     avatarEdit: { alignItems: "center", borderColor: colors.surface, borderRadius: 14, borderWidth: 3, bottom: -2, height: 28, justifyContent: "center", position: "absolute", right: -2, width: 28 },
-    heroCopy: { flex: 1, gap: 5 },
+    heroCopy: { alignItems: "center", gap: 5, width: "100%" },
     eyebrow: { color: colors.primary, fontFamily: fonts.label, fontSize: 10, letterSpacing: 0.8 },
     name: { color: colors.text, fontFamily: fonts.display, fontSize: 22 },
-    description: { color: colors.muted, fontFamily: fonts.body, fontSize: 12, lineHeight: 17 },
+    description: { color: colors.muted, fontFamily: fonts.body, fontSize: 12, lineHeight: 17, textAlign: "center" },
     removeAvatar: { color: colors.primaryDark, fontFamily: fonts.bodyMedium, fontSize: 11 },
     sectionHeader: { gap: 3, paddingHorizontal: 2 },
     sectionLabel: { color: colors.primary, fontFamily: fonts.label, fontSize: 10, letterSpacing: 0.8, textTransform: "uppercase" },
@@ -132,5 +164,9 @@ function createStyles(colors: ThemeColors) {
     settingsCopy: { flex: 1, gap: 4 },
     settingsTitle: { color: colors.text, fontFamily: fonts.heading, fontSize: 14 },
     settingsSubtitle: { color: colors.muted, fontFamily: fonts.body, fontSize: 11.5, lineHeight: 16 },
+    actionGroup: { gap: 0, paddingHorizontal: 16, paddingVertical: 4 },
+    actionRow: { alignItems: "center", flexDirection: "row", gap: 13, minHeight: 58, paddingVertical: 10 },
+    actionLabel: { color: colors.text, flex: 1, fontFamily: fonts.bodyMedium, fontSize: 14 },
+    rowDivider: { backgroundColor: colors.border, height: StyleSheet.hairlineWidth, marginLeft: 34 },
   });
 }

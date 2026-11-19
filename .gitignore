@@ -53,11 +53,17 @@ yarn-error.*
 
 # local artifacts
 artifacts/
+/*.apk
+/*.aab
+/*.ipa
+/*.zip
+/tmp-gradle-*.log
 
 # generated tooling and local signing material
 .wrangler/
 *.log
 android/app/debug.keystore
+android/.play-signing.properties
 
 # local AI / editor metadata
 .claude/

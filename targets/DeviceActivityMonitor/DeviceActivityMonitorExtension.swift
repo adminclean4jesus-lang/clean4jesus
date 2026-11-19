@@ -21,6 +21,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         guard let defaults = UserDefaults(suiteName: appGroupID) else { return }
         defaults.set(true, forKey: "activityIntervalActive")
         store.shield.applications = nil
+        applyImmediateBlocks(defaults: defaults)
         defaults.removeObject(forKey: "dailyThresholdReached")
     }
 
@@ -49,5 +50,14 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         defaults.set(rule.minutes, forKey: "lastReachedLimitMinutes")
         defaults.set(rule.id.uuidString, forKey: "lastReachedLimitRuleID")
         defaults.set(true, forKey: "shieldAppliedByDailyLimit")
+    }
+
+    private func applyImmediateBlocks(defaults: UserDefaults) {
+        guard let data = defaults.data(forKey: perAppLimitsKey),
+              let rules = try? PropertyListDecoder().decode([StoredApplicationLimit].self, from: data) else { return }
+        let blocked = Set(rules
+            .filter { $0.enabled && $0.minutes == 0 }
+            .map(\.token))
+        store.shield.applications = blocked.isEmpty ? nil : blocked
     }
 }

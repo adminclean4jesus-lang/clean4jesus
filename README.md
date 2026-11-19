@@ -2,7 +2,27 @@
 
 Clean4Jesus es una aplicación móvil de acompañamiento para vivir con mayor libertad frente a la pornografía, la masturbación compulsiva y otros entornos digitales vulnerables. Reúne protección local, Palabra, Comunidad y herramientas de apoyo sin vender la protección como vigilancia absoluta.
 
-## Estado del proyecto
+> Fuente de verdad: `C:\Users\millo\Desktop\Clean4Jesus`. No usar OneDrive para código o artefactos. La landing pública se mantiene fuera de cualquier trabajo móvil salvo autorización explícita.
+
+## Operación vigente — 2026-09-29
+
+| Área | Estado en fuente |
+| --- | --- |
+| Versión | `1.3.46` |
+| Android | `versionCode 59`; Gradle local, APK standalone, VPN DNS, onboarding de Accesibilidad e interrupción nativa. |
+| iOS | `buildNumber 35`; Family Controls, Managed Settings y límites por aplicación. |
+| Backend | Supabase Auth, Postgres/RLS, RPCs y Edge Functions. |
+
+- Android se compila solo con Gradle local: `npm run build:android:local`. El comando rota automáticamente los APK canónicos `current` y `previous`; no usa EAS, Metro ni QR.
+- iOS se distribuye mediante EAS/TestFlight y consume cuota: crear una build únicamente para una candidata aprobada.
+- En Android, Accesibilidad se configura durante onboarding y luego se pausa automáticamente para compatibilidad bancaria; PIN y VPN quedan activos. Bancos y apps financieras están fuera de toda lectura, conteo o interrupción.
+- En iOS, **Bloquear** equivale a un límite de cero minutos para una app elegida en Family Controls.
+
+Consulta [operación del repositorio](./docs/REPOSITORY-OPERATIONS.md) para comandos, rutas, QA y reglas de Git.
+
+## Estado histórico
+
+Esta sección conserva contexto anterior. Cuando difiera de **Operación vigente**, prevalecen `docs/DIRECTIVAS-CLEAN4JESUS.md`, `docs/REPOSITORY-OPERATIONS.md` y la configuración de la app.
 
 | Componente | Estado actual |
 | --- | --- |
@@ -138,31 +158,22 @@ El QR de `dev-client` requiere una development build instalada. Una APK o IPA Re
 
 ### Builds Android (APK local current/previous)
 
-El build de prueba se hace con Gradle local. `npm run build:android:local` genera una APK debug con development client y requiere Metro; se recomienda ejecutarlo desde una copia física corta del repo para evitar fallos de ruta de CMake. Un AAB para Play requiere una clave release local y Play App Signing; no se genera con EAS.
+La entrega normal de Android es una APK **standalone release local**: no usa EAS, Metro ni QR. Se genera desde la fuente de verdad y se rota automáticamente para conservar la versión anterior.
 
 La APK de QA se genera en Windows, fuera de GitHub Actions, y se rota manualmente para conservar una comparación:
 
 ```powershell
-cd C:\c4j\beta-1.3.37
-.\android\gradlew.bat :app:assembleDebug --no-daemon --max-workers=1
+cd C:\Users\millo\Desktop\Clean4Jesus
+npm run build:android:local
 ```
 
-La APK debug candidata `1.3.37 (versionCode 55)` ya se compiló y verificó en `artifacts/apk/current/Clean4Jesus-current.apk`; `1.3.36 (54)` queda en `artifacts/apk/previous/Clean4Jesus-previous.apk`. Ambas rutas son locales e ignoradas por Git. La nueva APK requiere Metro y todavía no acredita QA físico ni firma release.
+El resultado vigente queda en `artifacts/apk/current/Clean4Jesus-current.apk`; antes de reemplazarlo se conserva la anterior en `artifacts/apk/previous/Clean4Jesus-previous.apk`. `C:\c4j` solo puede usarse como copia temporal de Gradle, nunca como repositorio ni destino de entrega.
 
-### Build iOS desde GitHub
+### Build iOS / TestFlight
 
-La IPA se genera únicamente después de fusionar el pull request aprobado:
+iOS se distribuye mediante EAS y TestFlight, reservando cada build para cambios ya revisados. Antes de una nueva IPA se incrementa `expo.ios.buildNumber`, se valida en iPhone y luego se envía a App Store Connect. La extensión `DeviceActivityReport` requiere los perfiles Apple y el entitlement Family Controls en cada target.
 
-1. Sube los cambios a una rama.
-2. Crea el pull request hacia `main` con título y descripción en español.
-3. Espera las verificaciones y realiza el merge.
-4. En GitHub Actions abre **iOS local build on GitHub macOS**.
-5. Pulsa **Run workflow** sobre `main`.
-6. Descarga el artifact `clean4jesus-ios-ipa-vX.Y.Z-build-N`.
-
-El artifact contiene solamente `Clean4Jesus.ipa`. La última build enviada a TestFlight fue `1.3.35 (25)`; la fuente actual está numerada `1.3.36 (26)` y aún necesita compile, firma y prueba en iPhone. Cada IPA nueva debe incrementar `expo.ios.buildNumber`.
-
-Para un equipo nuevo: clona el repositorio, usa Node 22, ejecuta `npm ci`, copia `.env.example` a `.env.local` sin subirlo y ejecuta únicamente el build de la plataforma necesaria. La extensión iOS `DeviceActivityReport` requiere los perfiles de Apple y el entitlement Family Controls de cada target.
+Para un equipo nuevo: clona el repositorio en `C:\Users\millo\Desktop\Clean4Jesus`, usa Node 22, ejecuta `npm ci` y copia `.env.example` a `.env.local` sin subirlo. Consulta `docs/REPOSITORY-OPERATIONS.md` para el flujo completo.
 
 ## Validación
 

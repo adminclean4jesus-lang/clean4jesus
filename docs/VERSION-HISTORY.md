@@ -1,5 +1,28 @@
 # Clean4Jesus Version History
 
+## Candidata local 1.3.46 — Android 59 / iOS 35 — 2026-09-29
+
+### Incluye
+
+- Recuperación de PIN pendiente, confirmado o vencido después de reinstalar o volver a iniciar sesión.
+- Callback Google idempotente: no muestra error si el navegador ya completó la sesión.
+- Onboarding Android separado en PIN, VPN y Accesibilidad; Accesibilidad se pausa al terminar para compatibilidad bancaria.
+- iOS conserva Family Controls al volver a abrir y permite **Bloquear** por aplicación mediante límite de cero minutos.
+
+### Pendiente de cierre
+
+- Versionar y aplicar migraciones de PIN junto con la Edge Function `accountability` antes de afirmar recuperación remota.
+- QA físico Android para Nu y otro banco; QA iOS para Family Controls y bloqueo de cero minutos.
+- No se declara beta externa aprobada sin evidencia de estos recorridos y revisión de dependencias.
+
+## Candidata local 1.3.38 — Android 56 / iOS 27 — 2026-09-16
+
+- El PIN de protección ya se configura mediante una persona de confianza: el titular ingresa su correo, confirma desde el navegador y recibe un PIN aleatorio de ocho dígitos por correo. La aplicación solo sincroniza el hash confirmado al dispositivo.
+- La solicitud vence a las 24 horas, es de un solo uso, puede cancelarse, y está limitada a tres solicitudes por cuenta cada 24 horas.
+- TypeScript y 191 pruebas unitarias aprobaron. APK debug universal compilada con Gradle local y firma v2 verificada.
+- APK SHA-256: `558335D7C5059D3F3CEFA1D26BF1030B40D78047BAE740C78FB026755AAF1DC7`. Certificado de QA SHA-256: `3B8E9BCA44BD9E013D66E36A8B1BF0E44E932191DDA0580EE70D734C22C5DBB5`.
+- Pendiente de esta candidata: recorrido real de correo y confirmación con una cuenta beta, además de QA equivalente y distribución IPA para iOS.
+
 ## Candidata local 1.3.37 — Android 55 / iOS 27 — 2026-09-16
 
 - Android reemplaza el upstream DNS sin cifrar por DNS-over-TLS hacia Cloudflare Family (`family.cloudflare-dns.com:853`), con SNI, validación de hostname y socket protegido fuera del túnel.

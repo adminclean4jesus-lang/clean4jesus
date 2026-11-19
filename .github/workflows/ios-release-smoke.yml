@@ -11,7 +11,7 @@ on:
 
 jobs:
   release-startup:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       EXPO_NO_TELEMETRY: "1"
@@ -34,7 +34,9 @@ jobs:
       - name: Install locked dependencies
         # NODE_ENV=production is correct for the app bundle, but this gate also
         # needs the pinned TypeScript and Vitest dev tools before Xcode starts.
-        run: npm ci --include=dev
+        # The lockfile was generated with legacy peer resolution; npm ci must
+        # use the same mode or npm 10 rejects the locked dependency tree.
+        run: npm ci --include=dev --legacy-peer-deps
 
       # Keep these separate so the GitHub API identifies the exact failed gate
       # even when the credential used to monitor Actions cannot read raw logs.
@@ -109,9 +111,9 @@ jobs:
           test -n "$PROVIDER"
           grep -q "Clean4JesusIosProtectionModule" "$PROVIDER"
 
-      - name: Prove that iOS uses Legacy Architecture
+      - name: Verify iOS architecture configuration
         run: |
-          node -e "const p=require('./ios/Podfile.properties.json'); if(p.newArchEnabled !== 'false'){throw new Error('iOS New Architecture is still enabled: '+p.newArchEnabled)}; console.log('iOS newArchEnabled=false')"
+          node -e "const p=require('./ios/Podfile.properties.json'); if(p.newArchEnabled === 'false'){throw new Error('Legacy Architecture is incompatible with Expo SDK 57')}; console.log('iOS configuration does not disable New Architecture')"
 
       - name: Compile the Release simulator app
         timeout-minutes: 40

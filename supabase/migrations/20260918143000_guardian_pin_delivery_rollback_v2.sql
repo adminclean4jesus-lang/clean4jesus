@@ -84,4 +84,3 @@ $$;
 
 revoke all on function public.discard_my_guardian_pin_request(bytea) from public, anon;
 grant execute on function public.discard_my_guardian_pin_request(bytea) to authenticated;
-

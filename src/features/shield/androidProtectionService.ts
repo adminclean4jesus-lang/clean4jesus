@@ -2,9 +2,6 @@
 
 export const privateDnsHost = "family.cloudflare-dns.com";
 export const privateDnsSettingsAction = "android.settings.PRIVATE_DNS_SETTINGS";
-export const accessibilitySettingsAction = "android.settings.ACCESSIBILITY_SETTINGS";
-export const accessibilityDetailsSettingsAction = "android.settings.ACCESSIBILITY_DETAILS_SETTINGS";
-export const clean4jesusPackage = "com.clean4jesus.app";
 
 export async function openAndroidPrivateDnsSettings(): Promise<void> {
   if (Platform.OS !== "android") {
@@ -25,31 +22,19 @@ export async function openAndroidPrivateDnsSettings(): Promise<void> {
   }
 }
 
-export async function openAndroidAccessibilitySettings(): Promise<boolean> {
+export async function openAndroidAccessibilitySettings(): Promise<void> {
   if (Platform.OS !== "android") {
-    return false;
+    return;
   }
+
+  const { prepareAccessibilityInterventionSetup } = await import("@/features/shield/localDnsVpnService");
+  await prepareAccessibilityInterventionSetup();
 
   try {
     const IntentLauncher = await import("expo-intent-launcher");
-    try {
-      await IntentLauncher.startActivityAsync(accessibilityDetailsSettingsAction, {
-        data: `package:${clean4jesusPackage}`,
-      });
-      return true;
-    } catch {
-      await IntentLauncher.startActivityAsync(
-        IntentLauncher.ActivityAction.ACCESSIBILITY_SETTINGS,
-      );
-      return true;
-    }
+    await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.ACCESSIBILITY_SETTINGS);
   } catch {
-    try {
-      await Linking.openSettings();
-      return true;
-    } catch {
-      return false;
-    }
+    await Linking.openSettings();
   }
 }
 

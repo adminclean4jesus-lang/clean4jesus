@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
-import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   AppState,
@@ -16,12 +16,21 @@ import { InfoCard } from "@/components/InfoCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
+import { AppLoadingExperience } from "@/components/AppLoadingExperience";
+import { OfficialBrandMark } from "@/components/OfficialBrandMark";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { WelcomeAuthScreen } from "@/features/onboarding/WelcomeAuthScreen";
 import { hasPin } from "@/features/pin/pinService";
 import {
+  hasCompletedAccessibilityOnboarding,
   isAccessibilityInterventionActive,
   isLocalDnsVpnActive,
+  markAccessibilityOnboardingCompleted,
+  startLocalDnsVpn,
 } from "@/features/shield/localDnsVpnService";
+import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
 import {
+  enableShield,
   getShieldEnabled,
   prepareShield,
 } from "@/features/shield/shieldService";
@@ -37,6 +46,16 @@ import { fonts, ThemeColors } from "@/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function GateScreen() {
+  const { status } = useAuth();
+
+  if (status === "loading") {
+    return <AppLoadingExperience message="Preparando tu refugio..." />;
+  }
+
+  if (status !== "authenticated") {
+    return <WelcomeAuthScreen />;
+  }
+
   // iOS uses the dedicated refuge flow (equivalent to <Redirect href="/ios-protection" />).
   if (Platform.OS === "ios") return <IosGateScreen />;
   return <AndroidGateScreen />;
@@ -54,6 +73,7 @@ function IosGateScreen() {
     useState(false);
   const [protectionActive, setProtectionActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const restoredIosRefuge = useRef(false);
 
   useEffect(() => {
     void refreshIosState();
@@ -67,10 +87,36 @@ function IosGateScreen() {
   }, []);
 
   async function refreshIosState() {
+    // The guardian keeps the PIN; first-time iOS users configure it by email
+    // before proceeding to Family Controls. Existing protected users keep
+    // their active restrictions while the PIN is recovered on this device.
     try {
-      const status = await iosProtectionService.getProtectionStatus();
+      if (!(await hasPin())) {
+        router.replace("/pin-setup?after=ios-initial");
+        return;
+      }
+    } catch {
+      router.replace("/pin-setup?after=ios-initial");
+      return;
+    }
+    try {
+      const [status, selection] = await Promise.all([
+        iosProtectionService.getProtectionStatus(),
+        iosProtectionService.getSelectionSummary(),
+      ]);
+      const hasSavedIosRefuge = status.isAuthorized
+        && status.lastSyncTimestamp > 0
+        && selection.applications + selection.categories + selection.webDomains > 0;
       setFamilyControlsAuthorized(status.isAuthorized);
-      setProtectionActive(status.isEnabled);
+      // DeviceActivity can briefly report as not running after a cold launch.
+      // A previously saved, still-authorized refuge is safe to restore without
+      // making the person request Family Controls a second time.
+      setProtectionActive(status.isEnabled || hasSavedIosRefuge);
+      if (hasSavedIosRefuge && !restoredIosRefuge.current) {
+        restoredIosRefuge.current = true;
+        router.replace("/(tabs)");
+        return;
+      }
     } catch {
       setFamilyControlsAuthorized(false);
       setProtectionActive(false);
@@ -140,11 +186,7 @@ function IosGateScreen() {
     return (
       <Screen>
         <View style={styles.loadingCenter}>
-          <MaterialCommunityIcons
-            color={colors.primary}
-            name="shield-cross"
-            size={48}
-          />
+          <OfficialBrandMark size={48} />
           <Text style={styles.loadingText}>{copy.loading}</Text>
         </View>
       </Screen>
@@ -155,11 +197,7 @@ function IosGateScreen() {
     <Screen>
       <View style={styles.brandRow}>
         <View style={styles.brandBadge}>
-          <MaterialCommunityIcons
-            color={colors.primaryDark}
-            name="shield-cross"
-            size={20}
-          />
+          <OfficialBrandMark size={32} />
         </View>
         <View style={styles.brandText}>
           <Text style={styles.brandEyebrow}>Clean4Jesus</Text>
@@ -481,14 +519,57 @@ function AndroidGateScreen() {
   const { language } = useI18n();
   const copy = getSecondaryText(language);
   const styles = useGateStyles();
+  const { setup } = useLocalSearchParams<{ setup?: string }>();
   const [pinReady, setPinReady] = useState(false);
   const [shieldEnabled, setShieldEnabled] = useState(false);
+  const [setupPending, setSetupPending] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
   const [accessibilityReady, setAccessibilityReady] = useState(false);
 
   useEffect(() => {
-    void refreshProtectionStatus(true);
-  }, [router]);
+    void (async () => {
+      const [currentShield, pinExists, vpnActive, accessibilityActive, completedAccessibilityOnboarding] =
+        await Promise.all([
+          getShieldEnabled(),
+          hasPin(),
+          isLocalDnsVpnActive(),
+          isAccessibilityInterventionActive(),
+          hasCompletedAccessibilityOnboarding(),
+        ]);
+      if (!pinExists) {
+        router.replace("/pin-setup?after=shield-setup");
+        return;
+      }
+      let accessibilityConfigured = completedAccessibilityOnboarding;
+      if (accessibilityActive) {
+        if (!accessibilityConfigured) {
+          await markAccessibilityOnboardingCompleted();
+          accessibilityConfigured = true;
+        }
+      }
+      const protectionReady = pinExists && vpnActive && accessibilityConfigured;
+      setShieldEnabled(currentShield && protectionReady);
+      setPinReady(pinExists);
+      setVpnReady(vpnActive);
+      setAccessibilityReady(accessibilityConfigured);
+
+      if (!vpnActive || !accessibilityConfigured) {
+        router.replace(`/android-protection?step=${vpnActive ? "accessibility" : "vpn"}`);
+        return;
+      }
+
+      if (setup === "1" && pinExists && !currentShield) {
+        await prepareShield();
+        setSetupPending(true);
+      }
+
+      if (currentShield && protectionReady) {
+        router.replace("/(tabs)");
+      } else if (currentShield) {
+        setSetupPending(true);
+      }
+    })();
+  }, [router, setup]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
@@ -499,19 +580,23 @@ function AndroidGateScreen() {
     return () => subscription.remove();
   }, []);
 
-  async function refreshProtectionStatus(redirectWhenReady = false) {
-    const [currentShield, pinExists, vpnActive, accessibilityActive] = await Promise.all([
-      getShieldEnabled(),
+  async function refreshProtectionStatus() {
+    const [pinExists, vpnActive, accessibilityActive, accessibilityConfigured] = await Promise.all([
       hasPin(),
       isLocalDnsVpnActive(),
       isAccessibilityInterventionActive(),
+      hasCompletedAccessibilityOnboarding(),
     ]);
-    const protectionReady = pinExists && vpnActive && accessibilityActive;
     setPinReady(pinExists);
     setVpnReady(vpnActive);
-    setAccessibilityReady(accessibilityActive);
-    setShieldEnabled(currentShield && protectionReady);
-    if (redirectWhenReady && currentShield && protectionReady) router.replace("/(tabs)");
+    setAccessibilityReady(accessibilityConfigured);
+    return { accessibilityActive, accessibilityConfigured, pinExists, vpnActive };
+  }
+
+  async function handleStartVpn() {
+    const vpnActive = await startLocalDnsVpn();
+    setVpnReady(vpnActive);
+    return vpnActive;
   }
 
   async function handleActivate() {
@@ -522,7 +607,29 @@ function AndroidGateScreen() {
 
     await prepareShield();
     setShieldEnabled(false);
-    router.replace("/refuge-setup/vpn");
+    setSetupPending(true);
+  }
+
+  async function handleConfirmSetup() {
+    if (!vpnReady) {
+      await handleStartVpn();
+    }
+
+    const status = await refreshProtectionStatus();
+    if (!status.pinExists || !status.vpnActive || (!status.accessibilityConfigured && !status.accessibilityActive)) {
+      Alert.alert(copy.setupPending, copy.setupPendingBody);
+      return;
+    }
+
+    if (!status.accessibilityConfigured) {
+      await markAccessibilityOnboardingCompleted();
+      setAccessibilityReady(true);
+    }
+
+    const next = await enableShield();
+    setShieldEnabled(next.enabled);
+    setSetupPending(false);
+    router.replace("/(tabs)");
   }
 
   return (
@@ -570,7 +677,7 @@ function AndroidGateScreen() {
         <CheckRow
           label={copy.accessibility}
           ready={accessibilityReady}
-          value={accessibilityReady ? copy.active : copy.pending}
+          value={accessibilityReady ? copy.ready : copy.pending}
         />
       </InfoCard>
 
@@ -581,10 +688,41 @@ function AndroidGateScreen() {
         <Step ready={accessibilityReady} text={copy.stepAccessibility} />
       </InfoCard>
 
+      {setupPending ? (
+        <InfoCard tone="outline" style={styles.setupCard}>
+          <Text style={styles.setupTitle}>{copy.gatePaused}</Text>
+          <Text style={styles.setupBody}>{copy.gatePausedBody}</Text>
+          <View style={styles.setupActions}>
+            <Pressable
+              onPress={() => void handleStartVpn()}
+              style={[styles.setupLink, vpnReady && styles.setupLinkReady]}
+            >
+              <MaterialCommunityIcons
+                color={colors.primaryDark}
+                name="shield-outline"
+                size={16}
+              />
+              <Text style={styles.setupLinkText}>{copy.vpn}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => void openAndroidAccessibilitySettings()}
+              style={[styles.setupLink, accessibilityReady && styles.setupLinkReady]}
+            >
+              <MaterialCommunityIcons color={colors.primaryDark} name="access-point" size={16} />
+              <Text style={styles.setupLinkText}>{copy.accessibility}</Text>
+            </Pressable>
+          </View>
+          <PrimaryButton
+            label={copy.gateConfirm}
+            onPress={handleConfirmSetup}
+          />
+        </InfoCard>
+      ) : null}
+
       <View style={styles.actions}>
         <PrimaryButton
           label={shieldEnabled ? copy.gateEnter : copy.gatePrepare}
-          onPress={shieldEnabled ? () => router.replace("/(tabs)") : handleActivate}
+          onPress={handleActivate}
         />
       </View>
     </Screen>
@@ -786,16 +924,6 @@ function createStyles(colors: ThemeColors) {
     setupCard: {
       gap: 12,
     },
-    setupStepBadge: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceAlt,
-      borderColor: colors.border,
-      borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
-      height: 44,
-      justifyContent: "center",
-      width: 44,
-    },
     setupTitle: {
       color: colors.text,
       fontFamily: fonts.display,
@@ -811,15 +939,6 @@ function createStyles(colors: ThemeColors) {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 8,
-    },
-    setupSecondaryAction: {
-      alignItems: "center",
-      paddingVertical: 8,
-    },
-    setupSecondaryText: {
-      color: colors.primaryDark,
-      fontFamily: fonts.heading,
-      fontSize: 11,
     },
     setupLink: {
       alignItems: "center",

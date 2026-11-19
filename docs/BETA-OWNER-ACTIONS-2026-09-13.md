@@ -1,12 +1,14 @@
 # Acciones finales de la persona titular para la candidata beta 1.3.37
 
+> Documento histórico. Para builds y pruebas vigentes usa `REPOSITORY-OPERATIONS.md` y `TESTING-CELULAR.md`; no uses Metro ni `C:\c4j\beta-1.3.37` como ruta normal de entrega.
+
 Fecha de corte: 16 de septiembre de 2026. Esta hoja contiene únicamente tareas que requieren dispositivo físico, cuentas de tienda, custodia de claves o aprobación humana. La ingeniería automatizable de esta sesión ya fue ejecutada.
 
 La APK `1.3.37 (55)` fue compilada con Gradle local, aprobó lint nativo, fue verificada criptográficamente y queda destinada solo a QA interna con Metro. SHA-256: `C38B8714C28C9F5003A91E4297F80800464CCD9916E06412BD30FDB7AB2E1701`. Certificado debug SHA-256: `3B8E9BCA44BD9E013D66E36A8B1BF0E44E932191DDA0580EE70D734C22C5DBB5`.
 
 ## 1. Tus pruebas Android
 
-- [ ] Instalar `artifacts/apk/current/Clean4Jesus-current.apk` en el Pixel. Ejecutar Metro desde `C:\c4j\beta-1.3.37` con `npm run dev-client`; si falla la red local, usar `npm run dev-client:tunnel`.
+- [ ] Instalar `artifacts/apk/current/Clean4Jesus-current.apk` en el Pixel. La APK standalone vigente no requiere Metro; ejecutar `npm run dev-client` solo ante una depuración explícita.
 - [ ] Probar en Wi-Fi y datos móviles: VPN, Accesibilidad, búsqueda de un dominio adulto, página de interrupción, PIN, WhatsApp/Business OFF por defecto y opt-in, bancos/YouTube sin bloqueo, reinicio y pérdida de red.
 - [ ] Verificar específicamente DNS-over-TLS: la navegación normal funciona, el dominio adulto se bloquea y, si el upstream falla repetidamente, la protección vuelve a estado inactivo sin dejar el teléfono sin red indefinidamente.
 - [ ] Durante un desbloqueo deliberado de 15 minutos, abrir contenido adulto distinto en esa app: el análisis visible debe seguir interrumpiéndolo.

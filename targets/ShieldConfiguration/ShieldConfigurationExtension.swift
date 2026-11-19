@@ -25,37 +25,15 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         let primaryLabel = defaults?.string(forKey: "customShieldPrimaryLabel") ?? "Cerrar aplicación"
 
         return ShieldConfiguration(
-            backgroundColor: UIColor(red: 0.027, green: 0.122, blue: 0.322, alpha: 1.0),
-            icon: UIImage(named: "Clean4JesusOfficialMark") ?? makeClean4JesusMark(),
-            title: ShieldConfiguration.Label(text: titleText, color: .white),
-            subtitle: ShieldConfiguration.Label(text: subtitleText, color: UIColor(red: 0.88, green: 0.90, blue: 0.95, alpha: 1.0)),
-            primaryButtonLabel: ShieldConfiguration.Label(text: primaryLabel, color: UIColor(red: 0.03, green: 0.12, blue: 0.32, alpha: 1.0)),
-            primaryButtonBackgroundColor: UIColor(red: 0.98, green: 0.98, blue: 0.96, alpha: 1.0),
+            backgroundBlurStyle: .systemMaterialLight,
+            backgroundColor: UIColor(red: 0.94, green: 0.96, blue: 0.99, alpha: 1.0),
+            icon: UIImage(named: "Clean4JesusOfficialMark"),
+            title: ShieldConfiguration.Label(text: titleText, color: UIColor(red: 0.027, green: 0.122, blue: 0.322, alpha: 1.0)),
+            subtitle: ShieldConfiguration.Label(text: subtitleText, color: UIColor(red: 0.19, green: 0.29, blue: 0.43, alpha: 1.0)),
+            primaryButtonLabel: ShieldConfiguration.Label(text: primaryLabel, color: .white),
+            primaryButtonBackgroundColor: UIColor(red: 0.027, green: 0.122, blue: 0.322, alpha: 1.0),
             secondaryButtonLabel: nil
         )
     }
 
-    private func makeClean4JesusMark() -> UIImage {
-        let size = CGSize(width: 96, height: 96)
-        return UIGraphicsImageRenderer(size: size).image { _ in
-            let shield = UIBezierPath()
-            shield.move(to: CGPoint(x: 48, y: 8))
-            shield.addLine(to: CGPoint(x: 77, y: 20))
-            shield.addLine(to: CGPoint(x: 73, y: 54))
-            shield.addCurve(to: CGPoint(x: 48, y: 82), controlPoint1: CGPoint(x: 70, y: 67), controlPoint2: CGPoint(x: 58, y: 77))
-            shield.addCurve(to: CGPoint(x: 23, y: 54), controlPoint1: CGPoint(x: 38, y: 77), controlPoint2: CGPoint(x: 26, y: 67))
-            shield.addLine(to: CGPoint(x: 19, y: 20))
-            shield.close()
-            UIColor(red: 0.95, green: 0.80, blue: 0.30, alpha: 1.0).setStroke()
-            shield.lineWidth = 4
-            shield.stroke()
-
-            UIColor(red: 0.10, green: 0.24, blue: 0.52, alpha: 1.0).setFill()
-            shield.fill()
-
-            UIColor.white.setFill()
-            UIBezierPath(roundedRect: CGRect(x: 43, y: 29, width: 10, height: 35), cornerRadius: 5).fill()
-            UIBezierPath(roundedRect: CGRect(x: 31, y: 42, width: 34, height: 10), cornerRadius: 5).fill()
-        }
-    }
 }

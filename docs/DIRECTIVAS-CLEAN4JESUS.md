@@ -1,12 +1,13 @@
 # Directivas Clean4Jesus
 
-## Checkpoint Landing Reemplazada - 2026-09-18
+## Regresión Android reportada — 18 de noviembre de 2026
 
-- `clean4jesus.com` usa el HTML autocontenido entregado para la landing vigente, con capturas reales de Refugio, Palabra y Comunidad y los originales preservados en `web/landing/assets/`.
-- El CTA público apunta a `https://tally.so/r/Y5BAzv` y se presenta como `Beta cerrada · Solicita acceso`; no afirmar que la beta está abierta ni que Android/iOS estén disponibles hasta contar con evidencia y aprobación de salida.
-- No ejecutar `npm run landing:build` para esta versión: el script anterior reconstruye y reemplaza la landing autocontenida. Desplegar directamente `web/landing` con Wrangler tras la autorización explícita del CEO.
-- La cabecera exterior de la landing autocontenida debe conservar `<meta name="viewport" content="width=device-width, initial-scale=1">`; declararlo únicamente dentro del contenido dinámico hace que Android renderice un viewport de escritorio y recorte la versión móvil.
-- Un despliegue posterior puede sobrescribir la landing aunque GitHub esté correcto: `npm run landing:deploy` ejecuta el generador retirado y vuelve a crear la página antigua. Para la landing vigente, usar solo `npx wrangler deploy --config wrangler.landing.jsonc` desde el árbol que contiene la landing autocontenida.
+- En Pixel 9 se reprodujo que `VpnService.protect(Socket)` devuelve falso cuando el socket aún no tiene descriptor. Para DoH y DoT, llamar `bind(InetSocketAddress(0))` antes de `protect` y conectar después. La prueba aislada confirmó HTTPS 200 y respuesta TLS tras el cambio; falta validar la app completa.
+- En el mismo Pixel, la prueba aislada de `getLaunchIntentForPackage("com.nu.production")` falló sin declarar visibilidad del paquete y funcionó después de añadirlo a `<queries>`. El flujo completo de entrada/salida de Nu aún requiere prueba física.
+
+- La VPN sigue afectando la conectividad en pruebas reales; no declarar solucionada ni publicar otra candidata como verificada hasta reproducir y probar DNS, bloqueo y navegación en el Pixel con Wi‑Fi y datos.
+- No activar el puente bancario por abrir Google Wallet ni por un pago NFC. La exclusión específica y la visibilidad de Nu requieren prueba física del evento y no garantizan por sí solas un retorno correcto.
+- El regreso guiado no debe interrumpir la sesión bancaria ni afirmar que Accesibilidad se reactiva automáticamente. Las restricciones del sistema y la confirmación manual deben respetarse.
 
 ## Checkpoint De Validacion Temprana De Demanda - 2026-09-15
 
@@ -80,6 +81,7 @@
 ## Producto
 
 - Nombre publico: **Clean4Jesus**. Usarlo exactamente asi en UI, documentacion, splash, tabs y textos.
+- Splash de lanzamiento (17 de septiembre de 2026): el emblema debe aparecer integrado sobre el fondo azul oficial `#071F52`, nunca como una imagen azul sobre una pantalla blanca. Mantener una transición breve y serena; validar siempre en una build nativa, pues Metro no representa fielmente el splash de producción.
 - Tono: cristiano, calido, motivador y concreto. Evitar lenguaje clinico, generico o de dashboard empresarial.
 - Primer objetivo del MVP: que la app abra siempre, que el usuario entienda el estado del escudo y que pueda registrar habitos/devocional sin friccion.
 - La experiencia base es "escudo primero": el usuario activa la proteccion y solo entonces entra al resto de la app.
@@ -123,13 +125,7 @@
 - Solo se incluyen despues de un consentimiento explicito en Ajustes con advertencia de falsos positivos; retirarlos posteriormente exige PIN.
 - No agregar WhatsApp al catalogo de limites por app ni enviar mensajes, texto visible o enlaces al backend.
 - Android se entrega mediante compilacion local y rotacion exclusiva de `artifacts/apk/current/Clean4Jesus-current.apk` y `artifacts/apk/previous/Clean4Jesus-previous.apk`. No crear PR ni ejecutar EAS/GitHub Actions para entregar APK Android.
-
-## MUST — Generacion De APK Android
-
-- **Obligatorio en cada generacion de APK Android:** usar exclusivamente Gradle local; no ejecutar EAS ni GitHub Actions.
-- **Obligatorio:** conservar y reutilizar la cache corta de Gradle/CMake para evitar recompilaciones nativas innecesarias y no limpiar modulos nativos salvo que un error concreto lo exija.
-- **Obligatorio:** entregar siempre el APK en `C:\Users\millo\Desktop\Clean4Jesus\artifacts\apk`.
-- Antes de entregar, verificar que el archivo exista, registrar su tamano y hash SHA-256, y comprobar que la landing no haya cambiado.
+- Regla permanente de almacenamiento (18 de septiembre de 2026): no guardar codigo, APK, IPA, builds ni artefactos de Clean4Jesus en OneDrive. El repositorio activo y fuente de verdad local es `C:\\Users\\millo\\Desktop\\Clean4Jesus`; `C:\\c4j` se usa solo como ruta corta de trabajo/compilacion. Los APK entregables deben reemplazar exclusivamente `C:\\Users\\millo\\Desktop\\Clean4Jesus\\artifacts\\apk\\current\\Clean4Jesus-current.apk` y rotar el anterior a `...\\previous\\Clean4Jesus-previous.apk`.
 
 ## Escudo
 
@@ -272,24 +268,12 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - Si el usuario quiere ver "como se veria todo", preparar primero capturas o renders de las pantallas principales y luego lanzar el build.
 - Si el cambio toca el look and feel completo, validar primero la pantalla de ingreso, la home, Camino, Habitos y Perfil como set minimo.
 - Cuando el cambio sea pequeno y no afecte UI, se puede omitir preview visual y pasar directo a verificacion tecnica.
-- Mientras el usuario no pida explicitamente "APK de produccion", "release" o "sin QR", cualquier pedido de "build" significa APK local/debug de pruebas con dev client y QR. No gastar tiempo intentando generar release standalone si no fue pedido.
-- Regla permanente: queda prohibido usar `eas build` o entregar un artefacto remoto de EAS para pruebas. El flujo de pruebas debe ser siempre `C:\\c4j\\android\\gradlew.bat :app:assembleDebug --no-daemon --max-workers=1`, copiar la APK a `artifacts/apk/current` y entregar `npm run dev-client` para el QR. EAS solo se puede usar tras una petición explícita de APK de producción/release y confirmación del usuario.
-- Para pruebas actuales, el camino preferido es `:app:assembleDebug` y luego `npm run dev-client` o `npm run dev-client:tunnel` para el QR. El release/produccion queda para una fase posterior mas madura.
-- Siempre que se entregue un APK local al usuario, incluir en la misma respuesta el comando completo de `dev-client` desde la carpeta del proyecto para levantar Metro y mostrar el QR. Preferir `npm run dev-client`; usar `npm run dev-client:tunnel` si la red local falla.
+- Regla vigente de entrega Android: cada pedido de APK entrega una **APK standalone release local**, sin Metro ni QR, generada desde `C:\\Users\\millo\\Desktop\\Clean4Jesus` con `npm run build:android:local`.
+- Android no usa EAS. EAS/TestFlight se reserva exclusivamente para iOS y solo con autorización explícita para una candidata ya verificada.
+- `assembleDebug`, `npm run dev-client` y `npm run dev-client:tunnel` son herramientas de depuración explícita; nunca son el flujo de entrega, nunca se incluyen como requisito para abrir el APK y no sustituyen una APK standalone.
+- Toda entrega de APK local debe indicar la ruta canónica `artifacts/apk/current/Clean4Jesus-current.apk`, sin instrucciones de Metro ni QR.
 - Politica de APKs locales: no acumular builds. Mantener maximo dos APKs en `artifacts/apk`: `current/Clean4Jesus-current.apk` y `previous/Clean4Jesus-previous.apk`. En cada build nuevo, mover current a previous, escribir el nuevo current y borrar cualquier otro `.apk` viejo.
 - Al cerrar una sesion con APK local, verificar que `artifacts/apk` tenga exactamente esos dos APKs y que cualquier copia temporal de build, como `C:\c4j`, pueda borrarse si el APK ya fue copiado.
-
-## Auditoria Del Flujo APK Local — 21 De Septiembre De 2026
-
-- El flujo unico vigente es `npm run build:android:local`; delega en `scripts/build-android-local.ps1` y nunca usa EAS ni GitHub Actions.
-- La copia de compilacion persistente es `C:\c4j` y la cache persistente de Gradle es `C:\g`. No crear una copia temporal nueva en cada build: las rutas cambiantes invalidan CMake y fuerzan recompilaciones nativas.
-- GitHub (`https://github.com/adminclean4jesus-lang/clean4jesus.git`) es siempre la fuente de verdad del repositorio. El script debe verificar `origin` antes de compilar; una carpeta local sincronizada solo puede ser checkout de trabajo y nunca repositorio principal.
-- El script sincroniza solo el codigo necesario y excluye `.git`, `node_modules`, `.gradle`, `build`, `.cxx`, `artifacts`, `tmp` y `web/landing`. Ejecuta `npm ci` unicamente si falta `node_modules` o cambia `package-lock.json`; no copiar caches de otra ruta absoluta.
-- El APK de prueba compila por defecto solo `arm64-v8a`, que es el ABI del telefono de prueba. El universal de cuatro ABI solo se solicita con `npm run build:android:local:universal`.
-- El script fija JDK 17, SDK/NDK, `local.properties`, `CLEAN4JESUS_PLATFORM=android`, `NODE_ENV=production` y `GRADLE_USER_HOME=C:\g`; no modificar codigo para resolver fallos de rutas o entorno.
-- `-ResetNative` es una salida excepcional y explicita para errores CMake/Ninja; no limpiar caches nativas como paso rutinario.
-- La salida se publica en `C:\Users\millo\Desktop\Clean4Jesus\artifacts\apk\current\Clean4Jesus-current.apk`, mueve la anterior a `previous\Clean4Jesus-previous.apk`, elimina cualquier APK sobrante y registra tamaño/hash SHA-256.
-- La auditoria que motivó este flujo identificó como causas de las demoras: compilación desde la ruta sincronizada del repositorio, copias efímeras, caches con rutas absolutas antiguas, reinstalación innecesaria de dependencias, compilación universal por defecto y preparación manual de keystore/local.properties. No repetir esos pasos manuales.
 
 ## Aprendizajes De Errores Previos
 
@@ -320,6 +304,7 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - La allowlist debe pensar por categoria: servicios financieros, medios confiables y apps de sistema sensibles primero; luego aplicar heuristicas de riesgo sobre contenido adulto.
 - El bloqueo por accesibilidad debe cubrir Chrome, Telegram, TikTok y apps similares cuando el texto accesible exponga senales adultas.
 - Las apps bancarias y servicios sensibles deben ir en una allowlist amplia para reducir falsos positivos y evitar que el usuario vea alertas innecesarias.
+
 - YouTube y sus variantes quedan dentro de la categoria de medios confiables y no deben bloquearse por comentarios ni por analisis agresivo si el paquete es confiable.
 - "Cerrar app bloqueada" es una salida best-effort: enviar Back/Home para sacar la app del frente, no terminar procesos como root.
 - Para este reset, evitar cards gigantes y titulares excesivos; la version ganadora se siente mas calmada, mas sofisticada y mas compacta.
@@ -362,8 +347,8 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - No tocar el servicio de Accesibilidad ni su XML cuando se trabaje en VPN/DNS, salvo que el usuario pida explicitamente cambiar la pantalla de interrupcion o reglas de redes/navegadores.
 - Cuando el bloqueo detecte una senal adulta, debe intentar sacar la app bloqueada del frente antes de mostrar la interrupcion, dejando el bloqueo como salida best-effort sin matar procesos.
 - La salida best-effort no debe ejecutar `HOME` despues de lanzar `InterruptionActivity`; primero cerrar/sacar la app bloqueada y luego abrir la pantalla de interrupcion para que quede visible.
-- Para builds locales en Windows, la compilación debe ejecutarse desde la ruta corta `C:\\c4j` con JDK 17; la ruta sincronizada del repositorio no es una ruta de build. No tocar el codigo solo por el entorno.
-- Para APKs locales de prueba, la ruta corta vigente y validada es `C:\\c4j` con `:app:assembleDebug`. No ejecutar Gradle/CMake en la ruta donde se sincroniza el repositorio.
+- Para builds locales en Windows, construir desde una ruta corta en `C:\\c4j` y usar JDK 17; no tocar el codigo solo por el entorno.
+- Para APKs locales de prueba, la fuente de verdad es `C:\\Users\\millo\\Desktop\\Clean4Jesus`. `C:\\c4j` solo es una copia temporal corta si Gradle la necesita; la entrega normal es standalone release mediante `npm run build:android:local`, no `assembleDebug` ni QR.
 - La allowlist sensible debe cubrir prefijos reales de paquetes confiables, no solo coincidencias sueltas de nombre. YouTube y Nubank deben quedar exentos por categoria y por prefijo estable cuando corresponda.
 - En Android, el launcher usa adaptive icons y recorta con mascara distinta segun fabricante. No calibrar el icono para un Pixel especifico: usar fondo full-bleed separado y `foreground` transparente centrado dentro de zona segura conservadora. Para este logo, el simbolo debe ocupar aprox. 49-55% del lienzo de 1024px, no 60-65%, para que circulo, squircle y rounded-square no lo corten ni lo vean pegado.
 - YouTube como checkpoint tambien depende del DNS: CleanBrowsing Family puede forzar YouTube Restricted Mode y ocultar comentarios. La correccion preferida es Cloudflare Family como DNS base, manteniendo Accesibilidad como en el checkpoint probado.
@@ -495,7 +480,7 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - Una prueba E2E de idioma manual debe establecer también la marca de preferencia explícita; guardar solo el código de idioma simula una instalación nueva y puede ser reemplazado legítimamente por el idioma del sistema.
 - Cuando una tabla cambia de esquema, revisar funciones `SECURITY DEFINER`, cron y retención que aún la referencian. El job de privacidad debe purgar `public.false_positive_reports` y los eventos técnicos de rate limit; nunca dejar huellas de instalación indefinidamente por depender solo de limpiezas por dispositivo.
 - Un `npm audit --omit=dev` de la candidata encontró alertas altas en el árbol Expo/React Native. No ocultarlas ni usar `npm audit fix --force` sobre el checkpoint: planificar actualización SDK/dependencias con compilación y QA nativos separados antes de beta externa.
-- Para compilar Android en una copia corta, no reutilizar `node_modules` con artefactos Gradle copiados: una instalación limpia `npm ci` evitó bloqueos de `classpath-snapshot`. No dejar artefactos de compilación en la ruta sincronizada del repositorio.
+- Para compilar Android fuera de OneDrive en una copia corta, no reutilizar `node_modules` con artefactos Gradle copiados: una instalación limpia `npm ci` evitó bloqueos de `classpath-snapshot`. Conservar el repo principal como fuente de verdad y no modificar la copia vieja `C:\c4j\clean4jesus`.
 - Gradle 8 en Windows puede rechazar como “not a regular file” el `libc++_shared.so` hard-linked que produce el NDK, aunque Kotlin/CMake hayan compilado. Tras CMake, reemplazar ese enlace solo dentro de los outputs generados por una copia regular y dejar sin seguimiento de estado las tareas nativas/JNI solo en Windows; no alterar el NDK original ni desactivar incremental en macOS/Linux.
 - Lint nativo debe correr además de `assembleDebug`: con `minSdk 24`, la notificación VPN necesita `Notification.Builder` sin canal antes de API 26, el atributo SplashScreen de API 33 debe estar marcado, el nombre de marca no se traduce y `android/local.properties` local escapa la unidad `C\:`. No convertir problemas de código en supresiones globales.
 
@@ -529,12 +514,84 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 
 - Con CAPTCHA de Supabase activo, toda reautenticación destructiva debe obtener un token Turnstile nuevo en el cliente y enviarlo al backend. Un script administrativo no puede fabricar ese token ni reutilizarlo; la eliminación satisfactoria conserva una prueba manual en la app con cuenta desechable, aunque los contratos negativos se automaticen.
 - Las migraciones `20260830120000`, `20260913120000` y `20260913130000` están aplicadas en producción; `report-false-positive`, `accountability`, `accountability-health` y `delete-account` están desplegadas. Las suites remotas positiva y negativa del 16 de septiembre aprobaron. No volver a describir este despliegue como pendiente sin evidencia nueva de deriva.
-- En copias cortas de compilación Windows no copiar `.gradle`, `android/.gradle` ni carpetas `build/` desde otra ruta absoluta: esos metadatos conservan rutas anteriores y rompen la resolución. Regenerarlos en la copia física; la ruta sincronizada del repositorio queda fuera del trabajo de Gradle.
+- En copias cortas de compilación Windows no copiar `.gradle`, `android/.gradle` ni carpetas `build/` desde otra ruta absoluta: esos metadatos conservan rutas anteriores y rompen la resolución. Regenerarlos en la copia física; el repositorio de Desktop continúa como fuente de verdad.
 - La APK `1.3.37 (55)` acredita compilación, lint nativo, firma debug v2, TypeScript y 191 pruebas unitarias; no acredita QA físico ni beta externa. DNS-over-TLS requiere todavía pruebas en Wi-Fi, datos móviles, dominio bloqueado y fallo de upstream en dos fabricantes.
 - En Windows, `expo start --tunnel` requiere `@expo/ngrok` instalado globalmente aunque exista `~/.expo/ngrok.yml`. El error `Cannot read properties of undefined (reading 'body')` puede aparecer antes de Metro cuando falta ese paquete. Confirmar estado oficial de ngrok, instalar el paquete y cerrar el túnel con `Ctrl+C` al terminar; una URL de túnel expone temporalmente Metro y su QR solo se comparte con testers autorizados.
 
-## Regresiones Críticas Android — 21 De Septiembre De 2026
+## PIN Por Correo De Persona De Confianza (16 De Septiembre De 2026)
 
-- El callback OAuth puede llegar tanto al navegador autenticado como al router de la app. `exchangeAuthCode` debe deduplicar el mismo `flow:código` en memoria; un inicio de Google correcto nunca puede terminar en el popup genérico de error por un segundo consumo del código. Los registros posteriores de consentimiento son de mejor esfuerzo y no pueden invalidar una sesión ya autenticada.
-- Nu, bancos y billeteras no se inspeccionan ni se bloquean por paquete. La lista de paquetes de Accesibilidad no puede incluir bancos ni billeteras. Accesibilidad sigue siendo un requisito activo del onboarding Android: nunca se declara el Refugio preparado basándose sólo en una marca guardada, y nunca se apaga el servicio al terminar esa configuración. Cualquier futura política de compatibilidad bancaria debe evaluarse por separado y no puede degradar el flujo de protección ni prometer una reactivación automática que Android no permita.
-- La pantalla de interrupción activa no contiene una pausa, respiración, contador ni CTA de 60 segundos. Una prueba de contrato debe impedir que `rescueActionCard`, `renderRescue` o el copy correspondiente reaparezcan.
+- El PIN inicial de protección no se crea ni se muestra en el teléfono. El dueño introduce el correo de una persona de confianza; esa persona confirma desde cualquier navegador y recibe un PIN aleatorio de ocho dígitos por correo. No necesita instalar Clean4Jesus ni crear una cuenta.
+- La app recibe y sincroniza únicamente el hash SHA-256 compatible con la verificación nativa de Android; nunca recibe, muestra ni persiste el PIN en texto. El enlace de confirmación es aleatorio, de un solo uso, vence en 24 horas y la solicitud puede cancelarse antes de confirmar.
+- El enlace de confirmación vence en 24 horas y solo existe una solicitud pendiente por cuenta. No imponer un límite de producto de solicitudes por día: un reintento cancela la solicitud pendiente anterior. Los correos externos usan el logo oficial, dominio remitente verificado y copy explícito de consentimiento; el destinatario puede ignorar la solicitud.
+- Cambiar el PIN exige validar el PIN vigente en la app. Este control protege el flujo ordinario de UI; no se debe describir como resistencia frente a un dispositivo rooteado o comprometido. Antes de beta externa, probar el recorrido completo con dos correos reales y comprobar que los links, cancelación, expiración y entrega no duplicada funcionan.
+
+## Entrega De APK Android
+
+- Toda APK entregable se conserva en `artifacts/apk/current/Clean4Jesus-current.apk`. Antes de reemplazarla, mover la APK anterior a `artifacts/apk/previous/Clean4Jesus-previous.apk`. Nunca entregar una APK desde una carpeta `build/` sin actualizar ambos artefactos.
+
+## Regla De Build Android Standalone (29 De Septiembre De 2026)
+
+- La entrega normal de Android es standalone release local, sin Metro ni QR. Usar `npm run build:android:local` desde `C:\Users\millo\Desktop\Clean4Jesus`.
+- El script rota de forma automática los dos únicos APK permitidos: `current/Clean4Jesus-current.apk` y `previous/Clean4Jesus-previous.apk`; nunca dejar APK, AAB o IPA sueltos en la raíz.
+- Una development build con Metro es solo para depuración explícita. Esta regla reemplaza cualquier instrucción anterior que presente QR o `assembleDebug` como camino normal de entrega.
+
+## Eficiencia Y Hermes En Builds Android (30 De Septiembre De 2026)
+
+- Mantener el daemon y la caché Gradle para APKs locales: no usar `--no-daemon`, no limitar los workers a uno ni ejecutar `gradlew clean` en builds normales. Conservar `reactNativeArchitectures=arm64-v8a` para la APK de beta.
+- Prevalidar `npx expo export --platform android` antes de assembleRelease cuando se haya reparado o cambiado el árbol JS; esto detecta resolución Metro sin gastar tiempo de compilación nativa.
+- Con React Native 0.86+, no fijar Hermes a la ruta antigua `react-native/sdks/hermesc`. Permitir `detectOSAwareHermesCommand` de React Native Gradle Plugin para que seleccione el binario de `hermes-compiler`; validar el bytecode en release, porque el export JS por sí solo no prueba Hermes.
+- Desde Expo SDK 55, mantener `MainApplication.kt` en el patrón `ExpoReactHostFactory` de la plantilla SDK vigente; `ReactNativeHostWrapper` ya no forma parte de Expo y deja fallar Kotlin después de gastar el bundle. Conservar paquetes manuales dentro de `packageList`.
+- `npm ci --legacy-peer-deps` puede reconstruir `node_modules` si Metro falla resolviendo paquetes que están instalados; preserva el lockfile, pero invalida tareas nativas ligadas a archivos de dependencias. Hacerlo solo cuando la evidencia señale instalación inconsistente, luego prevalidar Metro y completar un único build local.
+
+## Compatibilidad Con Banca Android (Regla Reemplazada El 4 De Octubre De 2026)
+
+- El onboarding sí guía y requiere la configuración manual de Accesibilidad después de VPN.
+- Accesibilidad permanece activa después del onboarding. Al abrir una app financiera, Clean4Jesus identifica únicamente su paquete, pausa su propio `AccessibilityService` antes de inspeccionar nodos y mantiene PIN y VPN activos.
+- Navegadores y redes sociales son la única superficie cuyo contenido puede observarse. Bancos, billeteras, apps financieras, YouTube y servicios sensibles nunca se leen, cuentan ni interrumpen; resolver la clasificación por categoría de paquete, no por excepciones de texto.
+- La QA de toda APK candidata incluye completar PIN → VPN → Accesibilidad, confirmar que la pantalla de interrupción sigue disponible, abrir Nu y otro banco, comprobar la pausa bancaria y validar el aviso `Volver al Refugio`.
+
+## Estado Android Y Splash Oficial (3 De Octubre De 2026)
+
+- El estado mostrado en Refugio debe refrescarse cada vez que la pestaña recupera foco. VPN representa el estado nativo real; Accesibilidad representa la configuración obligatoria ya completada aunque el servicio esté pausado por compatibilidad bancaria.
+- Al terminar Accesibilidad, no navegar al Refugio hasta que Android confirme que `disableSelf()` retiró realmente el servicio de la lista de servicios habilitados. Esta verificación evita que Nu y otros bancos detecten Accesibilidad todavía activa.
+- El flujo PIN → VPN → Accesibilidad debe avanzar automáticamente al volver de Ajustes cuando ambas capas están confirmadas. Si la VPN dejó de estar activa, ofrecer una recuperación visible hacia el paso VPN y nunca dejar al usuario atrapado.
+- El splash nativo Android y las superficies de marca usan el logo oficial. Queda prohibido entregar recursos plantilla de Android o escudos reconstruidos cuando existe el activo oficial.
+- Una transición breve entre Wi-Fi y datos móviles no debe apagar la VPN por tres fallos DNS aislados; conservar un umbral acotado que tolere la transición y siga fallando de forma visible ante una indisponibilidad sostenida.
+
+## Puente Bancario Android (4 De Octubre De 2026)
+
+- Accesibilidad permanece activa después del onboarding para conservar la pantalla de interrupción. Solo se pausa al detectar por paquete una aplicación financiera y siempre antes de inspeccionar texto o nodos de esa aplicación.
+- La VPN local permanece activa durante la sesión bancaria. Al terminar, el aviso aprobado usa el título `Todo listo por aquí`, el texto `Ya puedes volver a tu experiencia habitual en Clean4Jesus.` y el CTA `Volver al Refugio`; no anunciar una brecha técnica ni afirmar que Android reactivó Accesibilidad automáticamente.
+- Android exige confirmación manual para volver a habilitar Accesibilidad. El CTA abre los ajustes del sistema y el aviso desaparece únicamente cuando el servicio se conecta de nuevo.
+- El retorno usa una Activity nativa translúcida como puente: queda detrás de la app bancaria y reaparece al cerrarla. Si Android no restaura esa tarea, abrir Clean4Jesus muestra el mismo popup pendiente. No depender de notificaciones, `PACKAGE_USAGE_STATS`, overlays ni `SYSTEM_ALERT_WINDOW` para este flujo.
+- El puente no puede mostrar el retorno hasta confirmar que su Activity pasó realmente a segundo plano por la app bancaria. El mensaje guía con `Volver al Refugio` → elegir Clean4Jesus → activar `Usar Clean4Jesus` → regresar, sin describir una brecha técnica ni usar lenguaje de desprotección.
+
+
+## Prueba limitada de Nu (18 de noviembre de 2026)
+
+- El usuario observó Nu funcionando con Accesibilidad activa cuando la aplicación ya estaba en segundo plano. Probar únicamente en dispositivo la convivencia desde un inicio en frío sin apagar el servicio automáticamente para `com.nu.production`; Nu sigue excluido de lectura, seguimiento e interrupciones. Esto no demuestra compatibilidad bancaria estable y no autoriza una distribución general sin prueba física, incluida la advertencia de seguridad de Nu. Las demás aplicaciones financieras conservan la pausa existente.
+
+
+## Mega checkpoint Android: Nu y Accesibilidad (18 de noviembre de 2026)
+
+- Versión de prueba interna instalada en Pixel 9: 1.3.58 (código 71), confirmada en el dispositivo. El usuario informa tres pruebas satisfactorias: Nu funcionó sin bloquearse y Accesibilidad permaneció activa, incluyendo apertura desde cero. No asumir que esta evidencia cubre todos los teléfonos, bancos o versiones de Nu.
+- En 71, `com.nu.production` no activa la pausa bancaria; el paquete permanece excluido del análisis, seguimiento e interrupciones. No restaurar su desactivación automática sin volver a investigar y probar. La pausa para otras apps financieras sigue vigente.
+- La VPN de la versión 70 se mantuvo activa mientras el usuario navegaba y cargaba YouTube; aún se requieren pruebas prolongadas y con otras redes y dispositivos. Esta observación no es una garantía de compatibilidad completa.
+- Pendiente validar Google Wallet/NFC en la versión 71, la pantalla de interrupción tras usar Nu, y el funcionamiento de Nu con otros dispositivos y actualizaciones. No afirmar que esos puntos están cerrados.
+- Paquete: `artifacts/play/Clean4Jesus-1.3.58-71-release.aab`; SHA-256 `56DDD3792C8BB8AF93D47AEF8C1FC0C376404BC2CEF7CA150493A7268409803D`.
+
+## Integración del checkpoint Android (18 de noviembre de 2026)
+
+- Al integrar la rama principal con la candidata 71, conservar su base Expo 57 y el flujo Android probado; la rama principal contenía rutas antiguas de configuración incompatibles. Mantener la landing vigente de la rama principal y verificarla con `scripts/verify-current-landing.mjs`.
+- El callback distingue recuperación y OAuth; solo un evento `PASSWORD_RECOVERY` autoriza el cambio de contraseña. Los intercambios simultáneos del mismo código comparten una operación; una sesión existente solo resuelve un intercambio fallido de OAuth, no uno de recuperación.
+- La integración de código no implica que una nueva compilación haya sido probada en teléfonos. La evidencia del Pixel corresponde a la versión 71 previa a esta integración.
+- El lockfile de esta candidata se generó con resolución de peers heredada; las comprobaciones iOS deben usar `npm ci --legacy-peer-deps` con el mismo modo. Esto no elimina la incompatibilidad declarada entre versiones de Expo y Worklets: conservarla visible y comprobar las compilaciones reales antes de publicar.
+- La landing vigente se valida directamente; `landing:build` y `landing:deploy` no deben regenerar la plantilla anterior y sobrescribir la página publicada.
+- Expo SDK 57 requiere la Nueva Arquitectura de React Native: la comprobación iOS no debe exigir la arquitectura Legacy. Esto no demuestra estabilidad en iOS; mantener la compilación Release, el simulador y las 20 aperturas como comprobaciones obligatorias antes de validar la candidata.
+
+## Corrección de beta iOS (18 de noviembre de 2026)
+
+- La persona usuaria confirmó que TestFlight 1.3.46 (35) no solicita el correo de la persona de confianza al comenzar y muestra un escudo antiguo. La nueva candidata debe solicitar el PIN por correo antes de configurar el refugio iOS, recuperar solicitudes existentes sin desactivar restricciones, y utilizar el archivo oficial `assets/icon.png` en la extensión de bloqueo de Apple.
+- La corrección de código no modifica la build ya distribuida. No afirmar que está disponible hasta obtener una compilación firmada, procesada en TestFlight y verificada en un iPhone físico con el correo de confirmación y el escudo real.
+- El usuario confirmó que la compilación más alta disponible en TestFlight era la 35; la candidata siguiente se prepara con número 36. Este número no acredita carga ni distribución.
+- EAS también ejecuta `npm ci` durante la compilación; el perfil de producción debe usar `NPM_CONFIG_LEGACY_PEER_DEPS=true` para respetar el modo del lockfile. La advertencia de compatibilidad entre Expo y Worklets continúa vigente.

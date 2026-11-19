@@ -1,7 +1,7 @@
 # Política de Privacidad de Clean4Jesus
 
-**Versión:** 1.1  
-**Fecha de vigencia:** 23 de julio de 2026  
+**Versión:** 1.2
+**Fecha de vigencia:** 14 de septiembre de 2026
 **Responsable:** Emmanuel López, persona natural, Colombia  
 **Contacto:** privacidad@clean4jesus.com  
 
@@ -71,16 +71,21 @@ Usamos proveedores que actúan como encargados o infraestructura:
 - **Cloudflare:** CAPTCHA, DNS, protección y publicación de superficies web.
 - **Expo:** notificaciones push y herramientas de distribución durante desarrollo.
 - **Google:** inicio de sesión cuando la persona elige “Continuar con Google”.
+- **Google Tag Manager:** medición agregada de las páginas públicas solo cuando la persona la acepta. No se utiliza dentro de la app ni para enviar actividad del Refugio, contenido visible, URL, historial, datos de Comunidad o datos sensibles.
 
 Cada proveedor trata información bajo sus propios términos y medidas de seguridad. No entregamos a estos proveedores el historial de navegación ni el contenido observado localmente por el Refugio.
 
-## 6. Base y autorización
+## 6. Medición de las páginas públicas
+
+La landing y el centro legal muestran una elección clara antes de habilitar la medición. Si la persona rechaza, conservamos esa preferencia en su navegador y la medición permanece desactivada. La aceptación es opcional y no se usa para publicidad personalizada, venta de perfiles ni decisiones automatizadas. Cuando JavaScript está desactivado, Google Tag Manager usa su iframe técnico de respaldo; por esa limitación no puede leer ni guardar la preferencia local.
+
+## 7. Base y autorización
 
 Solicitamos autorización mediante una acción clara al crear una cuenta, aceptar las normas, activar notificaciones, vincular una persona de confianza o habilitar permisos sensibles. Algunas funciones locales se ejecutan para cumplir la solicitud expresa de protección del usuario.
 
 La persona puede retirar autorizaciones opcionales. Retirarlas puede desactivar la función asociada, pero no invalida tratamientos ya realizados legítimamente.
 
-## 7. Conservación
+## 8. Conservación
 
 - Cuenta, perfil y contenido comunitario: mientras la cuenta permanezca activa.
 - Señales genéricas de riesgo: máximo 24 horas.
@@ -92,13 +97,13 @@ La persona puede retirar autorizaciones opcionales. Retirarlas puede desactivar 
 
 Las copias de seguridad administradas por proveedores pueden persistir temporalmente hasta completar su ciclo de rotación. Durante ese periodo no se restauran para uso ordinario.
 
-## 8. Derechos de la persona titular
+## 9. Derechos de la persona titular
 
 La persona puede solicitar conocimiento, acceso, actualización, rectificación, prueba de autorización, información sobre usos, revocación, supresión y presentar quejas ante la Superintendencia de Industria y Comercio cuando corresponda.
 
 Las solicitudes se reciben en **privacidad@clean4jesus.com**. Responderemos inicialmente dentro de 10 días hábiles; si necesitamos más tiempo, informaremos el motivo y la nueva fecha dentro de los límites legales aplicables.
 
-## 9. Eliminación de cuenta
+## 10. Eliminación de cuenta
 
 La cuenta puede eliminarse desde **Mi perfil > Eliminar mi cuenta**. También se podrá solicitar desde la página pública de eliminación.
 
@@ -106,24 +111,24 @@ La eliminación retira la cuenta, el perfil público y el contenido asociado. Po
 
 Eliminar la cuenta no borra automáticamente la configuración local del Refugio ni el progreso guardado en el dispositivo.
 
-## 10. Menores de edad
+## 11. Menores de edad
 
 La beta de **Cuenta y Comunidad está dirigida a personas de 18 años o más**. Las funciones locales de protección y Palabra pueden utilizarse en contextos familiares o pastorales bajo supervisión responsable, sin crear una cuenta comunitaria.
 
 No buscamos recopilar deliberadamente información personal de menores en Comunidad. Si identificamos una cuenta de una persona menor, podremos restringirla y eliminar sus datos. El futuro acceso juvenil requerirá controles parentales, revisión jurídica y una experiencia específica.
 
-## 11. Permisos sensibles
+## 12. Permisos sensibles
 
 Accesibilidad y VPN se usan únicamente para prestar la protección solicitada. Clean4Jesus no usa Accesibilidad para leer contraseñas, realizar transacciones, operar aplicaciones bancarias, registrar pulsaciones ni extraer mensajes.
 
 La VPN local enruta consultas necesarias para aplicar filtros de red. No garantiza bloquear todo contenido y su comportamiento puede variar según el dispositivo o la red.
 
-## 12. Transferencias y seguridad
+## 13. Transferencias y seguridad
 
 Los proveedores pueden procesar información fuera de Colombia. Adoptamos controles contractuales, acceso mínimo, cifrado en tránsito, RLS en base de datos, MFA para moderadores y separación entre datos comunitarios y actividad local.
 
 Ningún sistema es infalible. Si ocurre un incidente que afecte derechos, evaluaremos su alcance, corregiremos la causa y notificaremos cuando la ley lo exija.
 
-## 13. Cambios
+## 14. Cambios
 
 Los cambios materiales se informarán dentro de la aplicación o por correo. Cuando sea necesario, solicitaremos una nueva aceptación. La versión vigente estará publicada en `legal.clean4jesus.com`.

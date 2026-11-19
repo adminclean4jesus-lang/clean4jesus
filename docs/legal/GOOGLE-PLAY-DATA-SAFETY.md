@@ -29,7 +29,7 @@ Este documento guía el formulario. Debe verificarse contra el AAB final y el co
 
 ## Seguridad y controles
 
-- Cifrado en tránsito: sí.
+- Cifrado en tránsito: sí. La resolución DNS del Refugio usa DNS-over-TLS y, si el puerto 853 está bloqueado, DNS-over-HTTPS hacia `family.cloudflare-dns.com`; no se usa fallback DNS por UDP sin cifrar.
 - Eliminación desde la app: sí.
 - Solicitud web de eliminación: requerida antes de publicación.
 - Cuenta opcional: sí, para Refugio y Palabra.

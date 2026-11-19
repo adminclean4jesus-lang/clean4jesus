@@ -26,4 +26,3 @@ $$;
 
 revoke all on function public.get_guardian_pin_request_context(bytea) from public, anon, authenticated;
 grant execute on function public.get_guardian_pin_request_context(bytea) to service_role;
-

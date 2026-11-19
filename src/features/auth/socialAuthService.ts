@@ -25,11 +25,17 @@ export async function signInWithGoogle(language: SupportedLanguage) {
   }
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, authCallbackUrl);
-  if (result.type === "cancel" || result.type === "dismiss") {
-    return { cancelled: true };
-  }
+  // Android may report a dismissed browser after the deep link has already
+  // completed the Supabase session. The session is the source of truth: never
+  // show an error after the person has actually signed in.
   if (result.type !== "success") {
-    if (await hasAuthenticatedSession()) return { cancelled: false };
+    if (await hasAuthenticatedSession(supabase)) {
+      void recordLegalAcceptance(language, "google_oauth").catch(() => undefined);
+      return { cancelled: false };
+    }
+    if (result.type === "cancel" || result.type === "dismiss") {
+      return { cancelled: true };
+    }
     throw new Error("No pudimos completar el acceso. Intenta nuevamente.");
   }
 
@@ -41,32 +47,27 @@ export async function signInWithGoogle(language: SupportedLanguage) {
 
   const code = readQueryValue(parsed.queryParams?.code);
   if (!code) {
-    if (await hasAuthenticatedSession()) return { cancelled: false };
     throw new Error("Google no devolvió un código de acceso válido.");
   }
 
   try {
     await exchangeAuthCode(code, "oauth");
   } catch (error) {
-    // Android can deliver the OAuth redirect to both the browser session and
-    // Expo Router. Once either path persisted the session, the second code
-    // exchange is expected to fail and must not become a false user error.
-    if (!(await hasAuthenticatedSession())) throw error;
+    // A deep link can exchange the one-time code before WebBrowser resolves.
+    // In that case, preserve the valid session instead of reporting a false
+    // sign-in error for an already-used code.
+    if (!(await hasAuthenticatedSession(supabase))) throw error;
   }
-  // Authentication is already complete. A telemetry/consent write must never
-  // turn a successful Google sign-in into a false error for the user.
-  try {
-    await recordLegalAcceptance(language, "google_oauth");
-  } catch {
-    // The acceptance is recorded again on the next authenticated interaction.
-  }
+  // Legal acceptance is recorded as a best-effort audit event. A transient
+  // failure must never turn a completed Google session into a false error.
+  void recordLegalAcceptance(language, "google_oauth").catch(() => undefined);
   return { cancelled: false };
 }
 
-async function hasAuthenticatedSession(): Promise<boolean> {
+async function hasAuthenticatedSession(supabase: ReturnType<typeof getSupabaseClient>) {
   try {
-    const { data } = await getSupabaseClient().auth.getSession();
-    return Boolean(data.session?.user);
+    const { data } = await supabase.auth.getSession();
+    return Boolean(data.session);
   } catch {
     return false;
   }

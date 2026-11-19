@@ -5,8 +5,8 @@ tags:
   - release
   - startup
 ---
-# The app must open without asking for the guardian PIN. The PIN protects a
-# future change to configured limits, not devotional or community access.
+# The app must open reliably; an authenticated user without a guardian PIN
+# completes trusted-person setup before configuring protection.
 - launchApp
 - extendedWaitUntil:
     visible: ".*(Refugio|Refuge|iOS).*"

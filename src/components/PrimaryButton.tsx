@@ -36,8 +36,8 @@ export function PrimaryButton({ label, onPress, variant = "primary", disabled, t
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 20,
-    shadowColor: "#A9B8F5",
+    borderRadius: 999,
+    shadowColor: "#02174B",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 16,
@@ -47,11 +47,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(184, 92, 87, 0.24)",
   },
   content: {
-    height: 48,
+    height: 52,
   },
   label: {
     fontFamily: fonts.heading,
-    fontSize: 12.5,
+    fontSize: 14,
     letterSpacing: 0,
   },
 });

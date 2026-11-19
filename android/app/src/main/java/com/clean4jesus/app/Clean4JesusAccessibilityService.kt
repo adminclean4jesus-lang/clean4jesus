@@ -1,15 +1,12 @@
 package com.clean4jesus.app
 
 import android.accessibilityservice.AccessibilityService
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
-import android.text.TextUtils
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.text.SimpleDateFormat
@@ -38,7 +35,9 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     const val PREF_GUARDIAN_PIN = "guardian_pin"
     const val PREF_APP_LANGUAGE = "app_language"
     const val PREF_WHATSAPP_PROTECTION_ENABLED = "whatsapp_protection_enabled"
-    const val PREF_ACCESSIBILITY_SETUP_COMPLETED = "accessibility_setup_completed"
+    // Migration-only key from the retired manual pause flow. It is cleared when
+    // Accessibility reconnects or the onboarding screen is opened.
+    private const val LEGACY_PREF_DISABLE_AFTER_ONBOARDING = "disable_after_onboarding"
     private const val PREF_APP_USAGE_PREFIX = "app_usage_"
     private const val MAX_TRACKED_EVENT_GAP_MS = 15_000L
     private const val FULL_TREE_SCAN_INTERVAL_MS = 800L
@@ -62,52 +61,19 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     private const val RISK_COOLDOWN_MS = 6 * 60 * 60_000L
     private var activeInstance: Clean4JesusAccessibilityService? = null
 
-    fun prepareForAccessibilitySetup(context: Context): Boolean {
-      return try {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-          .edit()
-          .putBoolean(PREF_ACCESSIBILITY_SETUP_COMPLETED, false)
-          .apply()
-        setAccessibilityComponentEnabled(context, true)
-        true
-      } catch (_: Exception) {
-        false
-      }
-    }
+    fun prepareForUserSetup(context: Context): Boolean =
+      context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .edit()
+        .remove(LEGACY_PREF_DISABLE_AFTER_ONBOARDING)
+        .commit()
 
-    fun completeAccessibilitySetup(context: Context): Boolean {
-      return try {
-        if (!isAccessibilityServiceEnabled(context)) return false
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-          .edit()
-          .putBoolean(PREF_ACCESSIBILITY_SETUP_COMPLETED, true)
-          .apply()
-        true
-      } catch (_: Exception) {
-        false
-      }
-    }
-
-    fun isAccessibilityServiceEnabled(context: Context): Boolean {
+    fun isServiceEnabled(context: Context): Boolean {
       val enabledServices = Settings.Secure.getString(
         context.contentResolver,
-        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
       ) ?: return false
-      val expected = ComponentName(context, Clean4JesusAccessibilityService::class.java).flattenToString()
-      val colonSplitter = TextUtils.SimpleStringSplitter(':')
-      colonSplitter.setString(enabledServices)
-      while (colonSplitter.hasNext()) {
-        if (colonSplitter.next().equals(expected, ignoreCase = true)) return true
-      }
-      return false
-    }
-
-    private fun setAccessibilityComponentEnabled(context: Context, enabled: Boolean) {
-      context.packageManager.setComponentEnabledSetting(
-        ComponentName(context, Clean4JesusAccessibilityService::class.java),
-        if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-        PackageManager.DONT_KILL_APP
-      )
+      val expected = "${context.packageName}/${Clean4JesusAccessibilityService::class.java.name}"
+      return enabledServices.split(':').any { it.equals(expected, ignoreCase = true) }
     }
 
     fun getUsageSnapshot(context: Context, packageName: String, now: Long = System.currentTimeMillis()): Long {
@@ -134,12 +100,6 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
     fun scheduleTemporaryRelock(packageName: String, until: Long) {
       activeInstance?.scheduleRelock(packageName, until)
-    }
-
-    fun pauseAccessibilityIntervention(): Boolean {
-      val service = activeInstance ?: return false
-      service.disableSelf()
-      return true
     }
 
     fun flushRiskSignalsIfRunning() {
@@ -211,22 +171,6 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     "com.davivienda",
     "com.scotiabank",
     "com.c6bank",
-    "com.nequi",
-    "com.daviplata",
-    "com.bancodebogota",
-    "com.bancodeoccidente",
-    "com.avvillas",
-    "com.bancoagrario",
-    "com.bancopopular",
-    "com.lulobank",
-    "com.rappi.pay",
-    "com.klar",
-    "com.stori",
-    "com.revolut",
-    "com.transferwise",
-    "com.n26",
-    "com.wellsfargo",
-    "com.chase.sig.android",
     "com.mercadolibre.mercadopago",
     "com.paypal.android.p2pmobile"
   )
@@ -326,6 +270,14 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     if (event == null) return
     val packageName = event.packageName?.toString() ?: return
     val now = System.currentTimeMillis()
+    if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && isFinancialPackage(packageName)) {
+      stopForegroundTracking(now)
+      // Disable before the bank is resumed. The bridge itself is guarded against the
+      // burst of duplicate window events Android can send during this handoff.
+      BankCompatibilityBridge.beginBankSession(this, packageName)
+      disableSelf()
+      return
+    }
     if (shouldIgnorePackage(packageName)) {
       stopForegroundTracking(now)
       return
@@ -363,7 +315,9 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
 
   override fun onServiceConnected() {
     super.onServiceConnected()
+    prepareForUserSetup(this)
     activeInstance = this
+    BankCompatibilityBridge.clearReturnPrompt(this)
     restoreTemporaryRelocks()
     flushRiskSignalsAsync()
   }
@@ -501,6 +455,18 @@ class Clean4JesusAccessibilityService : AccessibilityService() {
     if (trustedFinancialPackagePrefixes.any { normalized.startsWith(it) }) return true
     return trustedMediaKeywords.any { normalized.contains(it) } ||
       trustedFinancialKeywords.any { normalized.contains(it) }
+  }
+
+  private fun isFinancialPackage(packageName: String): Boolean {
+    val normalized = packageName.lowercase()
+    // Contactless payments are not a bank-app session: never interrupt Wallet.
+    if (normalized == "com.google.android.apps.walletnfcrel" ||
+        normalized.startsWith("com.google.android.apps.walletnfcrel.")) return false
+    // Trial: do not stop accessibility for Nu; it remains excluded from scanning.
+    if (normalized == "com.nu.production") return false
+    if (trustedPackagePrefixes.any { normalized.startsWith(it) && (it.contains("nu") || it.contains("nubank")) }) return true
+    if (trustedFinancialPackagePrefixes.any { normalized.startsWith(it) }) return true
+    return trustedFinancialKeywords.any { normalized.contains(it) }
   }
 
   private fun String.containsSignal(signal: String): Boolean {

@@ -147,11 +147,18 @@ async function exchangeAuthCodeOnce(code: string, flow: AuthCodeFlow) {
   try {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error || !data.session || !data.user) {
+      // On Android the browser deep link and this callback can race for the
+      // same PKCE code. If the browser already established a session, a second
+      // exchange must be idempotent rather than showing a false failure.
       if (flow === "oauth") {
-        const existingSession = await supabase.auth.getSession();
-        if (existingSession?.data?.session?.user) {
-          return { isPasswordRecovery: false };
+        try {
+          const current = await supabase.auth.getSession();
+          if (current?.data?.session?.user) return { isPasswordRecovery: false };
+        } catch {
+          // Preserve the original OAuth error when the session cannot be read.
         }
+      }
+      if (flow === "oauth") {
         throw new AuthServiceError("access_failed", "No pudimos completar el acceso con Google. Intenta nuevamente.");
       }
       throw new AuthServiceError("password_recovery_invalid", "El enlace vencio o ya fue usado. Solicita uno nuevo.");

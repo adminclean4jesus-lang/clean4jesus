@@ -6,7 +6,7 @@ const OFFICIAL_LOGO_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAABAAAAAQACAYAAAB/HSuDAA
 const corsHeaders = {
   "Access-Control-Allow-Headers": "content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Origin": "https://clean4jesus.com",
+  "Access-Control-Allow-Origin": "https://pin.clean4jesus.com",
   "Cache-Control": "no-store",
 };
 
@@ -16,7 +16,7 @@ Deno.serve(async (request) => {
     const requestUrl = new URL(request.url);
     const token = requestUrl.searchParams.get("token") ?? "";
     if (!tokenPattern.test(token)) return page("Enlace no válido", "Pide a la persona que te eligió que envíe una nueva solicitud.", 400);
-    return confirmationPage(`https://${requestUrl.host}${requestUrl.pathname}`, token);
+    return Response.redirect(`https://pin.clean4jesus.com/?token=${encodeURIComponent(token)}`, 302);
   }
   if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   let body: { token?: unknown };

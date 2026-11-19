@@ -1,7 +1,19 @@
-const enabled = process.env.EXPO_PUBLIC_AUTH_CAPTCHA_ENABLED === "true";
-const siteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
-const challengeUrl = process.env.EXPO_PUBLIC_TURNSTILE_CHALLENGE_URL?.trim()
-  ?? "https://verify.clean4jesus.com/turnstile/";
+import Constants from "expo-constants";
+
+type PublicCaptchaConfig = {
+  challengeUrl?: string;
+  enabled?: boolean;
+  siteKey?: string;
+};
+
+const publicCaptcha = (Constants.expoConfig?.extra?.authCaptcha ?? {}) as PublicCaptchaConfig;
+const enabledFromEnvironment = process.env.EXPO_PUBLIC_AUTH_CAPTCHA_ENABLED;
+const enabled = enabledFromEnvironment === "true"
+  || (enabledFromEnvironment !== "false" && publicCaptcha.enabled === true);
+const siteKey = (process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY ?? publicCaptcha.siteKey ?? "").trim();
+const challengeUrl = (process.env.EXPO_PUBLIC_TURNSTILE_CHALLENGE_URL
+  ?? publicCaptcha.challengeUrl
+  ?? "https://verify.clean4jesus.com/turnstile/").trim();
 
 export const captchaConfig = {
   challengeUrl,

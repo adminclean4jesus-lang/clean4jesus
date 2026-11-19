@@ -1,11 +1,11 @@
 import { NativeModules, Platform } from "react-native";
 
+import { getJson, setJson, storageKeys } from "@/services/storage";
+
 type Clean4JesusVpnModule = {
   getStatus: () => Promise<boolean>;
   isAccessibilityInterventionEnabled: () => Promise<boolean>;
-  pauseAccessibilityIntervention: () => Promise<boolean>;
-  prepareAccessibilityIntervention?: () => Promise<boolean>;
-  completeAccessibilitySetup?: () => Promise<boolean>;
+  prepareAccessibilityInterventionSetup: () => Promise<boolean>;
   startDnsVpn: () => Promise<boolean>;
   stopDnsVpn: () => Promise<boolean>;
   syncLanguage?: (language: string) => Promise<boolean>;
@@ -19,7 +19,11 @@ export async function isLocalDnsVpnActive(): Promise<boolean> {
   }
 
   try {
-    return Boolean(await nativeVpn.getStatus());
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (await nativeVpn.getStatus()) return true;
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    return false;
   } catch {
     return false;
   }
@@ -66,40 +70,24 @@ export async function isAccessibilityInterventionActive(): Promise<boolean> {
   }
 }
 
-export async function pauseAccessibilityIntervention(): Promise<boolean> {
+export async function prepareAccessibilityInterventionSetup(): Promise<boolean> {
   if (Platform.OS !== "android" || !nativeVpn) {
     return false;
   }
 
   try {
-    return Boolean(await nativeVpn.pauseAccessibilityIntervention());
+    return Boolean(await nativeVpn.prepareAccessibilityInterventionSetup());
   } catch {
     return false;
   }
 }
 
-export async function prepareAccessibilityIntervention(): Promise<boolean> {
-  if (Platform.OS !== "android" || !nativeVpn?.prepareAccessibilityIntervention) {
-    return false;
-  }
-
-  try {
-    return Boolean(await nativeVpn.prepareAccessibilityIntervention());
-  } catch {
-    return false;
-  }
+export async function hasCompletedAccessibilityOnboarding(): Promise<boolean> {
+  return getJson(storageKeys.accessibilityOnboardingCompleted, false);
 }
 
-export async function completeAccessibilityInterventionSetup(): Promise<boolean> {
-  if (Platform.OS !== "android" || !nativeVpn?.completeAccessibilitySetup) {
-    return false;
-  }
-
-  try {
-    return Boolean(await nativeVpn.completeAccessibilitySetup());
-  } catch {
-    return false;
-  }
+export async function markAccessibilityOnboardingCompleted(): Promise<void> {
+  await setJson(storageKeys.accessibilityOnboardingCompleted, true);
 }
 
 export async function syncNativeLanguage(language: string): Promise<boolean> {

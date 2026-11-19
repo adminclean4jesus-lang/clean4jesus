@@ -1,6 +1,7 @@
 package com.clean4jesus.app
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -55,6 +56,7 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun stopDnsVpn(promise: Promise) {
     try {
+      Clean4JesusVpnService.setDesiredEnabled(reactContext, false)
       reactContext.startService(Intent(reactContext, Clean4JesusVpnService::class.java).apply {
         action = Clean4JesusVpnService.ACTION_STOP
       })
@@ -66,7 +68,36 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
 
   @ReactMethod
   fun getStatus(promise: Promise) {
-    promise.resolve(Clean4JesusVpnService.isActive())
+    if (Clean4JesusVpnService.isActive()) {
+      promise.resolve(true)
+      return
+    }
+    if (!Clean4JesusVpnService.shouldAutoStart(reactContext)) {
+      promise.resolve(false)
+      return
+    }
+
+    val intent = Intent(reactContext, Clean4JesusVpnService::class.java).apply {
+      action = Clean4JesusVpnService.ACTION_START
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      reactContext.startForegroundService(intent)
+    } else {
+      reactContext.startService(intent)
+    }
+    waitForVpnRecovery(promise, 0)
+  }
+
+  private fun waitForVpnRecovery(promise: Promise, attempt: Int) {
+    if (Clean4JesusVpnService.isActive()) {
+      promise.resolve(true)
+      return
+    }
+    if (attempt >= 30) {
+      promise.resolve(false)
+      return
+    }
+    Handler(Looper.getMainLooper()).postDelayed({ waitForVpnRecovery(promise, attempt + 1) }, 100L)
   }
 
   @ReactMethod
@@ -86,41 +117,19 @@ class Clean4JesusVpnModule(private val reactContext: ReactApplicationContext) : 
   @ReactMethod
   fun isAccessibilityInterventionEnabled(promise: Promise) {
     try {
-      promise.resolve(isAccessibilityInterventionEnabled())
+      promise.resolve(Clean4JesusAccessibilityService.isServiceEnabled(reactContext))
     } catch (error: Exception) {
       promise.reject("ACCESSIBILITY_STATUS_FAILED", error)
     }
   }
 
   @ReactMethod
-  fun pauseAccessibilityIntervention(promise: Promise) {
+  fun prepareAccessibilityInterventionSetup(promise: Promise) {
     try {
-      promise.resolve(Clean4JesusAccessibilityService.pauseAccessibilityIntervention())
+      promise.resolve(Clean4JesusAccessibilityService.prepareForUserSetup(reactContext))
     } catch (error: Exception) {
-      promise.reject("ACCESSIBILITY_PAUSE_FAILED", error)
+      promise.reject("ACCESSIBILITY_SETUP_PREPARE_FAILED", error)
     }
-  }
-
-  @ReactMethod
-  fun prepareAccessibilityIntervention(promise: Promise) {
-    try {
-      promise.resolve(Clean4JesusAccessibilityService.prepareForAccessibilitySetup(reactContext))
-    } catch (error: Exception) {
-      promise.reject("ACCESSIBILITY_PREPARE_FAILED", error)
-    }
-  }
-
-  @ReactMethod
-  fun completeAccessibilitySetup(promise: Promise) {
-    try {
-      promise.resolve(Clean4JesusAccessibilityService.completeAccessibilitySetup(reactContext))
-    } catch (error: Exception) {
-      promise.reject("ACCESSIBILITY_COMPLETE_FAILED", error)
-    }
-  }
-
-  private fun isAccessibilityInterventionEnabled(): Boolean {
-    return Clean4JesusAccessibilityService.isAccessibilityServiceEnabled(reactContext)
   }
 
   @ReactMethod

@@ -1,6 +1,8 @@
 # Development Build / APK Clean4Jesus
 
-La guía operativa completa y vigente está en `TESTING-CELULAR.md`. Android se compila localmente con Gradle; EAS se reserva para iOS.
+La guía operativa completa y vigente está en `REPOSITORY-OPERATIONS.md`. Android se compila localmente con Gradle; EAS se reserva para iOS.
+
+> Regla vigente: la APK entregable es standalone release, no requiere Metro ni QR y se genera desde `C:\Users\millo\Desktop\Clean4Jesus` con `npm run build:android:local`. Este documento conserva notas de development build solo para depuración explícita.
 
 Esta guia es para probar Clean4Jesus como app instalada en tu Google Pixel 9, fuera de Expo Go.
 
@@ -21,19 +23,20 @@ Para eso usamos una **development build**: una app Clean4Jesus propia con herram
 - `expo-dev-client` instalado.
 - Android package: `com.clean4jesus.app`.
 - Carpeta nativa `android/` generada y debe permanecer versionada.
-- La candidata local es `1.3.37 (versionCode 55)`; una APK debug necesita Metro.
+- Versión declarada actual: `1.3.46 (versionCode 59)`.
 
 ## Primer APK De Desarrollo
 
 En una terminal normal de Windows:
 
 ```bash
+cd C:\Users\millo\Desktop\Clean4Jesus
 npm run build:android:local
 ```
 
-GitHub (`https://github.com/adminclean4jesus-lang/clean4jesus`) es la fuente de verdad y el script verifica ese remoto antes de compilar. El checkout local solo es una copia de trabajo: se sincroniza hacia `C:\c4j` y todo el trabajo pesado ocurre allí. La carpeta donde vive el checkout no recibe Gradle, CMake, caches, `node_modules`, keystore ni APKs. No copies `.gradle` ni carpetas `build/` entre rutas absolutas; el script prepara los metadatos nativos en la copia corta. Antes de usar Metro, crea `.env.local` desde `.env.example` con la URL y clave **publicable** del proyecto Supabase y la configuración pública de CAPTCHA; nunca pongas allí una service role key.
+El repositorio Desktop es la fuente de verdad; OneDrive está prohibido. Si Gradle requiere una ruta corta, crea una copia temporal en `C:\c4j`, instala dependencias limpias allí y vuelve a copiar únicamente el APK terminado a la ruta canónica. No copies `.gradle` ni carpetas `build/` entre rutas absolutas. Antes de usar Metro para depuración explícita, crea `.env.local` desde `.env.example` con la URL y clave **publicable** de Supabase; nunca pongas allí una service role key.
 
-La APK se publica en `C:\Users\millo\Desktop\Clean4Jesus\artifacts\apk\current\Clean4Jesus-current.apk`; la anterior queda en `previous`. Antes de entregar, verifica versión, firma, pruebas y rotación.
+La APK queda en `artifacts/apk/current/Clean4Jesus-current.apk`; el comando rota automáticamente la anterior a `artifacts/apk/previous/Clean4Jesus-previous.apk`.
 `android/build.gradle` evita en Windows que Gradle intente tomar snapshots de enlaces `libc++_shared.so` generados por el NDK; la compilación en macOS/Linux conserva el seguimiento incremental normal.
 Antes de promover una APK de QA, ejecuta también `cd android; .\gradlew.bat :app:lintDebug --no-daemon --max-workers=1` desde la copia corta. No confundas `assembleDebug` con lint aprobado.
 

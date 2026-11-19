@@ -119,4 +119,3 @@ grant execute on function public.get_my_guardian_pin_request(boolean) to authent
 grant execute on function public.cancel_my_guardian_pin_request() to authenticated;
 grant execute on function public.confirm_guardian_pin_request(bytea, text) to service_role;
 grant execute on function public.reset_guardian_pin_confirmation(bytea) to service_role;
-

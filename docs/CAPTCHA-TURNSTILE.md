@@ -15,7 +15,7 @@ Estado: cliente movil implementado para ingreso, registro y recuperacion; challe
 Autorizar Wrangler una sola vez:
 
 ```powershell
-cd <ruta-del-repositorio>
+cd C:\Users\millo\Desktop\Clean4Jesus
 npx wrangler login
 ```
 

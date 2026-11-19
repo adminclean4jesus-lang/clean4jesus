@@ -1,0 +1,6 @@
+{
+  "name": "clean4jesus-guardian-confirm",
+  "compatibility_date": "2026-07-25",
+  "assets": { "directory": "./web/guardian-confirmation" },
+  "routes": [{ "pattern": "pin.clean4jesus.com", "custom_domain": true }]
+}

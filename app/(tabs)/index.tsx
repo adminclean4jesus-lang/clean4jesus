@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ProgressBar } from "react-native-paper";
 
@@ -12,9 +12,9 @@ import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { recordFall } from "@/features/habits/habitService";
 import { hasPin } from "@/features/pin/pinService";
-import { getAccessibilityConfigured } from "@/features/shield/accessibilitySetupService";
 import { openAndroidAccessibilitySettings } from "@/features/shield/androidProtectionService";
-import { isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
+import { hasCompletedAccessibilityOnboarding, isAccessibilityInterventionActive, isLocalDnsVpnActive, startLocalDnsVpn } from "@/features/shield/localDnsVpnService";
+import { useFocusEffect } from "expo-router";
 import { iosProtectionService } from "@/features/iosProtection/iosProtectionService.ios";
 import { useShieldGate } from "@/features/shield/useShieldGate";
 import { useI18n } from "@/features/i18n/I18nProvider";
@@ -51,13 +51,16 @@ export default function HomeScreen() {
   const [pinReady, setPinReady] = useState(false);
   const [vpnReady, setVpnReady] = useState(false);
   const [accessibilityReady, setAccessibilityReady] = useState(false);
-  const [accessibilityConfigured, setAccessibilityConfigured] = useState(false);
   const [familyControlsReady, setFamilyControlsReady] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
     void refreshHomeState();
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    void refreshHomeState();
+  }, []));
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
@@ -70,10 +73,10 @@ export default function HomeScreen() {
   }, []);
 
   /* ── Readiness calculation differs by platform ── */
-  const totalLayers = isIos ? 2 : 3;
+  const totalLayers = 2;
   const readyCount = isIos
     ? [pinReady, familyControlsReady].filter(Boolean).length
-    : [pinReady, vpnReady, accessibilityReady || accessibilityConfigured].filter(Boolean).length;
+    : [pinReady, vpnReady].filter(Boolean).length;
   const readiness = readyCount / totalLayers;
   const refugeReady = enabled && readiness === 1;
   const coverageLabel = Math.round(readiness * 100);
@@ -82,7 +85,7 @@ export default function HomeScreen() {
 
   const missingLayers = isIos
     ? [!pinReady ? layers.pin : null, !familyControlsReady ? layers.familyControls : null].filter(Boolean) as string[]
-    : [!pinReady ? layers.pin : null, !vpnReady ? layers.vpn : null, !(accessibilityReady || accessibilityConfigured) ? layers.accessibility : null].filter(Boolean) as string[];
+    : [!pinReady ? layers.pin : null, !vpnReady ? layers.vpn : null].filter(Boolean) as string[];
 
   async function refreshHomeState() {
     try {
@@ -94,22 +97,20 @@ export default function HomeScreen() {
         setPinReady(pinExists);
         setFamilyControlsReady(status.isAuthorized);
       } else {
-        const [pinExists, vpnActive, accessibilityActive, configured] = await Promise.all([
+        const [pinExists, vpnActive, accessibilityConfigured, accessibilityActive] = await Promise.all([
           hasPin(),
           isLocalDnsVpnActive(),
+          hasCompletedAccessibilityOnboarding(),
           isAccessibilityInterventionActive(),
-          getAccessibilityConfigured(),
         ]);
         setPinReady(pinExists);
         setVpnReady(vpnActive);
-        setAccessibilityReady(accessibilityActive);
-        setAccessibilityConfigured(configured);
+        setAccessibilityReady(accessibilityConfigured);
       }
     } catch {
       setPinReady(false);
       setVpnReady(false);
       setAccessibilityReady(false);
-      setAccessibilityConfigured(false);
       setFamilyControlsReady(false);
     }
   }
@@ -195,7 +196,7 @@ export default function HomeScreen() {
                   ) : (
                     <>
                       <LayerButton label={layers.vpn} ready={vpnReady} value={vpnReady ? uiText(language, "refuge.vpn.ready") : uiText(language, "refuge.vpn.activate")} icon="shield-outline" onPress={() => void handleLayerPress("vpn")} />
-                      <LayerButton label={layers.accessibility} ready={accessibilityReady || accessibilityConfigured} value={accessibilityReady ? uiText(language, "refuge.accessibility.ready") : accessibilityConfigured ? uiText(language, "refuge.pin.ready") : uiText(language, "refuge.accessibility.open")} icon="access-point" onPress={() => void handleLayerPress("accessibility")} />
+                      <LayerButton label={layers.accessibility} ready={accessibilityReady} value={accessibilityReady ? uiText(language, "refuge.accessibility.ready") : uiText(language, "refuge.accessibility.open")} icon="access-point" onPress={() => void handleLayerPress("accessibility")} />
                     </>
                   )}
                 </View>

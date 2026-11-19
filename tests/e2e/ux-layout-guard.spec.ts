@@ -14,6 +14,7 @@ const enabledShieldState = JSON.stringify({
 
 async function seedShield(page: Page) {
   await page.addInitScript((shieldState) => {
+    localStorage.setItem("clean4jesus.e2e.authenticated", "true");
     localStorage.setItem("clean4jesus.shield.enabled", "true");
     localStorage.setItem("clean4jesus.shield.state", shieldState);
   }, enabledShieldState);
@@ -58,17 +59,16 @@ test("UX guard: el footer conserva columnas separadas y espacio de lectura", asy
   await page.screenshot({ path: "artifacts/previews/ux-qa-planes-mobile.png", fullPage: true });
 });
 
-test("UX guard: comunidad conectada muestra acceso seguro y estable", async ({ page }) => {
+test("UX guard: el acceso global muestra una entrada segura y estable", async ({ page }) => {
   test.setTimeout(120_000);
-  await seedShield(page);
-  await page.goto("/community", { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await page.goto("/", { waitUntil: "domcontentloaded", timeout: 120_000 });
 
   const authGate = page.getByTestId("community-auth-gate");
   await expect(authGate).toBeVisible();
-  await expect(page.getByText("Vuelve a caminar acompañado", { exact: true })).toBeVisible();
+  await expect(page.getByText("Bienvenido de nuevo", { exact: true })).toBeVisible();
   await expect(page.getByText("Ingresar", { exact: true })).toBeVisible();
   await expect(page.getByText("Crear cuenta", { exact: true })).toBeVisible();
-  await expect(page.getByText(/tu correo nunca se muestra en el feed/i)).toBeVisible();
+  await expect(page.getByText(/tu cuenta es el primer paso/i)).toBeVisible();
   await page.screenshot({ path: "artifacts/previews/ux-qa-social-auth-light-mobile.png", fullPage: true });
   await page.getByText("Crear cuenta", { exact: true }).click();
   await expect(page.getByRole("checkbox")).toBeVisible();
@@ -79,14 +79,13 @@ test("UX guard: comunidad conectada muestra acceso seguro y estable", async ({ p
 
 test("UX guard: el reto antiabuso tiene una salida clara antes de autenticar", async ({ page }) => {
   test.setTimeout(120_000);
-  await seedShield(page);
-  await page.goto("/community", { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await page.goto("/", { waitUntil: "domcontentloaded", timeout: 120_000 });
 
   const inputs = page.locator("input");
   await inputs.nth(0).fill("qa@clean4jesus.com");
   await inputs.nth(1).fill("ContrasenaDePrueba1");
   await page.getByRole("checkbox").click();
-  await page.getByRole("button", { name: "Entrar a comunidad" }).click();
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
 
   await expect(page.getByText("Verificación disponible en la app móvil", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Cerrar" })).toBeVisible();
@@ -182,49 +181,6 @@ test("UX guard: perfil separa la cuenta de los ajustes y el modo oscuro", async 
   await expect(page.getByText("Palabra para hoy", { exact: true }).first()).toBeVisible();
   await page.screenshot({ path: "artifacts/previews/ux-qa-palabra-dark-mobile.png", fullPage: true });
 
-  await page.goto("/community", { waitUntil: "domcontentloaded", timeout: 120_000 });
-  await expect(page.getByRole("button", { name: "Continuar con Google" })).toBeVisible();
-  await expect(page.getByTestId("google-brand-icon")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Continuar con Apple" })).toHaveCount(0);
-  await expect(page.getByText("Continuar con Google", { exact: true })).toHaveCSS(
-    "color",
-    "rgb(31, 31, 31)",
-  );
-  await expect(page.getByRole("button", { name: "Continuar con Google" })).toHaveCSS(
-    "background-color",
-    "rgb(255, 255, 255)",
-  );
-  await expect(page.getByRole("button", { name: "Continuar con Google" })).toHaveCSS(
-    "border-color",
-    "rgb(116, 119, 117)",
-  );
-  const googleButtonBox = await page
-    .getByRole("button", { name: "Continuar con Google" })
-    .boundingBox();
-  const googleIconBox = await page.getByTestId("google-brand-icon").boundingBox();
-  const googleLabelBox = await page
-    .getByText("Continuar con Google", { exact: true })
-    .boundingBox();
-  expect(googleButtonBox).not.toBeNull();
-  expect(googleButtonBox?.height ?? 0).toBeGreaterThanOrEqual(48);
-  expect(googleIconBox?.width ?? 0).toBeGreaterThanOrEqual(19);
-  expect(googleIconBox?.width ?? 0).toBeLessThanOrEqual(21);
-  expect(Math.abs(
-    (googleIconBox?.y ?? 0) + (googleIconBox?.height ?? 0) / 2
-      - ((googleLabelBox?.y ?? 0) + (googleLabelBox?.height ?? 0) / 2),
-  )).toBeLessThanOrEqual(2);
-  expect((googleLabelBox?.x ?? 0) - ((googleIconBox?.x ?? 0) + (googleIconBox?.width ?? 0)))
-    .toBeGreaterThanOrEqual(10);
-  expect((googleLabelBox?.x ?? 0) - ((googleIconBox?.x ?? 0) + (googleIconBox?.width ?? 0)))
-    .toBeLessThanOrEqual(11);
-  expect((googleIconBox?.x ?? 0) - (googleButtonBox?.x ?? 0))
-    .toBeGreaterThanOrEqual(12);
-  expect(
-    (googleButtonBox?.x ?? 0) + (googleButtonBox?.width ?? 0)
-      - ((googleLabelBox?.x ?? 0) + (googleLabelBox?.width ?? 0)),
-  ).toBeGreaterThanOrEqual(12);
-  await page.screenshot({ path: "artifacts/previews/ux-qa-social-auth-dark-mobile.png", fullPage: true });
-
   await page.goto("/devotional", { waitUntil: "domcontentloaded", timeout: 120_000 });
   await page.getByTestId("devotional-mode-plans").click();
   await expect(page.getByText("Elige un camino para esta semana", { exact: true })).toBeVisible();
@@ -250,11 +206,10 @@ test("UX guard: perfil separa la cuenta de los ajustes y el modo oscuro", async 
 
 test("UX guard: Google conserva geometria profesional en anchos Android", async ({ page }) => {
   test.setTimeout(180_000);
-  await seedShield(page);
 
   for (const width of [320, 360, 393, 412]) {
     await page.setViewportSize({ width, height: 844 });
-    await page.goto("/community", { waitUntil: "domcontentloaded", timeout: 120_000 });
+    await page.goto("/", { waitUntil: "domcontentloaded", timeout: 120_000 });
 
     const button = page.getByRole("button", { name: "Continuar con Google" });
     const icon = page.getByTestId("google-brand-icon");

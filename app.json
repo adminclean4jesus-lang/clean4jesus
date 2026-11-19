@@ -3,22 +3,15 @@
     "name": "Clean4Jesus",
     "slug": "clean4jesus",
     "scheme": "clean4jesus",
-    "version": "1.3.37",
+    "version": "1.3.58",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
-    },
     "android": {
-      "versionCode": 55,
+      "versionCode": 71,
       "package": "com.clean4jesus.app",
-      "newArchEnabled": true,
       "adaptiveIcon": {
-        "backgroundColor": "#071F52",
+        "backgroundColor": "#02174B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -29,7 +22,7 @@
     "ios": {
       "appleTeamId": "Z7NA7KP494",
       "bundleIdentifier": "com.clean4jesus.app",
-      "buildNumber": "27",
+      "buildNumber": "36",
       "supportsTablet": false,
       "entitlements": {
         "com.apple.developer.family-controls": true,
@@ -47,13 +40,21 @@
     "plugins": [
       "expo-router",
       "@bacons/apple-targets",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#02174B",
+          "image": "./assets/splash-mark-transparent.png",
+          "imageWidth": 148,
+          "resizeMode": "contain"
+        }
+      ],
       "@react-native-community/datetimepicker",
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#071F52",
+          "color": "#02174B",
           "defaultChannel": "devotional-reminders"
         }
       ],
@@ -69,7 +70,7 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "16.0"
+            "deploymentTarget": "16.4"
           }
         }
       ],
@@ -77,14 +78,31 @@
         "expo-localization",
         {
           "supportedLocales": {
-            "ios": ["es", "en", "fr", "pt"],
-            "android": ["es", "en", "fr", "pt"]
+            "ios": [
+              "es",
+              "en",
+              "fr",
+              "pt"
+            ],
+            "android": [
+              "es",
+              "en",
+              "fr",
+              "pt"
+            ]
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-status-bar"
     ],
     "extra": {
       "router": {},
+      "authCaptcha": {
+        "enabled": true,
+        "siteKey": "0x4AAAAAAD3Tva_JqHFsBK0_",
+        "challengeUrl": "https://verify.clean4jesus.com/turnstile/"
+      },
       "supabase": {
         "url": "https://moqlovsxklxcpihvheyc.supabase.co",
         "publishableKey": "sb_publishable_33LHr0SmYA5RIpa5HWpE_A_Yv35VcDt"

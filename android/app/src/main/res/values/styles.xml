@@ -11,4 +11,12 @@
     <item name="postSplashScreenTheme">@style/AppTheme</item>
     <item name="android:windowSplashScreenBehavior" tools:targetApi="33">icon_preferred</item>
   </style>
+  <style name="Theme.Clean4Jesus.BankReturn" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <item name="android:windowIsTranslucent">true</item>
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:backgroundDimEnabled">true</item>
+    <item name="android:windowCloseOnTouchOutside">false</item>
+    <item name="android:colorAccent">#071F52</item>
+  </style>
 </resources>

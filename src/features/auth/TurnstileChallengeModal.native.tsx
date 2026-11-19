@@ -146,7 +146,7 @@ function createStyles(colors: ThemeColors) {
   body: { color: colors.muted, fontFamily: fonts.body, fontSize: 13, lineHeight: 21 },
   challengeFrame: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 20, borderWidth: 1, flex: 1, minHeight: 280, overflow: "hidden" },
   webView: { backgroundColor: colors.surface, flex: 1 },
-  loader: { ...StyleSheet.absoluteFillObject },
+  loader: { ...StyleSheet.absoluteFill },
   stateWrap: { alignItems: "center", flex: 1, gap: 14, justifyContent: "center", padding: 30 },
   errorText: { color: colors.danger, fontFamily: fonts.bodyMedium, fontSize: 13, lineHeight: 20, textAlign: "center" },
   retryButton: { alignItems: "center", backgroundColor: colors.primaryDark, borderRadius: 14, minHeight: 46, justifyContent: "center", paddingHorizontal: 20 },

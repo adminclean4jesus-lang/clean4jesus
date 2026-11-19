@@ -141,8 +141,26 @@ function repairLegacyEncoding(value: string) {
     .replaceAll("Â ", " ").replaceAll("â€™", "’").replaceAll("â€“", "–").replaceAll("â€”", "—").replaceAll("â€œ", "“").replaceAll("â€\u009d", "”");
 }
 
+const configuredAccessibilityRefugeBody: Record<SupportedLanguage, string> = {
+  es: "El PIN, la VPN local y la configuración de Accesibilidad forman tu refugio. Tras configurarla, Clean4Jesus la pausa para mantener la compatibilidad con tus apps bancarias.",
+  en: "Your PIN, local VPN, and Accessibility setup form your refuge. After setup, Clean4Jesus pauses Accessibility to keep banking apps compatible.",
+  fr: "Le PIN, le VPN local et la configuration de l’Accessibilité forment votre refuge. Après la configuration, Clean4Jesus met l’Accessibilité en pause pour préserver la compatibilité bancaire.",
+  pt: "O PIN, a VPN local e a configuração de Acessibilidade formam seu refúgio. Após a configuração, o Clean4Jesus pausa a Acessibilidade para manter a compatibilidade bancária.",
+};
+
+const configuredAccessibilityStatus: Record<SupportedLanguage, string> = {
+  es: "Configurada",
+  en: "Configured",
+  fr: "Configurée",
+  pt: "Configurada",
+};
+
 export function uiText(language: SupportedLanguage, key: UiTextKey, variables: Record<string, string | number> = {}) {
-  let value = repairLegacyEncoding(strings[language][key] ?? (language === "pt" ? strings.en[key] : strings.es[key]));
+  let value = key === "refuge.body"
+    ? configuredAccessibilityRefugeBody[language]
+    : key === "refuge.accessibility.ready"
+      ? configuredAccessibilityStatus[language]
+      : repairLegacyEncoding(strings[language][key] ?? (language === "pt" ? strings.en[key] : strings.es[key]));
   for (const [name, replacement] of Object.entries(variables)) value = value.replace(`{${name}}`, String(replacement));
   return value;
 }

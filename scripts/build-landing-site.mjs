@@ -35,6 +35,10 @@ function page() {
   <meta property="og:description" content="Protección local, Palabra y comunidad para volver a elegir con libertad.">
   <meta property="og:image" content="https://clean4jesus.com/app-refugio.png">
   <title>Clean4Jesus | Protección digital con propósito</title>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});</script>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KN36ZCP2');</script>
+  <!-- End Google Tag Manager -->
   <style>
     @font-face{font-family:Lexend;src:url('/fonts/lexend-regular.ttf');font-display:swap}
     @font-face{font-family:Lexend;src:url('/fonts/lexend-bold.ttf');font-display:swap;font-weight:700}
@@ -92,7 +96,10 @@ function page() {
   </style>
 </head>
 <body>
-  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KN36ZCP2" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <aside id="analytics-consent" aria-label="Preferencias de medición" hidden style="background:#11195b;bottom:16px;box-shadow:0 12px 32px rgba(17,25,91,.28);color:#fff;left:16px;max-width:540px;padding:20px;position:fixed;right:16px;z-index:50"><p style="color:#e1e7f7;font-size:13px;margin:0">Usamos medición anónima para mejorar este sitio. Puedes aceptar o rechazarla. Lee la <a style="color:#f4aa24" href="https://legal.clean4jesus.com/privacidad">Política de Privacidad</a>.</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px"><button type="button" data-analytics-choice="granted">Aceptar medición</button><button type="button" data-analytics-choice="denied">Rechazar</button></div></aside>  <a class="skip" href="#contenido">Saltar al contenido</a>
   <header class="hero" id="inicio">
     <div class="shell site-nav">
       <a class="brand" href="#inicio" aria-label="Clean4Jesus, inicio"><img src="/brand-mark.png" alt=""><span>Clean<span class="four">4</span>Jesus</span></a>
@@ -181,6 +188,6 @@ function page() {
   </main>
 
   <footer class="footer"><div class="shell footer-row"><a class="brand" href="#inicio"><img src="/brand-mark.png" alt=""><span>Clean4Jesus</span></a><div class="footer-links"><a href="https://legal.clean4jesus.com/privacidad">Privacidad</a><a href="https://legal.clean4jesus.com/terminos">Términos</a><a href="https://legal.clean4jesus.com/comunidad">Comunidad</a><a href="mailto:soporte@clean4jesus.com">soporte@clean4jesus.com</a></div><small>© 2026 Clean4Jesus</small></div></footer>
-</body>
+   <script>(()=>{const key='clean4jesus.analytics-consent.v1',banner=document.getElementById('analytics-consent'),saved=localStorage.getItem(key),apply=(value)=>{gtag('consent','update',{analytics_storage:value,ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});localStorage.setItem(key,value);banner.hidden=true};if(saved==='granted'||saved==='denied')apply(saved);else banner.hidden=false;banner.addEventListener('click',(event)=>{const choice=event.target.dataset.analyticsChoice;if(choice)apply(choice)})})();</script></body>
 </html>`;
 }

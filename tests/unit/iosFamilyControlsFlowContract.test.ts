@@ -15,6 +15,15 @@ describe("Family Controls activation flow", () => {
     expect(configure).toBeGreaterThan(picker);
   });
 
+  it("restores a previously configured iOS refuge without asking Family Controls again", () => {
+    const source = readFileSync(join(process.cwd(), "app/index.tsx"), "utf8");
+
+    expect(source).toContain("status.lastSyncTimestamp > 0");
+    expect(source).toContain("status.isAuthorized");
+    expect(source).toContain("hasSavedIosRefuge");
+    expect(source).toContain('router.replace("/(tabs)")');
+  });
+
   it("does not reference a missing generated JavaScript native module", () => {
     const source = readFileSync(
       join(process.cwd(), "modules/clean4jesus-ios-protection/index.js"),
