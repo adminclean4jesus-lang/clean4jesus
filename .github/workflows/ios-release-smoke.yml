@@ -11,7 +11,7 @@ on:
 
 jobs:
   release-startup:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       EXPO_NO_TELEMETRY: "1"
@@ -111,9 +111,9 @@ jobs:
           test -n "$PROVIDER"
           grep -q "Clean4JesusIosProtectionModule" "$PROVIDER"
 
-      - name: Prove that iOS uses Legacy Architecture
+      - name: Verify iOS architecture configuration
         run: |
-          node -e "const p=require('./ios/Podfile.properties.json'); if(p.newArchEnabled !== 'false'){throw new Error('iOS New Architecture is still enabled: '+p.newArchEnabled)}; console.log('iOS newArchEnabled=false')"
+          node -e "const p=require('./ios/Podfile.properties.json'); if(p.newArchEnabled === 'false'){throw new Error('Legacy Architecture is incompatible with Expo SDK 57')}; console.log('iOS configuration does not disable New Architecture')"
 
       - name: Compile the Release simulator app
         timeout-minutes: 40
