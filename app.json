@@ -22,7 +22,7 @@
     "ios": {
       "appleTeamId": "Z7NA7KP494",
       "bundleIdentifier": "com.clean4jesus.app",
-      "buildNumber": "35",
+      "buildNumber": "36",
       "supportsTablet": false,
       "entitlements": {
         "com.apple.developer.family-controls": true,

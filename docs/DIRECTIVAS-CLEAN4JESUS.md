@@ -593,3 +593,4 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 
 - La persona usuaria confirmó que TestFlight 1.3.46 (35) no solicita el correo de la persona de confianza al comenzar y muestra un escudo antiguo. La nueva candidata debe solicitar el PIN por correo antes de configurar el refugio iOS, recuperar solicitudes existentes sin desactivar restricciones, y utilizar el archivo oficial `assets/icon.png` en la extensión de bloqueo de Apple.
 - La corrección de código no modifica la build ya distribuida. No afirmar que está disponible hasta obtener una compilación firmada, procesada en TestFlight y verificada en un iPhone físico con el correo de confirmación y el escudo real.
+- El usuario confirmó que la compilación más alta disponible en TestFlight era la 35; la candidata siguiente se prepara con número 36. Este número no acredita carga ni distribución.
