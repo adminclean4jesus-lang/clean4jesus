@@ -17,6 +17,7 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { AppLoadingExperience } from "@/components/AppLoadingExperience";
+import { OfficialBrandMark } from "@/components/OfficialBrandMark";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { WelcomeAuthScreen } from "@/features/onboarding/WelcomeAuthScreen";
 import { hasPin } from "@/features/pin/pinService";
@@ -86,6 +87,18 @@ function IosGateScreen() {
   }, []);
 
   async function refreshIosState() {
+    // The guardian keeps the PIN; first-time iOS users configure it by email
+    // before proceeding to Family Controls. Existing protected users keep
+    // their active restrictions while the PIN is recovered on this device.
+    try {
+      if (!(await hasPin())) {
+        router.replace("/pin-setup?after=ios-initial");
+        return;
+      }
+    } catch {
+      router.replace("/pin-setup?after=ios-initial");
+      return;
+    }
     try {
       const [status, selection] = await Promise.all([
         iosProtectionService.getProtectionStatus(),
@@ -173,11 +186,7 @@ function IosGateScreen() {
     return (
       <Screen>
         <View style={styles.loadingCenter}>
-          <MaterialCommunityIcons
-            color={colors.primary}
-            name="shield-cross"
-            size={48}
-          />
+          <OfficialBrandMark size={48} />
           <Text style={styles.loadingText}>{copy.loading}</Text>
         </View>
       </Screen>
@@ -188,11 +197,7 @@ function IosGateScreen() {
     <Screen>
       <View style={styles.brandRow}>
         <View style={styles.brandBadge}>
-          <MaterialCommunityIcons
-            color={colors.primaryDark}
-            name="shield-cross"
-            size={20}
-          />
+          <OfficialBrandMark size={32} />
         </View>
         <View style={styles.brandText}>
           <Text style={styles.brandEyebrow}>Clean4Jesus</Text>

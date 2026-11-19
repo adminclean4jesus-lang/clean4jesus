@@ -8,13 +8,17 @@ function read(path: string) {
 }
 
 describe("Phase 1 protection contracts", () => {
-  it("keeps the guardian PIN out of iOS startup and requires it only for later limit edits", () => {
+  it("requests trusted-person setup before first iOS protection setup without asking for the PIN at every launch", () => {
     const gateSource = read("app/index.tsx");
     const verifySource = read("app/pin-verify.tsx");
     const protectionSource = read("app/ios-protection.tsx");
 
     expect(gateSource).not.toContain("isIosPinSessionVerified()");
     expect(gateSource).not.toContain('router.replace("/pin-verify?action=enter-ios-refuge")');
+    const iosGate = gateSource.split("function IosGateScreen()")[1].split("/* ─────────────────────── Android")[0];
+    expect(iosGate).toContain("if (!(await hasPin()))");
+    expect(iosGate).toContain('router.replace("/pin-setup?after=ios-initial")');
+    expect(iosGate.indexOf("await hasPin()" )).toBeLessThan(iosGate.indexOf("iosProtectionService.getProtectionStatus()"));
     expect(protectionSource).toContain("hasUserConfiguredLimits");
     expect(protectionSource).toContain('requireGuardianPin("edit-ios-limits")');
     expect(verifySource).toContain('action === "edit-ios-limits"');

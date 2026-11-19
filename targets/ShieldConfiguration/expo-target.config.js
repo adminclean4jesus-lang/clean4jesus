@@ -3,7 +3,7 @@ module.exports = {
   name: "ShieldConfigurationExtension",
   deploymentTarget: "16.0",
   images: {
-    Clean4JesusOfficialMark: "../../assets/android-icon-foreground.png",
+    Clean4JesusOfficialMark: "../../assets/icon.png",
   },
   entitlements: {
     "com.apple.developer.family-controls": true,

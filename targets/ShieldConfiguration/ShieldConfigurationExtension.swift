@@ -27,9 +27,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         return ShieldConfiguration(
             backgroundBlurStyle: .systemMaterialLight,
             backgroundColor: UIColor(red: 0.94, green: 0.96, blue: 0.99, alpha: 1.0),
-            // The exported foreground icon is white and disappears on Apple's
-            // light shield material. Draw the official shield mark in-brand.
-            icon: makeClean4JesusMark(),
+            icon: UIImage(named: "Clean4JesusOfficialMark"),
             title: ShieldConfiguration.Label(text: titleText, color: UIColor(red: 0.027, green: 0.122, blue: 0.322, alpha: 1.0)),
             subtitle: ShieldConfiguration.Label(text: subtitleText, color: UIColor(red: 0.19, green: 0.29, blue: 0.43, alpha: 1.0)),
             primaryButtonLabel: ShieldConfiguration.Label(text: primaryLabel, color: .white),
@@ -38,27 +36,4 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         )
     }
 
-    private func makeClean4JesusMark() -> UIImage {
-        let size = CGSize(width: 96, height: 96)
-        return UIGraphicsImageRenderer(size: size).image { _ in
-            let shield = UIBezierPath()
-            shield.move(to: CGPoint(x: 48, y: 8))
-            shield.addLine(to: CGPoint(x: 77, y: 20))
-            shield.addLine(to: CGPoint(x: 73, y: 54))
-            shield.addCurve(to: CGPoint(x: 48, y: 82), controlPoint1: CGPoint(x: 70, y: 67), controlPoint2: CGPoint(x: 58, y: 77))
-            shield.addCurve(to: CGPoint(x: 23, y: 54), controlPoint1: CGPoint(x: 38, y: 77), controlPoint2: CGPoint(x: 26, y: 67))
-            shield.addLine(to: CGPoint(x: 19, y: 20))
-            shield.close()
-            UIColor(red: 0.79, green: 0.58, blue: 0.12, alpha: 1.0).setStroke()
-            shield.lineWidth = 4
-            shield.stroke()
-
-            UIColor(red: 0.027, green: 0.122, blue: 0.322, alpha: 1.0).setFill()
-            shield.fill()
-
-            UIColor.white.setFill()
-            UIBezierPath(roundedRect: CGRect(x: 43, y: 29, width: 10, height: 35), cornerRadius: 5).fill()
-            UIBezierPath(roundedRect: CGRect(x: 31, y: 42, width: 34, height: 10), cornerRadius: 5).fill()
-        }
-    }
 }

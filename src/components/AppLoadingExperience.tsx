@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 
+import { OfficialBrandMark } from "@/components/OfficialBrandMark";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
 import { fonts, ThemeColors } from "@/theme";
 
@@ -22,7 +23,7 @@ export function AppLoadingExperience({
     <View style={[styles.shell, layout === "contextual" && styles.shellContextual]}>
       <View style={styles.center}>
         <View style={styles.iconWrap}>
-          <MaterialCommunityIcons color={colors.partial} name="shield-cross" size={34} />
+          {Platform.OS === "ios" ? <OfficialBrandMark size={58} /> : <MaterialCommunityIcons color={colors.partial} name="shield-cross" size={34} />}
         </View>
         <Text
           style={styles.title}

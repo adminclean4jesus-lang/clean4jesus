@@ -588,3 +588,8 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - El lockfile de esta candidata se generó con resolución de peers heredada; las comprobaciones iOS deben usar `npm ci --legacy-peer-deps` con el mismo modo. Esto no elimina la incompatibilidad declarada entre versiones de Expo y Worklets: conservarla visible y comprobar las compilaciones reales antes de publicar.
 - La landing vigente se valida directamente; `landing:build` y `landing:deploy` no deben regenerar la plantilla anterior y sobrescribir la página publicada.
 - Expo SDK 57 requiere la Nueva Arquitectura de React Native: la comprobación iOS no debe exigir la arquitectura Legacy. Esto no demuestra estabilidad en iOS; mantener la compilación Release, el simulador y las 20 aperturas como comprobaciones obligatorias antes de validar la candidata.
+
+## Corrección de beta iOS (18 de noviembre de 2026)
+
+- La persona usuaria confirmó que TestFlight 1.3.46 (35) no solicita el correo de la persona de confianza al comenzar y muestra un escudo antiguo. La nueva candidata debe solicitar el PIN por correo antes de configurar el refugio iOS, recuperar solicitudes existentes sin desactivar restricciones, y utilizar el archivo oficial `assets/icon.png` en la extensión de bloqueo de Apple.
+- La corrección de código no modifica la build ya distribuida. No afirmar que está disponible hasta obtener una compilación firmada, procesada en TestFlight y verificada en un iPhone físico con el correo de confirmación y el escudo real.
