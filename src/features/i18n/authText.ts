@@ -5,9 +5,9 @@ const es = {
   agreementTitle: "Revisa el acuerdo", agreementBody: "Confirma que leíste el aviso de privacidad y las reglas de comunidad.",
   passwordTitle: "Revisa tu contraseña", passwordMismatch: "La confirmación debe coincidir exactamente con la contraseña.",
   unavailable: "Verificación no disponible", checkEmail: "Revisa tu correo", resetSent: "Si existe una cuenta con ese correo, recibirás un enlace seguro. Ábrelo en este dispositivo para volver a Clean4Jesus y cambiar la contraseña.",
-  failed: "No pudimos continuar", retry: "Intenta nuevamente.", confirmAccount: "Confirma tu cuenta", sentLink: "Enviamos el enlace de confirmación a:",
+  failed: "No pudimos continuar", retry: "Intenta nuevamente.", confirmAccount: "Confirma tu cuenta", sentLink: "Solicitamos el envío del enlace de confirmación a:",
   openSameDevice: "Abre el enlace desde este mismo dispositivo para regresar a Clean4Jesus y completar el acceso.", spamHelp: "Si no lo encuentras, revisa spam o correo no deseado antes de solicitar otro.",
-  resending: "Reenviando...", resend: "Reenviar correo", resent: "Correo reenviado. Usa el enlace más reciente que recibas.", resendError: "No pudimos reenviarlo. Revisa tu conexión e intenta nuevamente.",
+  resending: "Reenviando...", resend: "Reenviar correo", resent: "Correo reenviado. Usa el enlace más reciente que recibas.", resendError: "No pudimos solicitar otro correo. Espera un momento y prueba de nuevo; si persiste, contacta a soporte.",
   anotherEmail: "Usar otro correo", pending: "Puedes cerrar esta pantalla mientras llega el mensaje. Tu cuenta quedará pendiente hasta que abras el enlace.",
   protected: "Comunidad protegida", signInTitle: "Vuelve a caminar acompañado", signUpTitle: "Crea tu espacio seguro", forgotTitle: "Recupera tu acceso",
   cardBody: "Tu cuenta permite conservar testimonios, pedidos de oración y respuestas. Tu correo nunca se muestra en el feed.",
@@ -35,3 +35,4 @@ const pt: AuthCopy = {
 
 const tables: Record<SupportedLanguage, AuthCopy> = { es, en, fr, pt };
 export function getAuthText(language: SupportedLanguage) { return tables[language]; }
+
