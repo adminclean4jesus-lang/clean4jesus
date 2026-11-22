@@ -36,7 +36,7 @@ jobs:
           echo "Construyendo Clean4Jesus ${LABEL} desde ${GITHUB_SHA}"
           echo "label=${LABEL}" >> "$GITHUB_OUTPUT"
 
-      - name: Build signed iOS IPA locally
+      - name: Build signed App Store iOS IPA locally
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
@@ -46,7 +46,7 @@ jobs:
           EXPO_PUBLIC_TURNSTILE_CHALLENGE_URL: ${{ secrets.EXPO_PUBLIC_TURNSTILE_CHALLENGE_URL }}
         run: |
           mkdir -p artifacts
-          npx eas-cli build --platform ios --profile preview --local --non-interactive --output ./artifacts/Clean4Jesus.ipa
+          npx eas-cli build --platform ios --profile production --local --non-interactive --output ./artifacts/Clean4Jesus.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
