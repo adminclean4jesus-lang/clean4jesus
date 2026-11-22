@@ -640,4 +640,5 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - Las ediciones de límites permiten reducir el tiempo sin PIN; para aumentar límites se valida el PIN de confianza y el editor nativo restringe opciones y verifica los cambios antes de guardar.
 - Al volver al primer plano, refrescar autorización Family Controls y mostrar estado pausado con acción para autorizar de nuevo si iOS retiró el permiso. Esto detecta la revocación; no la impide.
 - La build 38 debe compilarse y cargarse en TestFlight antes de anunciar disponibilidad. No se declara QA física completada por el build exitoso.
+- El workflow de entrega TestFlight debe subir el IPA App Store mediante `eas submit --platform ios --profile production --path ... --non-interactive` con `EXPO_TOKEN`, después de compilarlo; conservar el artefacto para rastreo. La ejecución de EAS Submit debe confirmarse en App Store Connect antes de decir que está en TestFlight.
 
