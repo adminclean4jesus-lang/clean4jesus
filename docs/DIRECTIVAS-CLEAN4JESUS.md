@@ -608,7 +608,7 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - La corrección de código no modifica la build ya distribuida. No afirmar que está disponible hasta obtener una compilación firmada, procesada en TestFlight y verificada en un iPhone físico con el correo de confirmación y el escudo real.
 - El usuario confirmó que la compilación más alta disponible en TestFlight era la 35; la candidata siguiente se prepara con número 36. Este número no acredita carga ni distribución.
 - EAS también ejecuta `npm ci` durante la compilación; el perfil de producción debe usar `NPM_CONFIG_LEGACY_PEER_DEPS=true` para respetar el modo del lockfile. La advertencia de compatibilidad entre Expo y Worklets continúa vigente.
-- El flujo de GitHub para iOS usa el perfil `preview` y EAS vuelve a ejecutar `npm ci` dentro del build local; ese perfil también debe exportar `NPM_CONFIG_LEGACY_PEER_DEPS=true`. Si no, el lockfile creado con peers heredados falla con dependencias faltantes aunque el paso inicial de CI pase.
+- El flujo de GitHub para TestFlight debe usar el perfil `production` de EAS (distribución App Store), no `preview` (instalación interna). EAS ejecuta `npm ci` dentro del build local; tanto el perfil `production` como el workflow deben conservar `NPM_CONFIG_LEGACY_PEER_DEPS=true` para respetar el lockfile creado con peers heredados.
 
 ## Android: batería y búsqueda de Google (19 de noviembre de 2026)
 
