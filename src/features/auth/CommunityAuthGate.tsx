@@ -59,9 +59,11 @@ export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGatePr
   const [socialSubmitting, setSocialSubmitting] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<"error" | "idle" | "sending" | "sent">("idle");
+  const [resendErrorMessage, setResendErrorMessage] = useState<string | null>(null);
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [legalDocument, setLegalDocument] = useState<CommunityLegalDocument | null>(null);
   const [captchaVisible, setCaptchaVisible] = useState(false);
+  const captchaPurpose = useRef<"credentials" | "resend">("credentials");
   const resendInFlight = useRef(false);
   const submitInFlight = useRef(false);
 
@@ -86,6 +88,7 @@ export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGatePr
         Alert.alert(copy.unavailable, getCaptchaConfigurationMessage(configurationError, language));
         return;
       }
+      captchaPurpose.current = "credentials";
       setCaptchaVisible(true);
       return;
     }
@@ -110,6 +113,7 @@ export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGatePr
         if (result.requiresEmailConfirmation) {
           setConfirmationEmail(email.trim().toLowerCase());
           setResendStatus("idle");
+          setResendErrorMessage(null);
           setMode("signIn");
         }
       }
@@ -117,6 +121,7 @@ export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGatePr
       if (mode === "signIn" && error instanceof AuthServiceError && error.code === "email_not_confirmed") {
         setConfirmationEmail(email.trim().toLowerCase());
         setResendStatus("idle");
+        setResendErrorMessage(null);
       } else {
         Alert.alert(copy.failed, getAuthErrorMessage(error, language, copy.retry));
       }
@@ -128,18 +133,41 @@ export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGatePr
 
   function handleCaptchaSolved(token: string) {
     setCaptchaVisible(false);
-    void submitCredentials(token);
+    if (captchaPurpose.current === "resend") {
+      void submitResendConfirmation(token);
+    } else {
+      void submitCredentials(token);
+    }
   }
 
   async function handleResendConfirmation() {
     if (!confirmationEmail || resendInFlight.current) return;
+
+    if (captchaConfig.enabled) {
+      const configurationError = captchaConfigurationError();
+      if (configurationError) {
+        Alert.alert(copy.unavailable, getCaptchaConfigurationMessage(configurationError, language));
+        return;
+      }
+      captchaPurpose.current = "resend";
+      setCaptchaVisible(true);
+      return;
+    }
+
+    await submitResendConfirmation();
+  }
+
+  async function submitResendConfirmation(captchaToken?: string) {
+    if (!confirmationEmail || resendInFlight.current) return;
     resendInFlight.current = true;
     setResendStatus("sending");
+    setResendErrorMessage(null);
     try {
-      await resendConfirmationEmail(confirmationEmail);
+      await resendConfirmationEmail(confirmationEmail, captchaToken);
       setResendStatus("sent");
-    } catch {
+    } catch (error) {
       setResendStatus("error");
+      setResendErrorMessage(getAuthErrorMessage(error, language, copy.resendError));
     } finally {
       resendInFlight.current = false;
     }
@@ -148,6 +176,7 @@ export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGatePr
   function changeConfirmationEmail() {
     setConfirmationEmail(null);
     setResendStatus("idle");
+    setResendErrorMessage(null);
     setMode("signUp");
   }
 
@@ -194,7 +223,7 @@ export function CommunityAuthGate({ presentation = "card" }: CommunityAuthGatePr
         {resendStatus === "sent" ? (
           <Text accessibilityLiveRegion="polite" style={styles.resendSuccess}>{copy.resent}</Text>
         ) : resendStatus === "error" ? (
-          <Text accessibilityLiveRegion="polite" style={styles.resendError}>{copy.resendError}</Text>
+          <Text accessibilityLiveRegion="polite" style={styles.resendError}>{resendErrorMessage ?? copy.resendError}</Text>
         ) : null}
         <Pressable accessibilityRole="button" onPress={changeConfirmationEmail}>
           <Text style={styles.textAction}>{copy.anotherEmail}</Text>
@@ -588,3 +617,4 @@ function createStyles(colors: ThemeColors) {
   textAction: { color: colors.primaryDark, fontFamily: fonts.heading, fontSize: 12, textAlign: "center" },
   });
 }
+
