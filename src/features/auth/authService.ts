@@ -99,10 +99,10 @@ export async function signUpWithEmail(
   return { requiresEmailConfirmation: !data.session };
 }
 
-export async function resendConfirmationEmail(email: string) {
+export async function resendConfirmationEmail(email: string, captchaToken?: string) {
   const { error } = await getSupabaseClient().auth.resend({
     email: normalizeEmail(email),
-    options: { emailRedirectTo: authCallbackUrl },
+    options: { captchaToken, emailRedirectTo: authCallbackUrl },
     type: "signup",
   });
   if (error) {
@@ -257,6 +257,11 @@ function toFriendlyAuthMessage(message: string) {
 
 function toAuthServiceError(message: string) {
   const normalized = message.toLowerCase();
+  const isNetworkFailure = normalized.includes("failed to fetch")
+    || normalized.includes("network request failed")
+    || normalized.includes("networkerror")
+    || normalized.includes("timeout")
+    || normalized.includes("timed out");
   const code: AuthServiceErrorCode = normalized.includes("invalid login credentials")
     ? "invalid_credentials"
     : normalized.includes("already registered")
@@ -267,7 +272,7 @@ function toAuthServiceError(message: string) {
           ? "email_not_confirmed"
           : normalized.includes("email address not authorized")
             ? "email_not_authorized"
-            : normalized.includes("error sending") || normalized.includes("confirmation email")
+            : isNetworkFailure || normalized.includes("error sending") || normalized.includes("confirmation email")
               ? "email_send_failed"
               : normalized.includes("rate limit") || normalized.includes("after 60 seconds")
                 ? "email_rate_limited"
@@ -300,3 +305,4 @@ async function readFunctionErrorCode(error: unknown) {
     return null;
   }
 }
+
