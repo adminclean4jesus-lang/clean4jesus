@@ -87,10 +87,18 @@ private struct PerAppLimitEditorScreen: View {
   let language: String
   let categoryCount: Int
   let webDomainCount: Int
+  let originalRules: [StoredApplicationLimit]
+  let allowIncrease: Bool
   let onCancel: () -> Void
   let onSave: ([StoredApplicationLimit]) -> Void
   private let options = [0, 15, 30, 60, 120]
   private var copy: PerAppEditorCopy { .forLanguage(language) }
+
+  private func allowedOptions(for rule: StoredApplicationLimit) -> [Int] {
+    if allowIncrease { return options }
+    guard let original = originalRules.first(where: { $0.id == rule.id }) else { return [0] }
+    return options.filter { $0 <= original.minutes }
+  }
 
   var body: some View {
     NavigationStack {
@@ -107,7 +115,7 @@ private struct PerAppLimitEditorScreen: View {
               Label(rule.token)
                 .font(.headline)
               Picker(copy.dailyTime, selection: $rule.minutes) {
-                ForEach(options, id: \.self) { minutes in
+                ForEach(allowedOptions(for: rule), id: \.self) { minutes in
                   Text(minutes == 0 ? copy.block : "\(minutes) min").tag(minutes)
                 }
               }
@@ -336,7 +344,7 @@ public class Clean4JesusIosProtectionModule: Module {
       ]
     }.runOnQueue(.main)
 
-    AsyncFunction("presentPerAppLimitEditor") { (language: String, promise: Promise) in
+    AsyncFunction("presentPerAppLimitEditor") { (language: String, allowIncrease: Bool, promise: Promise) in
       DispatchQueue.main.async {
         guard #available(iOS 16.0, *) else {
           promise.reject("ERR_IOS_VERSION", "Los límites por aplicación requieren iOS 16 o posterior.")
@@ -356,13 +364,25 @@ public class Clean4JesusIosProtectionModule: Module {
           return
         }
 
+        let originalRules = self.synchronizedPerAppLimits(for: selection)
         let editor = PerAppLimitEditorScreen(
-          rules: self.synchronizedPerAppLimits(for: selection),
+          rules: originalRules,
           language: language,
           categoryCount: selection.categoryTokens.count,
           webDomainCount: selection.webDomainTokens.count,
+          originalRules: originalRules,
+          allowIncrease: allowIncrease,
           onCancel: { promise.reject("ERR_LIMIT_EDITOR_CANCELLED", "Configuración cancelada.") },
           onSave: { rules in
+            if !allowIncrease && (rules.contains(where: { rule in
+              guard let original = originalRules.first(where: { $0.id == rule.id }) else { return rule.minutes > 0 || !rule.enabled }
+              return rule.minutes > original.minutes || (original.enabled && !rule.enabled)
+            }) || originalRules.contains(where: { original in
+              original.enabled && !rules.contains(where: { $0.id == original.id })
+            })) {
+              promise.reject("ERR_LIMIT_INCREASE_REQUIRES_PIN", "Verifica el PIN antes de aumentar un límite.")
+              return
+            }
             let wasEnabled = self.userDefaults?.bool(forKey: "shieldEnabled") == true
             do {
               try self.savePerAppLimits(rules)

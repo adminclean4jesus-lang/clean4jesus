@@ -1,5 +1,18 @@
 # Directivas Clean4Jesus
 
+## Checkpoint Android 1.3.60 (73) — 19 de noviembre de 2026
+
+- Pixel 9, versión instalada desde prueba interna: el usuario confirmó activación de VPN, navegación normal y VPN aún activa tras la prueba.
+- El usuario confirmó la interrupción en una búsqueda realizada desde el widget de Google.
+- El usuario confirmó que pudo usar Nu con normalidad y que, al salir, VPN y Accesibilidad seguían activas. Conservar la compatibilidad con Nu y no interferir con Google Wallet/NFC.
+- La corrección evita tratar como fallo una espera normal del descriptor VPN configurando lectura bloqueante. No asumir que una prueba breve demuestra estabilidad en todas las redes o dispositivos.
+- Pendiente: medir consumo de batería durante varias horas y comparar con uso semejante; validar Wi‑Fi y datos, reconexiones, reinicio y cierre de VPN. No afirmar que el consumo quedó resuelto antes de medirlo.
+
+## Activación VPN Android — 19 de noviembre de 2026
+
+- La versión 72 puede apagar la VPN durante el arranque: el descriptor de Android es no bloqueante por defecto y una lectura sin paquetes puede dar EAGAIN. No tratar esta espera normal como fallo. Configurar lectura bloqueante y validar en un dispositivo real tanto el primer permiso como la reactivación, navegación, consumo y cierre.
+- Si el inicio falla, el mensaje debe permitir reintentar sin afirmar que hay un permiso visible. La pantalla temporal de permisos no debe dejar al usuario atrapado.
+
 ## Regresión Android reportada — 18 de noviembre de 2026
 
 - En Pixel 9 se reprodujo que `VpnService.protect(Socket)` devuelve falso cuando el socket aún no tiene descriptor. Para DoH y DoT, llamar `bind(InetSocketAddress(0))` antes de `protect` y conectar después. La prueba aislada confirmó HTTPS 200 y respuesta TLS tras el cambio; falta validar la app completa.
@@ -595,3 +608,35 @@ Para pruebas en celular, seguir `docs/TESTING-CELULAR.md`.
 - La corrección de código no modifica la build ya distribuida. No afirmar que está disponible hasta obtener una compilación firmada, procesada en TestFlight y verificada en un iPhone físico con el correo de confirmación y el escudo real.
 - El usuario confirmó que la compilación más alta disponible en TestFlight era la 35; la candidata siguiente se prepara con número 36. Este número no acredita carga ni distribución.
 - EAS también ejecuta `npm ci` durante la compilación; el perfil de producción debe usar `NPM_CONFIG_LEGACY_PEER_DEPS=true` para respetar el modo del lockfile. La advertencia de compatibilidad entre Expo y Worklets continúa vigente.
+
+## Android: batería y búsqueda de Google (19 de noviembre de 2026)
+
+- El usuario reportó consumo excesivo en Pixel 9 con la build 71; las estadísticas del dispositivo mostraron tiempo de CPU anormalmente alto. Reducir escrituras por eventos y cálculos innecesarios no prueba por sí solo la causa ni garantiza un ahorro: comparar en dispositivo real con VPN, Accesibilidad y uso equivalentes.
+- El widget abre `com.google.android.googlequicksearchbox`. Limitar el análisis a contenedores visibles de búsqueda y resultados; no leer el texto de eventos ni rastrear el uso de otras pantallas de Google. La cobertura depende de identificadores de interfaz que Google puede cambiar y requiere pruebas reales con versiones distintas.
+- Ante cierre o error del descriptor de la VPN, detener el bucle, actualizar el estado y avisar; nunca girar en vacío ni informar protección activa si el túnel dejó de funcionar. Preservar el transporte DNS cifrado y la excepción de Nu de la build 71.
+- La optimización histórica `ab59f55` agrupaba eventos a 250 ms y limitaba su alcance por paquete. La compatibilidad bancaria posterior retiró la lista fija para detectar apps financieras; no restaurarla sin una alternativa probada que conserve esa detección. Recuperar el agrupamiento de 250 ms y medir en Pixel el impacto y el bloqueo de búsquedas antes de distribuir.
+
+## Navegación de protección iOS — 22 de noviembre de 2026
+
+- En iOS, «Protección de apps» abre la configuración nativa de Family Controls/Screen Time, nunca la pantalla Android de protección.
+- Ocultar la personalización de pantalla de interrupción en iOS. Usar el nombre común «Protección de apps» sin añadir «para iOS».
+
+## Fricción de Protección iOS — 22 de noviembre de 2026
+
+- En Screen Time, las personas pueden bajar sus límites por app sin PIN; subir el tiempo requiere validar el PIN de su persona de confianza. La vista nativa debe limitar las opciones disponibles y validar de nuevo antes de guardar, no depender solo de la interfaz React Native.
+- Apple no permite a Clean4Jesus interceptar el control de autorización de Family Controls en Ajustes ni mostrar allí su propio PIN. Recomendar el código de Tiempo en pantalla administrado por una persona de confianza y detectar autorización revocada al volver a la app; mostrar protección pausada y una acción clara para volver a autorizar.
+- No describir el código de Tiempo en pantalla como irremovible: Apple permite cambiarlo o restablecerlo mediante las opciones del sistema/cuenta. No prometer que impide toda revocación.
+- No tratar una guía para configurar el código de Tiempo en pantalla como solución a distancia: Apple exige configurar el código en Ajustes y Clean4Jesus no lo puede imponer ni validar. No presentar esa guía como una barrera del producto.
+- La autorización individual de Family Controls sigue siendo autogestionada. La autorización infantil requiere una cuenta infantil real dentro de En Familia y aprobación del tutor; no convertirla en atajo para adultos ni ampliar la audiencia sin revisión de producto y legal.
+
+## iOS TestFlight 1.3.60 (37) — 22 de noviembre de 2026
+
+- Mi perfil y Ajustes llaman «Protección de apps» a la configuración nativa de Apple; el acceso desde el perfil abre /ios-protection.
+- Ocultar Pantalla de interrupción en iOS; conservarla solo en Android.
+
+## Candidata iOS TestFlight 1.3.61 (38) — 22 de noviembre de 2026
+
+- Las ediciones de límites permiten reducir el tiempo sin PIN; para aumentar límites se valida el PIN de confianza y el editor nativo restringe opciones y verifica los cambios antes de guardar.
+- Al volver al primer plano, refrescar autorización Family Controls y mostrar estado pausado con acción para autorizar de nuevo si iOS retiró el permiso. Esto detecta la revocación; no la impide.
+- La build 38 debe compilarse y cargarse en TestFlight antes de anunciar disponibilidad. No se declara QA física completada por el build exitoso.
+

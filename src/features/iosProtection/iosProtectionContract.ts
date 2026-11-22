@@ -31,7 +31,7 @@ export interface IIosProtectionContract {
   pauseProtection(pinHash: string): Promise<boolean>;
   resumeProtection(): Promise<boolean>;
   getPerAppLimitSummary(): Promise<IosPerAppLimitSummary>;
-  presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary>;
+  presentPerAppLimitEditor(language: string, allowIncrease?: boolean): Promise<IosPerAppLimitSummary>;
   presentDailyUsageReport(language: string): Promise<boolean>;
   clearProtection(pinHash: string): Promise<boolean>;
   setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;

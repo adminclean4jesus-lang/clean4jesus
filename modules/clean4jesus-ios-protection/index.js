@@ -41,8 +41,8 @@ export function getPerAppLimitSummary() {
   return Clean4JesusIosProtectionModule.getPerAppLimitSummary();
 }
 
-export function presentPerAppLimitEditor(language) {
-  return Clean4JesusIosProtectionModule.presentPerAppLimitEditor(language);
+export function presentPerAppLimitEditor(language, allowIncrease = false) {
+  return Clean4JesusIosProtectionModule.presentPerAppLimitEditor(language, allowIncrease);
 }
 
 export function presentDailyUsageReport(language) {

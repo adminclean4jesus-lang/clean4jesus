@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@/components/MaterialCommunityIcon";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AccountSettingsCard } from "@/features/auth/AccountSettingsCard";
 import { useAppAppearance } from "@/features/appearance/AppearanceProvider";
@@ -114,11 +114,13 @@ export default function PerfilScreen() {
         <Text style={styles.sectionHint}>{t(language, "settings.status.readyBody")}</Text>
       </View>
       <InfoCard style={styles.actionGroup} tone="outline">
-        <ProfileActionRow icon="shield-lock-outline" label={t(language, "settings.row.appProtection")} onPress={() => router.push("/app-protection")} />
+        <ProfileActionRow icon="shield-lock-outline" label={t(language, "settings.row.appProtection")} onPress={() => router.push(Platform.OS === "ios" ? "/ios-protection" : "/app-protection")} />
         <View style={styles.rowDivider} />
         <ProfileActionRow icon="account-heart-outline" label={t(language, "settings.row.trustedPerson")} onPress={() => router.push("/trusted-person")} />
-        <View style={styles.rowDivider} />
-        <ProfileActionRow icon="image-outline" label={t(language, "settings.row.interruption")} onPress={() => router.push("/interruption-settings")} />
+        {Platform.OS !== "ios" ? <>
+          <View style={styles.rowDivider} />
+          <ProfileActionRow icon="image-outline" label={t(language, "settings.row.interruption")} onPress={() => router.push("/interruption-settings")} />
+        </> : null}
       </InfoCard>
 
       <InfoCard style={styles.actionGroup} tone="outline">

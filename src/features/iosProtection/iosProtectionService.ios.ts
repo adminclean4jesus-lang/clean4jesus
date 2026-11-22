@@ -24,7 +24,7 @@ type NativeIosProtectionModule = {
   pauseProtection(pinHash: string): Promise<boolean>;
   resumeProtection(): Promise<boolean>;
   getPerAppLimitSummary(): Promise<IosPerAppLimitSummary>;
-  presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary>;
+  presentPerAppLimitEditor(language: string, allowIncrease?: boolean): Promise<IosPerAppLimitSummary>;
   presentDailyUsageReport(language: string): Promise<boolean>;
   clearProtection(pinHash: string): Promise<boolean>;
   setShieldCopy(title: string, message: string, primaryLabel: string, secondaryLabel: string): Promise<boolean>;
@@ -165,14 +165,14 @@ class IosProtectionService implements IIosProtectionContract {
     return await requireIosProtectionModule().getPerAppLimitSummary();
   }
 
-  async presentPerAppLimitEditor(language: string): Promise<IosPerAppLimitSummary> {
+  async presentPerAppLimitEditor(language: string, allowIncrease = false): Promise<IosPerAppLimitSummary> {
     if (Platform.OS !== "ios") {
       throw new IosProtectionError(
         "Los límites por aplicación solo están disponibles en iOS.",
         IOS_PROTECTION_ERROR_CODES.MODULE_NOT_FOUND,
       );
     }
-    return await requireIosProtectionModule().presentPerAppLimitEditor(language);
+    return await requireIosProtectionModule().presentPerAppLimitEditor(language, allowIncrease);
   }
 
   async presentDailyUsageReport(language: string): Promise<boolean> {

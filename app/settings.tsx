@@ -183,7 +183,7 @@ export default function SettingsScreen() {
           onPress={() => router.push(isIos ? "/ios-protection" : "/app-protection")}
           testID="settings-protection-apps"
           subtitle={isIos ? iosProtectionCopy.selectionHelp : t(language, "settings.row.appProtectionHint")}
-          title={isIos ? iosProtectionCopy.title : t(language, "settings.row.appProtection")}
+          title={t(language, "settings.row.appProtection")}
         />
         <SettingsRow
           onPress={() => router.push("/trusted-person")}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, AppState, Image, ScrollView, StyleSheet, View } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -91,9 +91,16 @@ export default function IosProtectionScreen() {
     }, [loadStatus]),
   );
 
-  async function openPerAppLimitEditor() {
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void loadStatus();
+    });
+    return () => subscription.remove();
+  }, [loadStatus]);
+
+  async function openPerAppLimitEditor(allowIncrease = false) {
     try {
-      const summary = await iosProtectionService.presentPerAppLimitEditor(language);
+      const summary = await iosProtectionService.presentPerAppLimitEditor(language, allowIncrease);
       setLimitSummary(summary);
       await loadStatus();
 
@@ -202,11 +209,7 @@ export default function IosProtectionScreen() {
       Alert.alert(copy.limitErrorTitle, copy.limitErrorBody);
       return;
     }
-    if (limitSummary.hasUserConfiguredLimits) {
-      await requireGuardianPin("edit-ios-limits");
-      return;
-    }
-    await openPerAppLimitEditor();
+    await openPerAppLimitEditor(!limitSummary.hasUserConfiguredLimits);
   }
 
   async function handleViewUsage() {
@@ -239,7 +242,7 @@ export default function IosProtectionScreen() {
       return;
     }
     if (action === "limits") {
-      void openPerAppLimitEditor();
+      void openPerAppLimitEditor(true);
     } else {
       void openFamilyActivityPicker();
     }
@@ -309,6 +312,19 @@ export default function IosProtectionScreen() {
             >
               {copy.configureLimits}
             </Button>
+            {limitSummary.hasUserConfiguredLimits ? (
+              <Button
+                mode="outlined"
+                disabled={!statusInfo?.isAuthorized || selection.applications === 0}
+                onPress={() => void requireGuardianPin("edit-ios-limits")}
+                style={styles.selectButton}
+                testID="ios-increase-app-limit"
+                textColor={colors.primary}
+              >
+                {copy.increaseLimitsWithPin}
+              </Button>
+            ) : null}
+            <Text style={[styles.selectionHelp, { color: colors.muted }]}>{copy.increaseLimitsHelp}</Text>
             <Text style={[styles.selectionHelp, { color: colors.muted }]}>{copy.limitPrivacy}</Text>
             <Button
               buttonColor={colors.primary}
@@ -323,6 +339,15 @@ export default function IosProtectionScreen() {
             </Button>
           </Card.Content>
         </Card>
+
+        {statusInfo?.status === "permission_denied" && selectionCount > 0 ? (
+          <Card style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Card.Content>
+              <Text style={[styles.cardTitle, { color: colors.primaryDark }]}>{copy.permissionLostTitle}</Text>
+              <Text style={[styles.selectionHelp, { color: colors.muted }]}>{copy.permissionLostBody}</Text>
+            </Card.Content>
+          </Card>
+        ) : null}
 
         <Card style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Card.Content>
