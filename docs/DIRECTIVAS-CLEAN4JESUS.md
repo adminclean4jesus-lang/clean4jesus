@@ -1,5 +1,11 @@
 # Directivas Clean4Jesus
 
+## Confirmación de correo en registro — 22 de noviembre de 2026
+
+- La pantalla de reenvío debe mostrar el error de autenticación categorizado (límite de frecuencia, proveedor de correo o red). No afirmar que el usuario debe revisar su conexión si el error no confirma una falla de red.
+- Un `signUp` exitoso solo confirma que Supabase aceptó la solicitud; no demuestra que el mensaje llegó a la bandeja. El proveedor de correo predeterminado de Supabase tiene límites bajos y entrega de mejor esfuerzo; beta externa requiere validar SMTP de producción, registros Auth y entregabilidad antes de atribuirlo al cliente iOS.
+- Si Supabase Auth tiene CAPTCHA habilitado, cada operación protegida necesita su propio token vigente. El reenvío de confirmación usa `/auth/v1/resend` y debe abrir Turnstile y enviar `options.captchaToken`; un `signUp` exitoso no garantiza que un reenvío posterior funcione. Confirmado en producción: los POST de reenvío respondían 400 `captcha protection: request disallowed (no captcha_token found)` mientras el registro daba 200.
+
 ## Checkpoint Android 1.3.60 (73) — 19 de noviembre de 2026
 
 - Pixel 9, versión instalada desde prueba interna: el usuario confirmó activación de VPN, navegación normal y VPN aún activa tras la prueba.
