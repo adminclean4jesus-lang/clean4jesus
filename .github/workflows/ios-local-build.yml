@@ -54,3 +54,8 @@ jobs:
           name: clean4jesus-ios-ipa-${{ steps.version.outputs.label }}
           path: artifacts/Clean4Jesus.ipa
           if-no-files-found: error
+
+      - name: Upload IPA to TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx eas-cli submit --platform ios --profile production --path ./artifacts/Clean4Jesus.ipa --non-interactive
